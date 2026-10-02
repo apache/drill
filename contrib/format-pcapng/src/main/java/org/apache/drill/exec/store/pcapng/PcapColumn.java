@@ -28,13 +28,6 @@ import org.apache.drill.common.types.Types;
 import org.apache.drill.exec.store.pcap.PcapFormatUtils;
 import org.apache.drill.exec.vector.accessor.ScalarWriter;
 
-import fr.bmartel.pcapdecoder.structure.options.inter.IOptionsStatisticsHeader;
-import fr.bmartel.pcapdecoder.structure.types.IPcapngType;
-import fr.bmartel.pcapdecoder.structure.types.inter.IDescriptionBlock;
-import fr.bmartel.pcapdecoder.structure.types.inter.IEnhancedPacketBLock;
-import fr.bmartel.pcapdecoder.structure.types.inter.INameResolutionBlock;
-import fr.bmartel.pcapdecoder.structure.types.inter.ISectionHeaderBlock;
-import fr.bmartel.pcapdecoder.structure.types.inter.IStatisticsBlock;
 
 public abstract class PcapColumn {
 
@@ -70,43 +63,65 @@ public abstract class PcapColumn {
     columns.put("tcp_flags_fin", new PcapTcpFlagsFin());
     columns.put("tcp_parsed_flags", new PcapTcpParsedFlags());
     columns.put("packet_data", new PcapPacketData());
+    // Interface and Enhanced Packet Block metadata
+    columns.put("captured_length", new PcapCapturedLength());
+    columns.put("interface_id", new PcapInterfaceId());
+    columns.put("interface_name", new PcapInterfaceName());
+    columns.put("link_type", new PcapLinkType());
+    columns.put("comment", new PcapComment());
+    columns.put("direction", new PcapDirection());
+    columns.put("reception_type", new PcapReceptionType());
+    columns.put("fcs_length", new PcapFcsLength());
+    columns.put("drop_count", new PcapDropCount());
+    columns.put("packet_hash", new PcapPacketHash());
 
     // Extensions
     summary_columns.put("path", new PcapStatPath());
+    summary_columns.put("comment", new PcapComment());
     // Section Header Block
-    summary_columns.put("shb_hardware", new PcapHardware());
-    summary_columns.put("shb_os", new PcapOS());
-    summary_columns.put("shb_userappl", new PcapUserAppl());
+    addStat("shb_hardware", MinorType.VARCHAR);
+    addStat("shb_os", MinorType.VARCHAR);
+    addStat("shb_userappl", MinorType.VARCHAR);
     // Interface Description Block
-    summary_columns.put("if_name", new PcapIfName());
-    summary_columns.put("if_description", new PcapIfDescription());
-    summary_columns.put("if_ipv4addr", new PcapIfIPv4addr());
-    summary_columns.put("if_ipv6addr", new PcapIfIPv6addr());
-    summary_columns.put("if_macaddr", new PcapIfMACaddr());
-    summary_columns.put("if_euiaddr", new PcapIfEUIaddr());
-    summary_columns.put("if_speed", new PcapIfSpeed());
-    summary_columns.put("if_tsresol", new PcapIfTsresol());
-    summary_columns.put("if_tzone", new PcapIfTzone());
-    summary_columns.put("if_os", new PcapIfOS());
-    summary_columns.put("if_fcslen", new PcapIfFcslen());
-    summary_columns.put("if_tsoffset", new PcapIfTsOffset());
+    addStat("if_name", MinorType.VARCHAR);
+    addStat("if_description", MinorType.VARCHAR);
+    addStat("if_ipv4addr", MinorType.VARCHAR);
+    addStat("if_ipv6addr", MinorType.VARCHAR);
+    addStat("if_macaddr", MinorType.VARCHAR);
+    addStat("if_euiaddr", MinorType.VARCHAR);
+    addStat("if_speed", MinorType.BIGINT);
+    addStat("if_tsresol", MinorType.INT);
+    addStat("if_tzone", MinorType.INT);
+    addStat("if_os", MinorType.VARCHAR);
+    addStat("if_fcslen", MinorType.INT);
+    addStat("if_tsoffset", MinorType.BIGINT);
     // Name Resolution Block
-    summary_columns.put("ns_dnsname", new PcapDnsName());
-    summary_columns.put("ns_dnsip4addr", new PcapDnsIP4addr());
-    summary_columns.put("ns_dnsip6addr", new PcapDnsIP6addr());
+    addStat("ns_dnsname", MinorType.VARCHAR);
+    addStat("ns_dnsip4addr", MinorType.VARCHAR);
+    addStat("ns_dnsip6addr", MinorType.VARCHAR);
     // Interface Statistics Block
-    summary_columns.put("isb_starttime", new PcapIsbStarttime());
-    summary_columns.put("isb_endtime", new PcapIsbEndtime());
-    summary_columns.put("isb_ifrecv", new PcapIsbIfrecv());
-    summary_columns.put("isb_ifdrop", new PcapIsbIfdrop());
-    summary_columns.put("isb_filteraccept", new PcapIsbFilterAccept());
-    summary_columns.put("isb_osdrop", new PcapIsbOSdrop());
-    summary_columns.put("isb_usrdeliv", new PcapIsbUsrdeliv());
+    addStat("isb_starttime", MinorType.TIMESTAMP);
+    addStat("isb_endtime", MinorType.TIMESTAMP);
+    addStat("isb_ifrecv", MinorType.BIGINT);
+    addStat("isb_ifdrop", MinorType.BIGINT);
+    addStat("isb_filteraccept", MinorType.BIGINT);
+    addStat("isb_osdrop", MinorType.BIGINT);
+    addStat("isb_usrdeliv", MinorType.BIGINT);
+  }
+
+  private static void addStat(String name, MinorType type) {
+    summary_columns.put(name, new PcapStat(name, type));
   }
 
   abstract MajorType getType();
 
-  abstract void process(IPcapngType block, ScalarWriter writer);
+  abstract void process(PcapngBlock block, ScalarWriter writer);
+
+  private static void setString(ScalarWriter writer, String value) {
+    if (value != null) {
+      writer.setString(value);
+    }
+  }
 
   public static Map<String, PcapColumn> getColumns() {
     return Collections.unmodifiableMap(columns);
@@ -124,7 +139,7 @@ public abstract class PcapColumn {
     }
 
     @Override
-    void process(IPcapngType block, ScalarWriter writer) { }
+    void process(PcapngBlock block, ScalarWriter writer) { }
   }
 
   static class PcapStatPath extends PcapColumn {
@@ -135,7 +150,7 @@ public abstract class PcapColumn {
     }
 
     @Override
-    void process(IPcapngType block, ScalarWriter writer) { }
+    void process(PcapngBlock block, ScalarWriter writer) { }
   }
 
   static class PcapTimestamp extends PcapColumn {
@@ -146,8 +161,8 @@ public abstract class PcapColumn {
     }
 
     @Override
-    void process(IPcapngType block, ScalarWriter writer) {
-      writer.setTimestamp(Instant.ofEpochMilli(((IEnhancedPacketBLock) block).getTimeStamp() / 1000));
+    void process(PcapngBlock block, ScalarWriter writer) {
+      writer.setTimestamp(block.timestamp);
     }
   }
 
@@ -159,8 +174,8 @@ public abstract class PcapColumn {
     }
 
     @Override
-    void process(IPcapngType block, ScalarWriter writer) {
-      writer.setInt(((IEnhancedPacketBLock) block).getPacketLength());
+    void process(PcapngBlock block, ScalarWriter writer) {
+      writer.setInt(block.originalLength);
     }
   }
 
@@ -172,10 +187,9 @@ public abstract class PcapColumn {
     }
 
     @Override
-    void process(IPcapngType block, ScalarWriter writer) {
-      PacketDecoder packet = new PacketDecoder();
-      if (packet.readPcapng(((IEnhancedPacketBLock) block).getPacketData())) {
-        writer.setString(packet.getPacketType());
+    void process(PcapngBlock block, ScalarWriter writer) {
+      if (block.packet != null) {
+        writer.setString(block.packet.getPacketType());
       }
     }
   }
@@ -188,10 +202,9 @@ public abstract class PcapColumn {
     }
 
     @Override
-    void process(IPcapngType block, ScalarWriter writer) {
-      PacketDecoder packet = new PacketDecoder();
-      if (packet.readPcapng(((IEnhancedPacketBLock) block).getPacketData())) {
-        writer.setString(packet.getSrc_ip().getHostAddress());
+    void process(PcapngBlock block, ScalarWriter writer) {
+      if (block.packet != null) {
+        setString(writer, block.packet.getSourceIpAddressString());
       }
     }
   }
@@ -204,10 +217,9 @@ public abstract class PcapColumn {
     }
 
     @Override
-    void process(IPcapngType block, ScalarWriter writer) {
-      PacketDecoder packet = new PacketDecoder();
-      if (packet.readPcapng(((IEnhancedPacketBLock) block).getPacketData())) {
-        writer.setString(packet.getDst_ip().getHostAddress());
+    void process(PcapngBlock block, ScalarWriter writer) {
+      if (block.packet != null) {
+        setString(writer, block.packet.getDestinationIpAddressString());
       }
     }
   }
@@ -220,10 +232,9 @@ public abstract class PcapColumn {
     }
 
     @Override
-    void process(IPcapngType block, ScalarWriter writer) {
-      PacketDecoder packet = new PacketDecoder();
-      if (packet.readPcapng(((IEnhancedPacketBLock) block).getPacketData())) {
-        writer.setInt(packet.getSrc_port());
+    void process(PcapngBlock block, ScalarWriter writer) {
+      if (block.packet != null && (block.packet.isTcpPacket() || block.packet.isUdpPacket())) {
+        writer.setInt(block.packet.getSrc_port());
       }
     }
   }
@@ -236,10 +247,9 @@ public abstract class PcapColumn {
     }
 
     @Override
-    void process(IPcapngType block, ScalarWriter writer) {
-      PacketDecoder packet = new PacketDecoder();
-      if (packet.readPcapng(((IEnhancedPacketBLock) block).getPacketData())) {
-        writer.setInt(packet.getDst_port());
+    void process(PcapngBlock block, ScalarWriter writer) {
+      if (block.packet != null && (block.packet.isTcpPacket() || block.packet.isUdpPacket())) {
+        writer.setInt(block.packet.getDst_port());
       }
     }
   }
@@ -252,10 +262,9 @@ public abstract class PcapColumn {
     }
 
     @Override
-    void process(IPcapngType block, ScalarWriter writer) {
-      PacketDecoder packet = new PacketDecoder();
-      if (packet.readPcapng(((IEnhancedPacketBLock) block).getPacketData())) {
-        writer.setString(packet.getEthernetSource());
+    void process(PcapngBlock block, ScalarWriter writer) {
+      if (block.packet != null) {
+        setString(writer, block.packet.getEthernetSource());
       }
     }
   }
@@ -268,10 +277,9 @@ public abstract class PcapColumn {
     }
 
     @Override
-    void process(IPcapngType block, ScalarWriter writer) {
-      PacketDecoder packet = new PacketDecoder();
-      if (packet.readPcapng(((IEnhancedPacketBLock) block).getPacketData())) {
-        writer.setString(packet.getEthernetDestination());
+    void process(PcapngBlock block, ScalarWriter writer) {
+      if (block.packet != null) {
+        setString(writer, block.packet.getEthernetDestination());
       }
     }
   }
@@ -284,10 +292,9 @@ public abstract class PcapColumn {
     }
 
     @Override
-    void process(IPcapngType block, ScalarWriter writer) {
-      PacketDecoder packet = new PacketDecoder();
-      if (packet.readPcapng(((IEnhancedPacketBLock) block).getPacketData())) {
-        writer.setLong(packet.getSessionHash());
+    void process(PcapngBlock block, ScalarWriter writer) {
+      if (block.packet != null) {
+        writer.setLong(block.packet.getSessionHash());
       }
     }
   }
@@ -300,10 +307,9 @@ public abstract class PcapColumn {
     }
 
     @Override
-    void process(IPcapngType block, ScalarWriter writer) {
-      PacketDecoder packet = new PacketDecoder();
-      if (packet.readPcapng(((IEnhancedPacketBLock) block).getPacketData())) {
-        writer.setInt(packet.getAckNumber());
+    void process(PcapngBlock block, ScalarWriter writer) {
+      if (block.packet != null) {
+        writer.setInt(block.packet.getAckNumber());
       }
     }
   }
@@ -316,10 +322,9 @@ public abstract class PcapColumn {
     }
 
     @Override
-    void process(IPcapngType block, ScalarWriter writer) {
-      PacketDecoder packet = new PacketDecoder();
-      if (packet.readPcapng(((IEnhancedPacketBLock) block).getPacketData())) {
-        writer.setInt(packet.getFlags());
+    void process(PcapngBlock block, ScalarWriter writer) {
+      if (block.packet != null) {
+        writer.setInt(block.packet.getFlags());
       }
     }
   }
@@ -332,10 +337,9 @@ public abstract class PcapColumn {
     }
 
     @Override
-    void process(IPcapngType block, ScalarWriter writer) {
-      PacketDecoder packet = new PacketDecoder();
-      if (packet.readPcapng(((IEnhancedPacketBLock) block).getPacketData())) {
-        writer.setBoolean((packet.getFlags() & 0x100) != 0);
+    void process(PcapngBlock block, ScalarWriter writer) {
+      if (block.packet != null) {
+        writer.setBoolean((block.packet.getFlags() & 0x100) != 0);
       }
     }
   }
@@ -348,10 +352,9 @@ public abstract class PcapColumn {
     }
 
     @Override
-    void process(IPcapngType block, ScalarWriter writer) {
-      PacketDecoder packet = new PacketDecoder();
-      if (packet.readPcapng(((IEnhancedPacketBLock) block).getPacketData())) {
-        writer.setBoolean((packet.getFlags() & 0x80) != 0);
+    void process(PcapngBlock block, ScalarWriter writer) {
+      if (block.packet != null) {
+        writer.setBoolean((block.packet.getFlags() & 0x80) != 0);
       }
     }
   }
@@ -364,10 +367,9 @@ public abstract class PcapColumn {
     }
 
     @Override
-    void process(IPcapngType block, ScalarWriter writer) {
-      PacketDecoder packet = new PacketDecoder();
-      if (packet.readPcapng(((IEnhancedPacketBLock) block).getPacketData())) {
-        writer.setBoolean((packet.getFlags() & 0x40) != 0);
+    void process(PcapngBlock block, ScalarWriter writer) {
+      if (block.packet != null) {
+        writer.setBoolean((block.packet.getFlags() & 0x40) != 0);
       }
     }
   }
@@ -380,10 +382,9 @@ public abstract class PcapColumn {
     }
 
     @Override
-    void process(IPcapngType block, ScalarWriter writer) {
-      PacketDecoder packet = new PacketDecoder();
-      if (packet.readPcapng(((IEnhancedPacketBLock) block).getPacketData())) {
-        writer.setBoolean((packet.getFlags() & 0x42) == 0x42);
+    void process(PcapngBlock block, ScalarWriter writer) {
+      if (block.packet != null) {
+        writer.setBoolean((block.packet.getFlags() & 0x42) == 0x42);
       }
     }
   }
@@ -396,10 +397,9 @@ public abstract class PcapColumn {
     }
 
     @Override
-    void process(IPcapngType block, ScalarWriter writer) {
-      PacketDecoder packet = new PacketDecoder();
-      if (packet.readPcapng(((IEnhancedPacketBLock) block).getPacketData())) {
-        writer.setBoolean((packet.getFlags() & 0x42) == 0x40);
+    void process(PcapngBlock block, ScalarWriter writer) {
+      if (block.packet != null) {
+        writer.setBoolean((block.packet.getFlags() & 0x42) == 0x40);
       }
     }
   }
@@ -412,10 +412,9 @@ public abstract class PcapColumn {
     }
 
     @Override
-    void process(IPcapngType block, ScalarWriter writer) {
-      PacketDecoder packet = new PacketDecoder();
-      if (packet.readPcapng(((IEnhancedPacketBLock) block).getPacketData())) {
-        writer.setBoolean((packet.getFlags() & 0x20) != 0);
+    void process(PcapngBlock block, ScalarWriter writer) {
+      if (block.packet != null) {
+        writer.setBoolean((block.packet.getFlags() & 0x20) != 0);
       }
     }
   }
@@ -428,10 +427,9 @@ public abstract class PcapColumn {
     }
 
     @Override
-    void process(IPcapngType block, ScalarWriter writer) {
-      PacketDecoder packet = new PacketDecoder();
-      if (packet.readPcapng(((IEnhancedPacketBLock) block).getPacketData())) {
-        writer.setBoolean((packet.getFlags() & 0x10) != 0);
+    void process(PcapngBlock block, ScalarWriter writer) {
+      if (block.packet != null) {
+        writer.setBoolean((block.packet.getFlags() & 0x10) != 0);
       }
     }
   }
@@ -444,10 +442,9 @@ public abstract class PcapColumn {
     }
 
     @Override
-    void process(IPcapngType block, ScalarWriter writer) {
-      PacketDecoder packet = new PacketDecoder();
-      if (packet.readPcapng(((IEnhancedPacketBLock) block).getPacketData())) {
-        writer.setBoolean((packet.getFlags() & 0x8) != 0);
+    void process(PcapngBlock block, ScalarWriter writer) {
+      if (block.packet != null) {
+        writer.setBoolean((block.packet.getFlags() & 0x8) != 0);
       }
     }
   }
@@ -460,10 +457,9 @@ public abstract class PcapColumn {
     }
 
     @Override
-    void process(IPcapngType block, ScalarWriter writer) {
-      PacketDecoder packet = new PacketDecoder();
-      if (packet.readPcapng(((IEnhancedPacketBLock) block).getPacketData())) {
-        writer.setBoolean((packet.getFlags() & 0x4) != 0);
+    void process(PcapngBlock block, ScalarWriter writer) {
+      if (block.packet != null) {
+        writer.setBoolean((block.packet.getFlags() & 0x4) != 0);
       }
     }
   }
@@ -476,10 +472,9 @@ public abstract class PcapColumn {
     }
 
     @Override
-    void process(IPcapngType block, ScalarWriter writer) {
-      PacketDecoder packet = new PacketDecoder();
-      if (packet.readPcapng(((IEnhancedPacketBLock) block).getPacketData())) {
-        writer.setBoolean((packet.getFlags() & 0x2) != 0);
+    void process(PcapngBlock block, ScalarWriter writer) {
+      if (block.packet != null) {
+        writer.setBoolean((block.packet.getFlags() & 0x2) != 0);
       }
     }
   }
@@ -492,10 +487,9 @@ public abstract class PcapColumn {
     }
 
     @Override
-    void process(IPcapngType block, ScalarWriter writer) {
-      PacketDecoder packet = new PacketDecoder();
-      if (packet.readPcapng(((IEnhancedPacketBLock) block).getPacketData())) {
-        writer.setBoolean((packet.getFlags() & 0x1) != 0);
+    void process(PcapngBlock block, ScalarWriter writer) {
+      if (block.packet != null) {
+        writer.setBoolean((block.packet.getFlags() & 0x1) != 0);
       }
     }
   }
@@ -508,10 +502,9 @@ public abstract class PcapColumn {
     }
 
     @Override
-    void process(IPcapngType block, ScalarWriter writer) {
-      PacketDecoder packet = new PacketDecoder();
-      if (packet.readPcapng(((IEnhancedPacketBLock) block).getPacketData())) {
-        writer.setString(packet.getParsedFlags());
+    void process(PcapngBlock block, ScalarWriter writer) {
+      if (block.packet != null) {
+        writer.setString(block.packet.getParsedFlags());
       }
     }
   }
@@ -524,18 +517,42 @@ public abstract class PcapColumn {
     }
 
     @Override
-    void process(IPcapngType block, ScalarWriter writer) {
-      PacketDecoder packet = new PacketDecoder();
-      if (packet.readPcapng(((IEnhancedPacketBLock) block).getPacketData())) {
-        writer.setString(PcapFormatUtils.parseBytesToASCII(((IEnhancedPacketBLock) block).getPacketData()));
+    void process(PcapngBlock block, ScalarWriter writer) {
+      if (block.packet != null) {
+        writer.setString(PcapFormatUtils.parseBytesToASCII(block.data));
       }
     }
   }
 
-  /**
-   * shb_hardware: description of the hardware
-   */
-  static class PcapHardware extends PcapColumn {
+  // Interface and Enhanced Packet Block metadata
+
+  static class PcapCapturedLength extends PcapColumn {
+
+    @Override
+    MajorType getType() {
+      return Types.required(MinorType.INT);
+    }
+
+    @Override
+    void process(PcapngBlock block, ScalarWriter writer) {
+      writer.setInt(block.capturedLength);
+    }
+  }
+
+  static class PcapInterfaceId extends PcapColumn {
+
+    @Override
+    MajorType getType() {
+      return Types.required(MinorType.INT);
+    }
+
+    @Override
+    void process(PcapngBlock block, ScalarWriter writer) {
+      writer.setInt(block.interfaceId);
+    }
+  }
+
+  static class PcapInterfaceName extends PcapColumn {
 
     @Override
     MajorType getType() {
@@ -543,20 +560,31 @@ public abstract class PcapColumn {
     }
 
     @Override
-    void process(IPcapngType block, ScalarWriter writer) {
-      if (!(block instanceof ISectionHeaderBlock)) {
-        return;
-      }
-      writer.setString(((ISectionHeaderBlock) block).getOptions().getHardware());
+    void process(PcapngBlock block, ScalarWriter writer) {
+      setString(writer, block.interfaceName);
     }
   }
 
-  // Section Header Block
+  /**
+   * link_type: LINKTYPE_ value of the packet's interface, see https://www.tcpdump.org/linktypes.html
+   */
+  static class PcapLinkType extends PcapColumn {
+
+    @Override
+    MajorType getType() {
+      return Types.required(MinorType.INT);
+    }
+
+    @Override
+    void process(PcapngBlock block, ScalarWriter writer) {
+      writer.setInt(block.linkType);
+    }
+  }
 
   /**
-   * shb_os: name of the OS
+   * comment: opt_comment of the block; multiple comments are newline separated
    */
-  static class PcapOS extends PcapColumn {
+  static class PcapComment extends PcapColumn {
 
     @Override
     MajorType getType() {
@@ -564,18 +592,16 @@ public abstract class PcapColumn {
     }
 
     @Override
-    void process(IPcapngType block, ScalarWriter writer) {
-      if (!(block instanceof ISectionHeaderBlock)) {
-        return;
-      }
-      writer.setString(((ISectionHeaderBlock) block).getOptions().getOS());
+    void process(PcapngBlock block, ScalarWriter writer) {
+      setString(writer, block.comment);
     }
   }
 
   /**
-   * shb_userappl: name of the user application
+   * direction: inbound or outbound, from epb_flags bits 0-1
    */
-  static class PcapUserAppl extends PcapColumn {
+  static class PcapDirection extends PcapColumn {
+    private static final String[] VALUES = {null, "inbound", "outbound", null};
 
     @Override
     MajorType getType() {
@@ -583,20 +609,18 @@ public abstract class PcapColumn {
     }
 
     @Override
-    void process(IPcapngType block, ScalarWriter writer) {
-      if (!(block instanceof ISectionHeaderBlock)) {
-        return;
+    void process(PcapngBlock block, ScalarWriter writer) {
+      if (block.flags != null) {
+        setString(writer, VALUES[block.flags & 0x3]);
       }
-      writer.setString(((ISectionHeaderBlock) block).getOptions().getUserAppl());
     }
   }
 
-  // Interface Description Block
-
   /**
-   * if_name: name of the device used to capture
+   * reception_type: unicast, multicast, broadcast or promiscuous, from epb_flags bits 2-4
    */
-  static class PcapIfName extends PcapColumn {
+  static class PcapReceptionType extends PcapColumn {
+    private static final String[] VALUES = {null, "unicast", "multicast", "broadcast", "promiscuous", null, null, null};
 
     @Override
     MajorType getType() {
@@ -604,113 +628,17 @@ public abstract class PcapColumn {
     }
 
     @Override
-    void process(IPcapngType block, ScalarWriter writer) {
-      if (!(block instanceof IDescriptionBlock)) {
-        return;
+    void process(PcapngBlock block, ScalarWriter writer) {
+      if (block.flags != null) {
+        setString(writer, VALUES[(block.flags >> 2) & 0x7]);
       }
-      writer.setString(((IDescriptionBlock) block).getOptions().getInterfaceName());
     }
   }
 
   /**
-   * if_description: Description of the device used to capture the data
+   * fcs_length: frame check sequence length in octets, from epb_flags bits 5-8
    */
-  static class PcapIfDescription extends PcapColumn {
-
-    @Override
-    MajorType getType() {
-      return Types.optional(MinorType.VARCHAR);
-    }
-
-    @Override
-    void process(IPcapngType block, ScalarWriter writer) {
-      if (!(block instanceof IDescriptionBlock)) {
-        return;
-      }
-      writer.setString(((IDescriptionBlock) block).getOptions().getInterfaceDescription());
-    }
-  }
-
-  /**
-   * if_IPv4addr: IPV4 address
-   */
-  static class PcapIfIPv4addr extends PcapColumn {
-
-    @Override
-    MajorType getType() {
-      return Types.optional(MinorType.VARCHAR);
-    }
-
-    @Override
-    void process(IPcapngType block, ScalarWriter writer) {
-      if (!(block instanceof IDescriptionBlock)) {
-        return;
-      }
-      writer.setString(((IDescriptionBlock) block).getOptions().getInterfaceIpv4NetworkAddr());
-    }
-  }
-
-  /**
-   * if_IPv6addr: IPV6 address
-   */
-  static class PcapIfIPv6addr extends PcapColumn {
-
-    @Override
-    MajorType getType() {
-      return Types.optional(MinorType.VARCHAR);
-    }
-
-    @Override
-    void process(IPcapngType block, ScalarWriter writer) {
-      if (!(block instanceof IDescriptionBlock)) {
-        return;
-      }
-      writer.setString(((IDescriptionBlock) block).getOptions().getIpv6NetworkAddr());
-    }
-  }
-
-  /**
-   * if_MACaddr: MAC address
-   */
-  static class PcapIfMACaddr extends PcapColumn {
-
-    @Override
-    MajorType getType() {
-      return Types.optional(MinorType.VARCHAR);
-    }
-
-    @Override
-    void process(IPcapngType block, ScalarWriter writer) {
-      if (!(block instanceof IDescriptionBlock)) {
-        return;
-      }
-      writer.setString(((IDescriptionBlock) block).getOptions().getInterfaceMacAddr());
-    }
-  }
-
-  /**
-   * if_EUIaddr: EUI address
-   */
-  static class PcapIfEUIaddr extends PcapColumn {
-
-    @Override
-    MajorType getType() {
-      return Types.optional(MinorType.VARCHAR);
-    }
-
-    @Override
-    void process(IPcapngType block, ScalarWriter writer) {
-      if (!(block instanceof IDescriptionBlock)) {
-        return;
-      }
-      writer.setString(((IDescriptionBlock) block).getOptions().getInterfaceEuiAddr());
-    }
-  }
-
-  /**
-   * if_speed: interface speed in bps
-   */
-  static class PcapIfSpeed extends PcapColumn {
+  static class PcapFcsLength extends PcapColumn {
 
     @Override
     MajorType getType() {
@@ -718,56 +646,35 @@ public abstract class PcapColumn {
     }
 
     @Override
-    void process(IPcapngType block, ScalarWriter writer) {
-      if (!(block instanceof IDescriptionBlock)) {
-        return;
+    void process(PcapngBlock block, ScalarWriter writer) {
+      if (block.flags != null && ((block.flags >> 5) & 0xF) != 0) {
+        writer.setInt((block.flags >> 5) & 0xF);
       }
-      writer.setInt(((IDescriptionBlock) block).getOptions().getInterfaceSpeed());
     }
   }
 
   /**
-   * if_tsresol: Resolution of timestamp (6 means microsecond resolution for instance)
+   * drop_count: packets lost between this packet and the preceding one (epb_dropcount)
    */
-  static class PcapIfTsresol extends PcapColumn {
+  static class PcapDropCount extends PcapColumn {
 
     @Override
     MajorType getType() {
-      return Types.optional(MinorType.INT);
+      return Types.optional(MinorType.BIGINT);
     }
 
     @Override
-    void process(IPcapngType block, ScalarWriter writer) {
-      if (!(block instanceof IDescriptionBlock)) {
-        return;
+    void process(PcapngBlock block, ScalarWriter writer) {
+      if (block.dropCount != null) {
+        writer.setLong(block.dropCount);
       }
-      writer.setInt(((IDescriptionBlock) block).getOptions().getTimeStampResolution());
     }
   }
 
   /**
-   * if_tzone: indicate Time zone => offset from UTC time
+   * packet_hash: epb_hash as algorithm:hex, such as md5:9e107d9d372bb6826bd81d3542a419d6
    */
-  static class PcapIfTzone extends PcapColumn {
-
-    @Override
-    MajorType getType() {
-      return Types.optional(MinorType.INT);
-    }
-
-    @Override
-    void process(IPcapngType block, ScalarWriter writer) {
-      if (!(block instanceof IDescriptionBlock)) {
-        return;
-      }
-      writer.setInt(((IDescriptionBlock) block).getOptions().getTimeBias());
-    }
-  }
-
-  /**
-   * if_os: Name of the operating system
-   */
-  static class PcapIfOS extends PcapColumn {
+  static class PcapPacketHash extends PcapColumn {
 
     @Override
     MajorType getType() {
@@ -775,245 +682,52 @@ public abstract class PcapColumn {
     }
 
     @Override
-    void process(IPcapngType block, ScalarWriter writer) {
-      if (!(block instanceof IDescriptionBlock)) {
-        return;
-      }
-      writer.setString(((IDescriptionBlock) block).getOptions().getInterfaceOperatingSystem());
+    void process(PcapngBlock block, ScalarWriter writer) {
+      setString(writer, block.hash);
     }
   }
 
   /**
-   * if_fcslen: Length of the Frame Check Sequence (in bits)
+   * A stat column, read from the options the reader decoded from a
+   * Section Header, Interface Description, Name Resolution or Interface
+   * Statistics Block. Null when the block does not have the option.
    */
-  static class PcapIfFcslen extends PcapColumn {
+  static class PcapStat extends PcapColumn {
+    private final String name;
+    private final MinorType type;
+
+    PcapStat(String name, MinorType type) {
+      this.name = name;
+      this.type = type;
+    }
 
     @Override
     MajorType getType() {
-      return Types.optional(MinorType.INT);
+      return Types.optional(type);
     }
 
     @Override
-    void process(IPcapngType block, ScalarWriter writer) {
-      if (!(block instanceof IDescriptionBlock)) {
+    void process(PcapngBlock block, ScalarWriter writer) {
+      Object value = block.stats == null ? null : block.stats.get(name);
+      if (value == null) {
         return;
       }
-      writer.setInt(((IDescriptionBlock) block).getOptions().getInterfaceFrameCheckSequenceLength());
-    }
-  }
-
-  /**
-   * if_tsoffset: Timestamp offset for each packet / if not present timestamp are absolute
-   */
-  static class PcapIfTsOffset extends PcapColumn {
-
-    @Override
-    MajorType getType() {
-      return Types.optional(MinorType.INT);
-    }
-
-    @Override
-    void process(IPcapngType block, ScalarWriter writer) {
-      if (!(block instanceof IDescriptionBlock)) {
-        return;
+      switch (type) {
+        case VARCHAR:
+          writer.setString((String) value);
+          break;
+        case INT:
+          writer.setInt((Integer) value);
+          break;
+        case BIGINT:
+          writer.setLong((Long) value);
+          break;
+        case TIMESTAMP:
+          writer.setTimestamp((Instant) value);
+          break;
+        default:
+          throw new IllegalStateException("Unsupported stat column type " + type);
       }
-      writer.setInt(((IDescriptionBlock) block).getOptions().getTimeStampOffset());
-    }
-  }
-
-  // Name Resolution Block
-
-  /**
-   * ns_dnsname: Retrieve DNS server name
-   */
-  static class PcapDnsName extends PcapColumn {
-
-    @Override
-    MajorType getType() {
-      return Types.optional(MinorType.VARCHAR);
-    }
-
-    @Override
-    void process(IPcapngType block, ScalarWriter writer) {
-      if (!(block instanceof INameResolutionBlock)) {
-        return;
-      }
-      writer.setString(((INameResolutionBlock) block).getOptions().getDnsName());
-    }
-  }
-
-  /**
-   * ns_dnsIP4addr: Retrieve DNS IPV4 server address
-   */
-  static class PcapDnsIP4addr extends PcapColumn {
-
-    @Override
-    MajorType getType() {
-      return Types.optional(MinorType.VARCHAR);
-    }
-
-    @Override
-    void process(IPcapngType block, ScalarWriter writer) {
-      if (!(block instanceof INameResolutionBlock)) {
-        return;
-      }
-      writer.setString(((INameResolutionBlock) block).getOptions().getDnsIpv4Addr());
-    }
-  }
-
-  /**
-   * ns_dnsIP6addr: Retrieve DNS IPV6 server address
-   */
-  static class PcapDnsIP6addr extends PcapColumn {
-
-    @Override
-    MajorType getType() {
-      return Types.optional(MinorType.VARCHAR);
-    }
-
-    @Override
-    void process(IPcapngType block, ScalarWriter writer) {
-      if (!(block instanceof INameResolutionBlock)) {
-        return;
-      }
-      writer.setString(((INameResolutionBlock) block).getOptions().getDnsIpv6Addr());
-    }
-  }
-
-  // Interface Statistics Block
-
-  /**
-   * isb_starttime: capture start time (timestamp resolution is defined in Interface description header check exemple)
-   */
-  static class PcapIsbStarttime extends PcapColumn {
-
-    @Override
-    MajorType getType() {
-      return Types.optional(MinorType.TIMESTAMP);
-    }
-
-    @Override
-    void process(IPcapngType block, ScalarWriter writer) {
-      if (!(block instanceof IStatisticsBlock)) {
-        return;
-      }
-      IOptionsStatisticsHeader statisticsHeader = ((IStatisticsBlock) block).getOptions();
-      writer.setTimestamp(Instant.ofEpochMilli(statisticsHeader.getCaptureStartTime() / 1000));
-    }
-  }
-
-  /**
-   * isb_endtime: capture end time (timestamp resolution is defined in Interface description header check example)
-   */
-  static class PcapIsbEndtime extends PcapColumn {
-
-    @Override
-    MajorType getType() {
-      return Types.optional(MinorType.TIMESTAMP);
-    }
-
-    @Override
-    void process(IPcapngType block, ScalarWriter writer) {
-      if (!(block instanceof IStatisticsBlock)) {
-        return;
-      }
-      IOptionsStatisticsHeader statisticsHeader = ((IStatisticsBlock) block).getOptions();
-      writer.setTimestamp(Instant.ofEpochMilli(statisticsHeader.getCaptureEndTime() / 1000));
-    }
-  }
-
-  /**
-   * isb_ifrecv: packet received count
-   */
-  static class PcapIsbIfrecv extends PcapColumn {
-
-    @Override
-    MajorType getType() {
-      return Types.optional(MinorType.BIGINT);
-    }
-
-    @Override
-    void process(IPcapngType block, ScalarWriter writer) {
-      if (!(block instanceof IStatisticsBlock)) {
-        return;
-      }
-      writer.setLong(((IStatisticsBlock) block).getOptions().getPacketReceivedCount());
-    }
-  }
-
-  /**
-   * isb_ifdrop: packet drop count
-   */
-  static class PcapIsbIfdrop extends PcapColumn {
-
-    @Override
-    MajorType getType() {
-      return Types.optional(MinorType.BIGINT);
-    }
-
-    @Override
-    void process(IPcapngType block, ScalarWriter writer) {
-      if (!(block instanceof IStatisticsBlock)) {
-        return;
-      }
-      writer.setLong(((IStatisticsBlock) block).getOptions().getPacketDropCount());
-    }
-  }
-
-  /**
-   * isb_filteraccept: packet accepted by filter count
-   */
-  static class PcapIsbFilterAccept extends PcapColumn {
-
-    @Override
-    MajorType getType() {
-      return Types.optional(MinorType.BIGINT);
-    }
-
-    @Override
-    void process(IPcapngType block, ScalarWriter writer) {
-      if (!(block instanceof IStatisticsBlock)) {
-        return;
-      }
-      writer.setLong(((IStatisticsBlock) block).getOptions().getPacketAcceptedByFilterCount());
-    }
-  }
-
-  /**
-   * isb_osdrop: packet dropped by Operating system count
-   */
-  static class PcapIsbOSdrop extends PcapColumn {
-
-    @Override
-    MajorType getType() {
-      return Types.optional(MinorType.BIGINT);
-    }
-
-    @Override
-    void process(IPcapngType block, ScalarWriter writer) {
-      if (!(block instanceof IStatisticsBlock)) {
-        return;
-      }
-      writer.setLong(((IStatisticsBlock) block).getOptions().getPacketDroppedByOS());
-    }
-  }
-
-  /**
-   * isb_usrdeliv: packet deliver to use count
-   */
-  static class PcapIsbUsrdeliv extends PcapColumn {
-
-    @Override
-    MajorType getType() {
-      return Types.optional(MinorType.BIGINT);
-    }
-
-    @Override
-    void process(IPcapngType block, ScalarWriter writer) {
-      if (!(block instanceof IStatisticsBlock)) {
-        return;
-      }
-      writer.setLong(((IStatisticsBlock) block).getOptions().getPacketDeliveredToUser());
     }
   }
 }

@@ -44,7 +44,6 @@ import java.io.InputStream;
 public abstract class BasePcapFormatPlugin<T extends PcapFormatConfig> extends EasyFormatPlugin<T> {
 
   static final Logger logger = LoggerFactory.getLogger(ManagedScanFramework.class);
-  private static PacketDecoder.FileFormat fileFormat = PacketDecoder.FileFormat.UNKNOWN;
 
   public BasePcapFormatPlugin(String name,
                               DrillbitContext context,
@@ -86,18 +85,14 @@ public abstract class BasePcapFormatPlugin<T extends PcapFormatConfig> extends E
      */
     @Override
     public ManagedReader newReader(FileSchemaNegotiator negotiator) {
-      if (negotiator.file().fileSystem() != null) { // todo: can be simplified with java9
-        // ifPresentOrElse
-        Path path = scan.getWorkUnits().stream()
-                .findFirst()
-                .orElseThrow(() -> UserException.
-                        dataReadError()
-                        .addContext("There are no files for scanning")
-                        .build(logger))
-                .getPath();
-        fileFormat = getFileFormat(negotiator.file().fileSystem(), path);
+      // Local, and detected from this reader's own file: readers for
+      // different files can be created concurrently
+      PacketDecoder.FileFormat fileFormat = PacketDecoder.FileFormat.UNKNOWN;
+      if (negotiator.file().fileSystem() != null) {
+        fileFormat = getFileFormat(negotiator.file().fileSystem(), negotiator.file().split().getPath());
+        String formatName = fileFormat.name().toLowerCase();
         if (config.getExtensions().stream()
-                .noneMatch(f -> f.equals(fileFormat.name().toLowerCase()))) {
+                .noneMatch(f -> f.equals(formatName))) {
           logger.error("File format {} is not within plugin extensions: {}. Trying to use default PCAP format plugin to " +
                   "read the file", fileFormat, config.getExtensions());
         }
@@ -105,12 +100,12 @@ public abstract class BasePcapFormatPlugin<T extends PcapFormatConfig> extends E
         logger.error("It is not possible to detect file format, because the File Framework is not initialized. " +
                 "Trying to use default PCAP format plugin to read the file");
       }
-      return createReader(scan, config, negotiator);
+      return createReader(fileFormat, scan, config, negotiator);
     }
   }
 
-  private static ManagedReader createReader(EasySubScan scan, PcapFormatConfig config,
-    FileSchemaNegotiator negotiator) {
+  private static ManagedReader createReader(PacketDecoder.FileFormat fileFormat, EasySubScan scan,
+    PcapFormatConfig config, FileSchemaNegotiator negotiator) {
     switch(fileFormat) {
       case PCAPNG: return new PcapngBatchReader(config, scan, negotiator);
       case PCAP:
