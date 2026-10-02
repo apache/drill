@@ -87,11 +87,15 @@ public class HttpSessionDecoder implements SessionProtocolDecoder<HttpExchanges>
         }
         break;
       }
-      messages.add(m);
+      // Interim responses (1xx) precede the final response to the same request
+      boolean interim = !requests && m.statusCode != null && m.statusCode / 100 == 1;
+      if (!interim) {
+        messages.add(m);
+      }
       if (m.headerEnd < 0) {
         break;
       }
-      int index = messages.size() - 1;
+      int index = interim ? messages.size() : messages.size() - 1;
       long bodyEnd = bodyEnd(m, data, requests ? null : request(requestsForResponses, index));
       if (bodyEnd < 0 || bodyEnd > data.length) {
         break; // body continues past the captured data
