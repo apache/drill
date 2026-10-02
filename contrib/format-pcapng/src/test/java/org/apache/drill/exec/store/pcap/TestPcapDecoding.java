@@ -128,4 +128,23 @@ public class TestPcapDecoding extends ClusterTest {
         "where decode_error is not null";
     assertEquals("packet: Invalid IPv4 header length 12", client.queryBuilder().sql(sql).singletonString());
   }
+
+  @Test
+  public void testReadFailureMidFileIsReported() throws Exception {
+    // A corrupted gzip file fails while decompressing, partway through the capture
+    String file = "dfs.`pcap/http_corrupt.pcap.gz`";
+    long packets = client.queryBuilder().sql("select count(*) from " + file + " where decode_error is null").singletonLong();
+    String error = client.queryBuilder().sql("select decode_error from " + file + " where decode_error is not null").singletonString();
+    assertTrue(packets > 0);
+    assertTrue(error, error.contains("file: read failed"));
+  }
+
+  @Test
+  public void testCompressedCapture() throws Exception {
+    // A decompressing stream returns short reads; every packet must still be read
+    String sql = "select count(*) from dfs.`pcap/http.pcap.gz` where decode_error is null";
+    assertEquals(43, client.queryBuilder().sql(sql).singletonLong());
+    sql = "select count(*) from dfs.`pcap/http.pcap.gz` where decode_error is not null";
+    assertEquals(0, client.queryBuilder().sql(sql).singletonLong());
+  }
 }

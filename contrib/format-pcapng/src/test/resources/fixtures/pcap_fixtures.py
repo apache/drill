@@ -180,6 +180,21 @@ def oversized():
     frames = [ETHERNET + ipv4(17, udp(4000, 7, b'ECHO:ok'), '10.0.0.1', '10.0.0.2', ihl=ihl) for ihl in (5, 3, 5)]
     pcap_file(os.path.join(PCAP, 'malformed.pcap'), frames)
 
+def compressed():
+    # Valid and corrupted gzip copies of real captures; mtime=0 keeps the output stable
+    import gzip
+    for name, folder in (('http.pcap', PCAP), ('sniff.pcapng', PCAPNG)):
+        data = gzip.compress(open(os.path.join(folder, name), 'rb').read(), mtime=0)
+        if name == 'http.pcap':
+            write(os.path.join(folder, name + '.gz'), data)
+        # Flip bytes in the middle of the compressed stream: decompression fails there
+        corrupt = bytearray(data)
+        middle = len(corrupt) // 2
+        for i in range(middle, middle + 40):
+            corrupt[i] ^= 0xFF
+        stem = name.split('.')[0]
+        write(os.path.join(folder, stem + '_corrupt.' + name.split('.')[1] + '.gz'), bytes(corrupt))
+
 if __name__ == '__main__':
     echo()
     errors()
@@ -187,3 +202,4 @@ if __name__ == '__main__':
     classic()
     dns()
     oversized()
+    compressed()

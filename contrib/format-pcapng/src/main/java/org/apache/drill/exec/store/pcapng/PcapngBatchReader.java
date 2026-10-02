@@ -180,11 +180,10 @@ public class PcapngBatchReader implements ManagedReader {
       try {
         block = nextRow();
       } catch (IOException e) {
-        throw UserException
-               .dataReadError(e)
-               .message("Failed to decode the pcapng file. " + e.getMessage())
-               .addContext(errorContext)
-               .build(logger);
+        // The stream cannot be read further: report it, then finish like end of file
+        finished = true;
+        protocolColumns.writeErrorRow("file: read failed at byte " + position + ": " + ProtocolDecoders.describe(e));
+        continue;
       }
       if (block == null) {
         // At end of file, more batches are needed only for open sessions that did not fit
