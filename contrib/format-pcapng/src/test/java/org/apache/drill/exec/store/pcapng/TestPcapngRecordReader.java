@@ -62,14 +62,14 @@ public class TestPcapngRecordReader extends ClusterTest {
 
   @Test
   public void testExplicitQuery() throws Exception {
-    String sql = "select type, packet_length, `timestamp` from dfs.`pcapng/sniff.pcapng` where type = 'ARP' limit 2";
+    String sql = "select type, packet_length, packet_timestamp from dfs.`pcapng/sniff.pcapng` where type = 'ARP' limit 2";
     QueryBuilder builder = client.queryBuilder().sql(sql);
     RowSet sets = builder.rowSet();
 
     TupleMetadata schema = new SchemaBuilder()
         .addNullable("type", MinorType.VARCHAR)
         .addNullable("packet_length", MinorType.INT)
-        .addNullable("timestamp", MinorType.TIMESTAMP)
+        .addNullable("packet_timestamp", MinorType.TIMESTAMP)
         .buildSchema();
 
     RowSet expected = new RowSetBuilder(client.allocator(), schema)
@@ -116,14 +116,14 @@ public class TestPcapngRecordReader extends ClusterTest {
   @Test
   public void testExplicitQueryWithCompressedFile() throws Exception {
     QueryTestUtil.generateCompressedFile("pcapng/sniff.pcapng", "zip", "pcapng/sniff.pcapng.zip");
-    String sql = "select type, packet_length, `timestamp` from dfs.`pcapng/sniff.pcapng.zip` where type = 'ARP' limit 2";
+    String sql = "select type, packet_length, packet_timestamp from dfs.`pcapng/sniff.pcapng.zip` where type = 'ARP' limit 2";
     QueryBuilder builder = client.queryBuilder().sql(sql);
     RowSet sets = builder.rowSet();
 
     TupleMetadata schema = new SchemaBuilder()
         .addNullable("type", MinorType.VARCHAR)
         .addNullable("packet_length", MinorType.INT)
-        .addNullable("timestamp", MinorType.TIMESTAMP)
+        .addNullable("packet_timestamp", MinorType.TIMESTAMP)
         .buildSchema();
 
     RowSet expected = new RowSetBuilder(client.allocator(), schema)
@@ -137,7 +137,7 @@ public class TestPcapngRecordReader extends ClusterTest {
 
   @Test
   public void testCaseInsensitiveQuery() throws Exception {
-    String sql = "select `timestamp`, paCket_dAta, TyPe from dfs.`pcapng/sniff.pcapng`";
+    String sql = "select packet_timestamp, paCket_dAta, TyPe from dfs.`pcapng/sniff.pcapng`";
     QueryBuilder builder = client.queryBuilder().sql(sql);
     RowSet sets = builder.rowSet();
 
@@ -174,7 +174,7 @@ public class TestPcapngRecordReader extends ClusterTest {
     RowSet sets = client.queryBuilder().sql(sql).rowSet();
 
     TupleMetadata schema = new SchemaBuilder()
-        .addNullable("timestamp", MinorType.TIMESTAMP)
+        .addNullable("packet_timestamp", MinorType.TIMESTAMP)
         .addNullable("packet_length", MinorType.INT)
         .addNullable("type", MinorType.VARCHAR)
         .addNullable("src_ip", MinorType.VARCHAR)
@@ -253,7 +253,7 @@ public class TestPcapngRecordReader extends ClusterTest {
    */
   @Test
   public void testLinkTypesAndInterfaces() throws Exception {
-    String sql = "select interface_id, link_type, interface_name, `timestamp`, src_ip, src_port, " +
+    String sql = "select interface_id, link_type, interface_name, packet_timestamp, src_ip, src_port, " +
         "src_mac_address, captured_length from dfs.`pcapng/metadata.pcapng`";
     RowSet results = client.queryBuilder().sql(sql).rowSet();
 
@@ -261,7 +261,7 @@ public class TestPcapngRecordReader extends ClusterTest {
         .addNullable("interface_id", MinorType.INT)
         .addNullable("link_type", MinorType.INT)
         .addNullable("interface_name", MinorType.VARCHAR)
-        .addNullable("timestamp", MinorType.TIMESTAMP)
+        .addNullable("packet_timestamp", MinorType.TIMESTAMP)
         .addNullable("src_ip", MinorType.VARCHAR)
         .addNullable("src_port", MinorType.INT)
         .addNullable("src_mac_address", MinorType.VARCHAR)
@@ -381,7 +381,7 @@ public class TestPcapngRecordReader extends ClusterTest {
 
   @Test
   public void testDistinctQuery() throws Exception {
-    String sql = "select distinct `timestamp`, src_ip from dfs.`pcapng/sniff.pcapng`";
+    String sql = "select distinct packet_timestamp, src_ip from dfs.`pcapng/sniff.pcapng`";
     QueryBuilder builder = client.queryBuilder().sql(sql);
     RowSet sets = builder.rowSet();
 
@@ -406,14 +406,14 @@ public class TestPcapngRecordReader extends ClusterTest {
 
   @Test
   public void testInlineSchema() throws Exception {
-    String sql =   "SELECT type, packet_length, `timestamp` FROM table(dfs.`pcapng/sniff.pcapng` " +
+    String sql =   "SELECT type, packet_length, packet_timestamp FROM table(dfs.`pcapng/sniff.pcapng` " +
             "(type => 'pcapng', stat => false, sessionizeTCPStreams => false )) where type = 'ARP' limit 2";
     RowSet sets = client.queryBuilder().sql(sql).rowSet();
 
     TupleMetadata schema = new SchemaBuilder()
             .addNullable("type", MinorType.VARCHAR)
             .addNullable("packet_length", MinorType.INT)
-            .addNullable("timestamp", MinorType.TIMESTAMP)
+            .addNullable("packet_timestamp", MinorType.TIMESTAMP)
             .buildSchema();
 
     RowSet expected = new RowSetBuilder(client.allocator(), schema)

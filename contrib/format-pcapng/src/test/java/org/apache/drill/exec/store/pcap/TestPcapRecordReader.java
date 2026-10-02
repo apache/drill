@@ -67,7 +67,7 @@ public class TestPcapRecordReader extends BaseTestQuery {
   @Test
   public void testDistinctQuery() throws Exception {
     // omit data field from distinct count for now
-    runSQLVerifyCount("select distinct type, network, `timestamp`, src_ip, dst_ip, src_port, dst_port, src_mac_address, dst_mac_address, tcp_session, packet_length from dfs.`pcap/tcp-1.pcap`", 1);
+    runSQLVerifyCount("select distinct type, network, packet_timestamp, src_ip, dst_ip, src_port, dst_port, src_mac_address, dst_mac_address, tcp_session, packet_length from dfs.`pcap/tcp-1.pcap`", 1);
   }
 
   @Test
