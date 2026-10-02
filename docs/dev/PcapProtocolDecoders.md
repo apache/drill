@@ -271,6 +271,260 @@ Bodies are skipped using `Content-Length` or chunked encoding, so later messages
 connection are found. Bodies themselves are not returned; `data_from_originator` and `data_from_remote`
 already carry the raw bytes.
 
+## Phase 2 Decoder Fields
+
+Each decoder matches on the ports listed, then validates the payload as described in Matching: other
+traffic on those ports is left undecoded. Lists are capped at 64 entries and strings at 4096 characters,
+with a warning in `decode_error` when a cap is hit.
+
+### `icmp` (packet)
+
+ICMP and ICMPv6 packets (the bytes after the IP header).
+
+Field | Type
+------|-----
+`version` | INT (4 for ICMP, 6 for ICMPv6)
+`type`, `code` | INT
+`type_name`, `code_name` | VARCHAR, such as `echo_request` or `port_unreachable`
+`identifier`, `sequence` | INT (echo messages)
+`mtu` | INT (fragmentation needed, packet too big)
+`gateway` | VARCHAR (redirect)
+`target_address`, `destination_address` | VARCHAR (neighbor discovery, ICMPv6 redirect)
+`original_src_ip`, `original_dst_ip`, `original_protocol`, `original_src_port`, `original_dst_port` | VARCHAR, INT: the header quoted by an error message
+
+### `arp` (packet)
+
+ARP packets (the bytes after the link header).
+
+Field | Type
+------|-----
+`hardware_type`, `protocol_type`, `operation` | INT
+`operation_name` | VARCHAR (`request`, `reply`, `rarp_request`, ...)
+`sender_mac`, `sender_ip`, `target_mac`, `target_ip` | VARCHAR
+`is_gratuitous`, `is_probe` | BIT
+
+### `ntp` (packet)
+
+UDP 123.
+
+Field | Type
+------|-----
+`leap_indicator`, `version`, `stratum`, `poll`, `precision` | INT
+`mode` | VARCHAR (`client`, `server`, `broadcast`, `symmetric_active`, ...)
+`root_delay`, `root_dispersion` | FLOAT8 (seconds)
+`reference_id` | VARCHAR (IP address, or a code such as `GPS` for stratum 1)
+`reference_time`, `origin_time`, `receive_time`, `transmit_time` | TIMESTAMP
+`request_code` | INT (mode 6 and 7 control messages)
+
+### `syslog` (packet)
+
+UDP 514. RFC 5424 messages and the older BSD (RFC 3164) format.
+
+Field | Type
+------|-----
+`facility`, `severity` | INT
+`facility_name`, `severity_name` | VARCHAR
+`version` | INT (RFC 5424 only)
+`timestamp_text` | VARCHAR, as sent (the formats have no year or zone in common)
+`hostname`, `app_name`, `proc_id`, `msg_id`, `structured_data`, `message` | VARCHAR
+
+### `ssdp` (packet)
+
+UDP 1900.
+
+Field | Type
+------|-----
+`method` | VARCHAR (`M-SEARCH`, `NOTIFY`)
+`status_code` | INT (responses)
+`st`, `nt`, `nts`, `usn`, `location`, `server`, `user_agent`, `man`, `cache_control` | VARCHAR
+`mx` | INT
+`headers` | repeated map: `name`, `value` VARCHAR
+
+### `sip` (packet)
+
+UDP or single-segment TCP 5060.
+
+Field | Type
+------|-----
+`is_request` | BIT
+`method`, `request_uri`, `reason` | VARCHAR
+`status_code` | INT
+`from_address`, `to_address`, `call_id`, `cseq`, `user_agent`, `contact`, `content_type` | VARCHAR
+`via` | VARCHAR array
+`content_length` | BIGINT
+`username` | VARCHAR (from an `Authorization` header)
+`password_present` | BIT (always false: SIP digest authentication never sends a cleartext password)
+`headers` | repeated map: `name`, `value` VARCHAR
+
+### `dhcp` (packet)
+
+UDP 67 and 68.
+
+Field | Type
+------|-----
+`op`, `message_type` | VARCHAR (`DISCOVER`, `OFFER`, `REQUEST`, `ACK`, ...)
+`transaction_id`, `lease_time` | BIGINT
+`broadcast` | BIT
+`client_mac`, `client_ip`, `your_ip`, `server_ip`, `relay_ip` | VARCHAR
+`server_name`, `boot_file`, `hostname`, `requested_ip`, `server_id`, `subnet_mask`, `vendor_class`, `domain_name` | VARCHAR
+`routers`, `dns_servers` | VARCHAR array
+`parameter_request_list` | INT array
+`options` | repeated map: `code` INT, `value` VARCHAR (every option, as hex)
+
+### `dhcpv6` (packet)
+
+UDP 546 and 547. Relay messages are unwrapped.
+
+Field | Type
+------|-----
+`message_type`, `relayed_message_type` | VARCHAR
+`hop_count`, `transaction_id`, `status_code` | INT
+`link_address`, `peer_address` | VARCHAR (relay messages)
+`client_duid`, `server_duid`, `status_message`, `fqdn` | VARCHAR
+`ia_addresses`, `ia_prefixes`, `dns_servers`, `domain_list` | VARCHAR array
+`option_request_list` | INT array
+`options` | repeated map: `code` INT, `value` VARCHAR
+
+### `tftp` (packet)
+
+UDP 69. Transfers move to other ports after the first packet, so only requests and replies to port 69 are
+decoded.
+
+Field | Type
+------|-----
+`opcode` | VARCHAR (`RRQ`, `WRQ`, `DATA`, `ACK`, `ERROR`, `OACK`)
+`filename`, `mode` | VARCHAR
+`block`, `data_length`, `error_code` | INT
+`error_message` | VARCHAR
+`options` | repeated map: `name`, `value` VARCHAR
+
+### `netbios_ns` (packet)
+
+UDP 137.
+
+Field | Type
+------|-----
+`transaction_id`, `rcode` | INT
+`is_response`, `broadcast` | BIT
+`opcode` | VARCHAR
+`questions` | repeated map: `name` VARCHAR, `suffix` INT, `suffix_name` VARCHAR, `type` VARCHAR
+`answers`, `authorities`, `additionals` | repeated map: the question fields plus `ttl` BIGINT, `addresses` VARCHAR array, `node_type` VARCHAR, `is_group` BIT, `names` VARCHAR array and `mac_address` VARCHAR (node status replies)
+
+### `radius` (packet)
+
+UDP 1812, 1813, 1645 and 1646.
+
+Field | Type
+------|-----
+`code`, `identifier` | INT
+`code_name` | VARCHAR (`Access-Request`, `Accounting-Request`, ...)
+`authenticator` | VARCHAR (hex)
+`username` | VARCHAR
+`password_present` | BIT (the `User-Password` attribute is encrypted with the shared secret and never decoded)
+`nas_ip_address`, `nas_identifier`, `calling_station_id`, `called_station_id`, `framed_ip_address`, `acct_status_type`, `acct_session_id`, `reply_message` | VARCHAR
+`nas_port` | BIGINT
+`attributes` | repeated map: `type` INT, `value` VARCHAR
+
+### `snmp` (packet)
+
+UDP 161 and 162. Versions 1, 2c and 3; v3 scoped PDUs are decoded only when not encrypted.
+
+Field | Type
+------|-----
+`version`, `pdu_type` | VARCHAR
+`community_present` | BIT
+`community` | VARCHAR (only with `exposeCredentials`)
+`request_id`, `specific_trap`, `time_stamp`, `msg_id` | BIGINT
+`error_status`, `error_index`, `non_repeaters`, `max_repetitions`, `generic_trap` | INT
+`enterprise`, `agent_address` | VARCHAR (v1 traps)
+`msg_user_name`, `security_level`, `engine_id` | VARCHAR (v3)
+`encrypted` | BIT (v3 privacy)
+`varbinds` | repeated map: `oid`, `value_type`, `value` VARCHAR
+
+### `tls` (packet)
+
+TCP 443, 465, 563, 636, 853, 989, 990, 992, 993, 994, 995, 5061 and 8443. ClientHello and ServerHello
+messages that fit in one segment (see the `tls` session decoder for the rest).
+
+Field | Type
+------|-----
+`handshake_type` | VARCHAR (`client_hello`, `server_hello`)
+`record_version`, `version`, `session_id`, `sni` | VARCHAR
+`supported_versions`, `alpn` | VARCHAR array
+`cipher_suites`, `extensions`, `supported_groups`, `ec_point_formats`, `signature_algorithms` | INT array (GREASE values are kept here and dropped from JA3)
+`cipher_suite` | INT (ServerHello)
+`ja3`, `ja3_hash` | VARCHAR (ClientHello)
+`ja3s`, `ja3s_hash` | VARCHAR (ServerHello)
+
+### `stun` (packet)
+
+UDP 3478 and 19302. The magic cookie must be present.
+
+Field | Type
+------|-----
+`message_class`, `message_method`, `transaction_id` | VARCHAR
+`xor_mapped_address`, `mapped_address`, `software`, `realm`, `nonce`, `error_reason`, `username` | VARCHAR
+`error_code` | INT
+`password_present` | BIT (always false: STUN never sends a cleartext password)
+`attributes` | repeated map: `type`, `length` INT
+
+## Phase 3 Decoder Fields
+
+Session decoders read both reassembled directions of a TCP session. A gap in a stream stops parsing that
+direction with a warning; what was parsed before it is kept.
+
+### `tls` (session)
+
+The same ports as the `tls` packet decoder. Handshake messages are reassembled across records and segments.
+
+Field | Type
+------|-----
+`client_version`, `server_version`, `sni`, `alpn_selected`, `cipher_suite_name` | VARCHAR
+`client_supported_versions`, `alpn_offered` | VARCHAR array
+`cipher_suite`, `certificate_count` | INT
+`session_resumed`, `hello_retry_request` | BIT
+`certificate_encrypted` | BIT (TLS 1.3, where certificates are not visible)
+`certificates` | repeated map: `subject`, `issuer`, `serial`, `signature_algorithm`, `public_key_algorithm`, `sha256` VARCHAR; `not_before`, `not_after` TIMESTAMP; `subject_alt_names` VARCHAR array; `public_key_bits` INT; `is_self_signed` BIT
+
+### `ftp` (session)
+
+TCP 21. The server stream must start with a 220 greeting or the client stream with `USER` or `AUTH`. Data
+channels are separate TCP sessions and are not decoded. Parsing stops when TLS starts.
+
+Field | Type
+------|-----
+`banner`, `system_type` | VARCHAR
+`username` | VARCHAR
+`password_present` | BIT
+`password` | VARCHAR (only with `exposeCredentials`)
+`tls_started` | BIT
+`current_directories` | VARCHAR array
+`transfers` | repeated map: `command`, `path` VARCHAR, `reply_code` INT, `data_address` VARCHAR (`ip:port`; `:port` for EPSV, whose host is the server's control address)
+`commands` | repeated map: `command`, `argument` VARCHAR (the PASS argument is `***` unless `exposeCredentials`)
+`replies` | repeated map: `code` INT, `text` VARCHAR
+
+### `ssh` (session)
+
+TCP 22 and 2222. SSH 2.0 (and 1.99) identification strings and the first KEXINIT in each direction.
+
+Field | Type
+------|-----
+`client_version`, `server_version`, `client_software`, `server_software`, `client_comments`, `server_comments` | VARCHAR
+`client_kex_algorithms`, `client_host_key_algorithms`, `client_ciphers`, `client_macs`, `client_compression` | VARCHAR array (client to server lists)
+`server_kex_algorithms`, `server_host_key_algorithms`, `server_ciphers`, `server_macs`, `server_compression` | VARCHAR array (server to client lists)
+`hassh`, `hassh_string`, `hassh_server`, `hassh_server_string` | VARCHAR
+
+### `dns` (session)
+
+TCP 53: length-prefixed DNS messages, such as zone transfers and large responses.
+
+Field | Type
+------|-----
+`queries` | repeated map: `transaction_id` INT, `name`, `type` VARCHAR
+`answers` | repeated map: `transaction_id` INT, `name`, `type` VARCHAR, `ttl` BIGINT, `data` VARCHAR
+`client_message_count`, `server_message_count` | INT
+`is_zone_transfer` | BIT
+
 ## Writing a Decoder
 
 1. Implement `PacketProtocolDecoder<T>` or `SessionProtocolDecoder<T>`, where `T` is a small class
@@ -285,7 +539,7 @@ already carry the raw bytes.
 
 ## Implementation Notes
 
-Differences from the design above, recorded during phase 1:
+Differences from the design above, recorded during implementation:
 
 - The two `Packet` accessors for ICMP and ARP bytes arrive with the phase 2 ICMP and ARP decoders; no phase 1
   decoder needs them.
@@ -300,3 +554,16 @@ Differences from the design above, recorded during phase 1:
   lost its offsets in the scan output (`OutputBatchBuilder`), and an array index inside a map was parsed as an
   extra array dimension (`ScanProjectionParser`), which rejected projections such as
   `parsed_data.dns.questions[0].name`.
+- With many decoders the sparse sizing was not enough: harvesting a full batch filled the unwritten decoder
+  fields, which asked for more memory than the batch budget allowed and failed the query. `ResultSetLoaderImpl`
+  now lets those fills through while harvesting (`TestResultSetLoaderLimits#testHarvestFillsUnwrittenColumnsOverBudget`).
+- The classic PCAP reader could not read gzip files: a refill overwrote unread bytes, and packets kept for
+  sessions pointed into the reused buffer. Refills now append after unread bytes and each packet copies its
+  record. A read failure part way through a file keeps the packets already read and adds an error row.
+- The packet decoders for phases 2 and 3 read ICMP from `Packet.getIpPayload()` and ARP from
+  `Packet.getLinkPayload()`.
+- Session decoders receive only the two reassembled streams, so FTP cannot fill in the host of an EPSV data
+  address.
+- Field names avoid words Drill reserves after a dot (`from`, `timestamp`, `date`, `group`), so every field can
+  be queried without quotes: SIP uses `from_address` and `to_address`, syslog `timestamp_text`.
+  `TestDecoderFieldNames` checks this for every registered decoder.
