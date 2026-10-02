@@ -154,6 +154,19 @@ public class ProjectContextBlockTest {
     return messages.get(0).getContent();
   }
 
+  /**
+   * Sessionizing a packet capture is easy to miss, and users ask about TCP sessions
+   * before any SQL exists, so the hint is always present rather than detected.
+   */
+  @Test
+  public void testSystemPromptExplainsPcapSessionization() {
+    String prompt = systemPromptOf(
+        new ProspectorResources().buildMessages(new LlmConfig(), request(null), USER));
+    assertTrue(prompt.contains("type => 'pcap', sessionizeTCPStreams => true"));
+    assertTrue(prompt.contains("session_closed"));
+    assertTrue(prompt.contains("parsed_protocol"));
+  }
+
   @Test
   public void testNoProjectBlockWhenNoProjectId() {
     List<ChatMessage> messages =
