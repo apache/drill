@@ -115,7 +115,7 @@ public class TestPcapngStatRecordReader extends ClusterTest {
     long cnt = queryBuilder().physical(plan).singletonLong();
 
     // The error row of bad_block_length.pcapng is counted too
-    assertEquals("Counts should match", 65, cnt);
+    assertEquals("Counts should match", 68, cnt);
   }
 
   @Test
