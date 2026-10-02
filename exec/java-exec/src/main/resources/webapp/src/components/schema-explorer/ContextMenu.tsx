@@ -29,8 +29,10 @@ import {
   InfoCircleOutlined,
   SettingOutlined,
   ProfileOutlined,
+  ApartmentOutlined,
 } from '@ant-design/icons';
 import type { FileInfo, ColumnInfo } from '../../types';
+import { buildSessionizeSql, isPacketCaptureFormat } from '../../utils/sessionize';
 
 export type NodeType = 'plugin' | 'schema' | 'table' | 'file' | 'column';
 
@@ -50,6 +52,9 @@ export interface ContextMenuProps {
   onProfileData?: (schemaName: string, tableName: string) => void;
   isFavorite?: boolean;
   onToggleFavorite?: (key: string) => void;
+  /** File extension, or the shared format of a folder's files; enables format-specific items */
+  dataFormat?: string;
+  onOpenInNewTab?: (sql: string, tabName?: string) => void;
 }
 
 function copyToClipboard(text: string) {
@@ -75,6 +80,8 @@ export default function ContextMenu({
   onProfileData,
   isFavorite,
   onToggleFavorite,
+  dataFormat,
+  onOpenInNewTab,
 }: ContextMenuProps) {
   const handleMenuClick = useCallback(
     (info: { key: string }) => {
@@ -132,6 +139,13 @@ export default function ContextMenu({
           onEditPlugin?.(pluginName);
           break;
         }
+        case 'sessionize': {
+          const query = buildSessionizeSql(nodeKey);
+          if (query) {
+            onOpenInNewTab?.(query.sql, query.tabName);
+          }
+          break;
+        }
         case 'profile-data': {
           const parts = nodeKey.split(':');
           if (parts.length >= 3) {
@@ -141,7 +155,7 @@ export default function ContextMenu({
         }
       }
     },
-    [qualifiedName, nodeKey, columnNames, fileInfo, columnInfos, onInsertText, onRefreshNode, onShowStats, onShowFileInfo, onEditPlugin, onProfileData, onToggleFavorite],
+    [qualifiedName, nodeKey, columnNames, fileInfo, columnInfos, onInsertText, onRefreshNode, onShowStats, onShowFileInfo, onEditPlugin, onProfileData, onToggleFavorite, onOpenInNewTab],
   );
 
   const items: MenuProps['items'] = [];
@@ -183,6 +197,10 @@ export default function ContextMenu({
     }
     if (onProfileData) {
       items.push({ key: 'profile-data', label: 'Profile Data', icon: <ProfileOutlined /> });
+    }
+    // Packet captures: one row per TCP session instead of one per packet
+    if (nodeType === 'file' && onOpenInNewTab && isPacketCaptureFormat(dataFormat)) {
+      items.push({ key: 'sessionize', label: 'Sessionize TCP Streams', icon: <ApartmentOutlined /> });
     }
     if (nodeType === 'file' && fileInfo && onShowFileInfo) {
       items.push({ key: 'file-info', label: 'Get Info', icon: <InfoCircleOutlined /> });

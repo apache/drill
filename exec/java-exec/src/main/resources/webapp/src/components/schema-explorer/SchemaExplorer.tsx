@@ -1169,6 +1169,15 @@ export default function SchemaExplorer({ onInsertText, onSelectQuery, onOpenInNe
       // Look up FileInfo for file nodes (for Get Info)
       const fi = nodeType === 'file' ? lookupFileInfo(key) : undefined;
 
+      // A file's extension, or the format shared by every file in a folder
+      let dataFormat: string | undefined;
+      if (key.startsWith('file:')) {
+        dataFormat = (key.split('.').pop() || '').toLowerCase();
+      } else if (key.startsWith('dir:')) {
+        const children = filesCacheRef.current[key];
+        dataFormat = children ? getHomogeneousDataFormat(children) : undefined;
+      }
+
       return (
         <ContextMenu
           nodeType={nodeType}
@@ -1185,12 +1194,14 @@ export default function SchemaExplorer({ onInsertText, onSelectQuery, onOpenInNe
           onProfileData={handleProfileData}
           isFavorite={isFavorite(key)}
           onToggleFavorite={toggleFavorite}
+          dataFormat={dataFormat}
+          onOpenInNewTab={onOpenInNewTab}
         >
           <span>{nodeData.title as React.ReactNode}</span>
         </ContextMenu>
       );
     },
-    [onInsertText, handleRefreshNode, handleShowStats, handleShowFileInfo, handleEditPlugin, handleProfileData, lookupFileInfo, isFavorite, toggleFavorite],
+    [onInsertText, handleRefreshNode, handleShowStats, handleShowFileInfo, handleEditPlugin, handleProfileData, lookupFileInfo, isFavorite, toggleFavorite, onOpenInNewTab],
   );
 
   // ---------- Render ----------
