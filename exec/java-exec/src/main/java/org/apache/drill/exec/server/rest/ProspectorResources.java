@@ -753,7 +753,10 @@ public class ProspectorResources {
       + "- Recognized protocols are decoded into parsed_protocol (e.g. 'dns', 'http'), a\n"
       + "  parsed_data map with one sub-map per protocol, and decode_error. Alias the table to\n"
       + "  reach into it: SELECT t.parsed_data.dns.questions[0].name FROM dfs.`x.pcap` t\n"
-      + "  WHERE parsed_protocol = 'dns'.\n\n"
+      + "  WHERE parsed_protocol = 'dns'. Packet rows decode dns, http, tls (sni, ja3), dhcp,\n"
+      + "  dhcpv6, icmp, arp, ntp, syslog, ssdp, sip, tftp, netbios_ns, radius, snmp and stun.\n"
+      + "  Session rows decode http, tls (certificates), ftp, ssh (hassh), dns, smtp, pop3 and\n"
+      + "  imap. Credentials appear as username and password_present.\n\n"
 
       + "Not supported — do not generate these:\n"
       + "- UPDATE, DELETE, MERGE, or INSERT on file data. Drill reads; it does not edit rows.\n"
