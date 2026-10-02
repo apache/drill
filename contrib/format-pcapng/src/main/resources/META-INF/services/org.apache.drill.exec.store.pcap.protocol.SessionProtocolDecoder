@@ -27,3 +27,4 @@ org.apache.drill.exec.store.pcap.protocol.telnet.TelnetSessionDecoder
 org.apache.drill.exec.store.pcap.protocol.rdp.RdpSessionDecoder
 org.apache.drill.exec.store.pcap.protocol.mqtt.MqttSessionDecoder
 org.apache.drill.exec.store.pcap.protocol.smb.SmbSessionDecoder
+org.apache.drill.exec.store.pcap.protocol.ldap.LdapSessionDecoder
