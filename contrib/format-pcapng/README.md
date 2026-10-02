@@ -93,7 +93,25 @@ Built-in decoders:
 Protocol|Rows|Matches
 --------|----|-------
 dns|packets|DNS, mDNS and LLMNR on ports 53, 5353 and 5355
+dns|sessions|DNS over TCP port 53, such as zone transfers
 http|packets and sessions|HTTP/1.x on ports 80, 591, 3128, 8000, 8008, 8080 and 8888
+icmp|packets|ICMP and ICMPv6
+arp|packets|ARP
+ntp|packets|UDP 123
+syslog|packets|UDP 514, RFC 5424 and BSD formats
+ssdp|packets|UDP 1900
+sip|packets|UDP and TCP 5060
+dhcp|packets|UDP 67 and 68
+dhcpv6|packets|UDP 546 and 547
+tftp|packets|UDP 69
+netbios_ns|packets|UDP 137
+radius|packets|UDP 1812, 1813, 1645 and 1646
+snmp|packets|UDP 161 and 162, versions 1, 2c and 3
+tls|packets|ClientHello and ServerHello (SNI, ALPN, JA3, JA3S) on TLS ports such as 443, 993 and 8443
+tls|sessions|Full handshake on the same ports: negotiated version and cipher, certificates
+stun|packets|UDP 3478 and 19302
+ftp|sessions|FTP control channel on port 21
+ssh|sessions|SSH identification and key exchange (HASSH) on ports 22 and 2222
 
 A decoder only handles traffic that parses as its protocol: other traffic on the same port is left undecoded.
 Decoding runs only when `parsed_protocol` or `parsed_data` is queried.
