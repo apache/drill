@@ -165,6 +165,9 @@ public class ProjectContextBlockTest {
     assertTrue(prompt.contains("type => 'pcap', sessionizeTCPStreams => true"));
     assertTrue(prompt.contains("session_closed"));
     assertTrue(prompt.contains("parsed_protocol"));
+    // Both capture formats name the packet time packet_timestamp, which needs no quoting
+    assertTrue(prompt.contains("MIN(packet_timestamp)"));
+    assertFalse(prompt.contains("`timestamp` column"));
   }
 
   /**
