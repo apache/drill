@@ -16,3 +16,4 @@
 # limitations under the License.
 #
 org.apache.drill.exec.store.pcap.protocol.http.HttpSessionDecoder
+org.apache.drill.exec.store.pcap.protocol.tlssession.TlsSessionDecoder
