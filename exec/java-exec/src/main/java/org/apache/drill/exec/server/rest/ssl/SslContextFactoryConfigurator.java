@@ -165,7 +165,7 @@ public class SslContextFactoryConfigurator {
 
     // Generate a private-public key pair
     final KeyPairGenerator keyPairGenerator = KeyPairGenerator.getInstance("RSA");
-    keyPairGenerator.initialize(1024, random);
+    keyPairGenerator.initialize(2048, random);
     final KeyPair keyPair = keyPairGenerator.generateKeyPair();
 
 
