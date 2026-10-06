@@ -51,9 +51,18 @@ import org.apache.calcite.sql.SqlWithItem;
 import org.apache.calcite.schema.SchemaPlus;
 import org.apache.calcite.schema.Table;
 import org.apache.calcite.util.NlsString;
+import org.apache.drill.common.expression.AnyValueExpression;
+import org.apache.drill.common.expression.BooleanOperator;
+import org.apache.drill.common.expression.CastExpression;
+import org.apache.drill.common.expression.ConvertExpression;
 import org.apache.drill.common.expression.ExpressionStringBuilder;
-import org.apache.drill.common.expression.LogicalExpression;
+import org.apache.drill.common.expression.FunctionCall;
+import org.apache.drill.common.expression.IfExpression;
 import org.apache.drill.common.expression.LiteralExpression;
+import org.apache.drill.common.expression.LogicalExpression;
+import org.apache.drill.common.expression.NullExpression;
+import org.apache.drill.common.expression.SchemaPath;
+import org.apache.drill.common.expression.TypedNullConstant;
 import org.apache.drill.common.expression.ValueExpressions;
 import org.apache.drill.common.logical.StoragePluginConfig;
 import org.apache.drill.common.parser.LogicalExpressionParser;
@@ -90,7 +99,6 @@ public final class PlanCache implements AutoCloseable {
       .maximumWeight(32 * 1024 * 1024)
       .weigher((String key, Entry value) -> value.json.length())
       .expireAfterWrite(10, TimeUnit.MINUTES)
-      .recordStats()
       .build();
   private final AtomicLong successfulBinds = new AtomicLong();
   private final ThreadPoolExecutor writer = new ThreadPoolExecutor(1, 1, 0L,
@@ -478,7 +486,7 @@ public final class PlanCache implements AutoCloseable {
     }
   }
 
-  private static String serialize(SqlLiteral literal, MajorType type, int index) {
+  private static LiteralExpression bindLiteral(SqlLiteral literal, MajorType type, int index) {
     Object value = literal.getValue();
     LogicalExpression expression;
     if (value instanceof BigDecimal) {
@@ -509,8 +517,9 @@ public final class PlanCache implements AutoCloseable {
     } else {
       throw new IllegalArgumentException("Unsupported parameter type");
     }
-    ((LiteralExpression) expression).setDynamicParamIndex(index);
-    return ExpressionStringBuilder.toString(expression);
+    LiteralExpression bound = (LiteralExpression) expression;
+    bound.setDynamicParamIndex(index);
+    return bound;
   }
 
   /** Visits every serialized field, including nested plugin-specific fields. */
@@ -539,36 +548,15 @@ public final class PlanCache implements AutoCloseable {
   }
 
   private static String rewrite(String input, List<SqlLiteral> replacements) {
-    // Parsing first ensures that a marker belongs to a Drill expression field.
+    // Bind expression nodes rather than text: a quoted field name or string
+    // containing the marker must never be interpreted as a parameter slot.
     LogicalExpression original = LogicalExpressionParser.parse(input);
     Map<Integer, MajorType> originalTypes = new HashMap<>();
     collectTypes(original, originalTypes);
-    StringBuilder output = new StringBuilder();
-    int offset = 0;
-    while (offset < input.length()) {
-      int start = findMarker(input, offset);
-      if (start < 0) {
-        output.append(input, offset, input.length());
-        break;
-      }
-      output.append(input, offset, start);
-      int indexEnd = input.indexOf(',', start + MARKER.length());
-      if (indexEnd < 0) {
-        throw new IllegalArgumentException("Malformed cached parameter");
-      }
-      int index = Integer.parseInt(input.substring(start + MARKER.length(), indexEnd).trim());
-      if (!originalTypes.containsKey(index)) {
-        throw new IllegalArgumentException("Cached marker is not an expression parameter");
-      }
-      int end = matchingClose(input, indexEnd + 1);
-      if (index < 0 || index >= replacements.size()) {
-        throw new IllegalArgumentException("Unexpected cached parameter index");
-      }
-      // Keep the slot marker in the execution plan for round-trip checks.
-      output.append(serialize(replacements.get(index), originalTypes.get(index), index));
-      offset = end + 1;
+    if (originalTypes.isEmpty()) {
+      return input;
     }
-    String result = output.toString();
+    String result = ExpressionStringBuilder.toString(bindExpression(original, replacements));
     LogicalExpression parsed = LogicalExpressionParser.parse(result);
     Map<Integer, MajorType> newTypes = new HashMap<>();
     collectTypes(parsed, newTypes);
@@ -578,22 +566,58 @@ public final class PlanCache implements AutoCloseable {
     return result;
   }
 
-  private static int findMarker(String input, int offset) {
-    boolean quoted = false;
-    boolean escaped = false;
-    for (int i = 0; i < input.length(); i++) {
-      char c = input.charAt(i);
-      if (escaped) {
-        escaped = false;
-      } else if (c == '\\' && quoted) {
-        escaped = true;
-      } else if (c == '\'') {
-        quoted = !quoted;
-      } else if (!quoted && i >= offset && input.startsWith(MARKER, i)) {
-        return i;
+  private static LogicalExpression bindExpression(LogicalExpression expression,
+      List<SqlLiteral> replacements) {
+    if (expression instanceof LiteralExpression) {
+      LiteralExpression literal = (LiteralExpression) expression;
+      if (!literal.isDynamicParam()) {
+        return literal;
       }
+      int index = literal.getDynamicParamIndex();
+      if (index >= replacements.size()) {
+        throw new IllegalArgumentException("Unexpected cached parameter index");
+      }
+      return bindLiteral(replacements.get(index), literal.getMajorType(), index);
     }
-    return -1;
+    if (expression instanceof FunctionCall) {
+      FunctionCall call = (FunctionCall) expression;
+      List<LogicalExpression> args = new ArrayList<>(call.args().size());
+      for (LogicalExpression arg : call.args()) {
+        args.add(bindExpression(arg, replacements));
+      }
+      return call instanceof BooleanOperator
+          ? new BooleanOperator(call.getName(), args, call.getPosition())
+          : new FunctionCall(call.getName(), args, call.getPosition());
+    }
+    if (expression instanceof CastExpression) {
+      CastExpression cast = (CastExpression) expression;
+      return new CastExpression(bindExpression(cast.getInput(), replacements),
+          cast.getMajorType(), cast.getPosition());
+    }
+    if (expression instanceof ConvertExpression) {
+      ConvertExpression convert = (ConvertExpression) expression;
+      return new ConvertExpression(convert.getConvertFunction(), convert.getEncodingType(),
+          bindExpression(convert.getInput(), replacements), convert.getPosition());
+    }
+    if (expression instanceof IfExpression) {
+      IfExpression conditional = (IfExpression) expression;
+      return IfExpression.newBuilder()
+          .setPosition(conditional.getPosition())
+          .setIfCondition(new IfExpression.IfCondition(
+              bindExpression(conditional.ifCondition.condition, replacements),
+              bindExpression(conditional.ifCondition.expression, replacements)))
+          .setElse(bindExpression(conditional.elseExpression, replacements))
+          .build();
+    }
+    if (expression instanceof AnyValueExpression) {
+      AnyValueExpression any = (AnyValueExpression) expression;
+      return new AnyValueExpression(bindExpression(any.getInput(), replacements), any.getPosition());
+    }
+    if (expression instanceof SchemaPath || expression instanceof NullExpression
+        || expression instanceof TypedNullConstant) {
+      return expression;
+    }
+    throw new IllegalArgumentException("Unsupported cached expression: " + expression.getClass().getName());
   }
 
   private static void collectTypes(LogicalExpression expression,
@@ -612,26 +636,5 @@ public final class PlanCache implements AutoCloseable {
     for (LogicalExpression child : expression) {
       collectTypes(child, types);
     }
-  }
-
-  private static int matchingClose(String input, int start) {
-    boolean quoted = false;
-    boolean escaped = false;
-    int depth = 1;
-    for (int i = start; i < input.length(); i++) {
-      char c = input.charAt(i);
-      if (escaped) {
-        escaped = false;
-      } else if (c == '\\' && quoted) {
-        escaped = true;
-      } else if (c == '\'') {
-        quoted = !quoted;
-      } else if (!quoted && c == '(') {
-        depth++;
-      } else if (!quoted && c == ')' && --depth == 0) {
-        return i;
-      }
-    }
-    throw new IllegalArgumentException("Unclosed cached parameter");
   }
 }

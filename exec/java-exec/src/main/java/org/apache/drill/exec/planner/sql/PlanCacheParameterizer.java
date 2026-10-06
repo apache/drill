@@ -24,6 +24,7 @@ import java.util.List;
 import java.util.Locale;
 import java.util.Objects;
 
+import org.apache.calcite.rel.type.RelDataTypeFactory;
 import org.apache.calcite.sql.SqlCall;
 import org.apache.calcite.sql.SqlJoin;
 import org.apache.calcite.sql.SqlKind;
@@ -41,11 +42,16 @@ import org.apache.drill.exec.planner.sql.conversion.SqlBoundDynamicParam;
 final class PlanCacheParameterizer extends SqlShuttle {
   private final List<SqlLiteral> literals = new ArrayList<>();
   private final List<String> types = new ArrayList<>();
+  private final RelDataTypeFactory typeFactory;
   private boolean preserveProjection;
 
-  static Candidate parameterize(SqlNode parsed) {
+  private PlanCacheParameterizer(RelDataTypeFactory typeFactory) {
+    this.typeFactory = Objects.requireNonNull(typeFactory, "typeFactory");
+  }
+
+  static Candidate parameterize(SqlNode parsed, RelDataTypeFactory typeFactory) {
     Objects.requireNonNull(parsed, "parsed");
-    PlanCacheParameterizer visitor = new PlanCacheParameterizer();
+    PlanCacheParameterizer visitor = new PlanCacheParameterizer(typeFactory);
     SqlNode parameterized = parsed.accept(visitor);
     if (visitor.literals.isEmpty()) {
       parameterized = parsed;
@@ -170,8 +176,9 @@ final class PlanCacheParameterizer extends SqlShuttle {
     }
     int index = literals.size();
     literals.add(literal);
-    // Precision and scale affect inferred types and must be part of the key.
-    String shape = literal.getTypeName().name();
+    // SqlNumericLiteral reports DECIMAL even for INT and BIGINT values. Resolve
+    // its actual type so equal precision and scale cannot hide a width change.
+    String shape = literal.createSqlType(typeFactory).getSqlTypeName().name();
     if (value instanceof BigDecimal) {
       BigDecimal number = (BigDecimal) value;
       shape += ":" + number.precision() + ":" + number.scale();

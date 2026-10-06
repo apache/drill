@@ -311,7 +311,8 @@ public class DrillSqlWorker {
         PlanCache.ContextSnapshot snapshot = PlanCache.ContextSnapshot.resolve(
             parser.getDefaultSchema(), sqlNode, context);
         if (snapshot != null) {
-          PlanCacheParameterizer.Candidate candidate = PlanCacheParameterizer.parameterize(sqlNode);
+          PlanCacheParameterizer.Candidate candidate =
+              PlanCacheParameterizer.parameterize(sqlNode, parser.getTypeFactory());
           PlanCache cache = context.getDrillbitContext().getPlanCache();
           String key = context.getQueryUserName() + '\n'
               + context.getSession().getDefaultSchemaPath() + '\n'

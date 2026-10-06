@@ -238,35 +238,27 @@ public class ExpressionStringBuilder extends AbstractExprVisitor<Void, StringBui
 
   @Override
   public Void visitDecimal9Constant(Decimal9Expression decExpr, StringBuilder sb) throws RuntimeException {
-    startBoundLiteral(decExpr, sb);
     BigDecimal value = new BigDecimal(decExpr.getIntFromDecimal());
     sb.append((value.setScale(decExpr.getScale())).toString());
-    endBoundLiteral(decExpr, sb);
     return null;
   }
 
   @Override
   public Void visitDecimal18Constant(Decimal18Expression decExpr, StringBuilder sb) throws RuntimeException {
-    startBoundLiteral(decExpr, sb);
     BigDecimal value = new BigDecimal(decExpr.getLongFromDecimal());
     sb.append((value.setScale(decExpr.getScale())).toString());
-    endBoundLiteral(decExpr, sb);
     return null;
   }
 
   @Override
   public Void visitDecimal28Constant(Decimal28Expression decExpr, StringBuilder sb) throws RuntimeException {
-    startBoundLiteral(decExpr, sb);
     sb.append(decExpr.toString());
-    endBoundLiteral(decExpr, sb);
     return null;
   }
 
   @Override
   public Void visitDecimal38Constant(Decimal38Expression decExpr, StringBuilder sb) throws RuntimeException {
-    startBoundLiteral(decExpr, sb);
     sb.append(decExpr.getBigDecimal().toString());
-    endBoundLiteral(decExpr, sb);
     return null;
   }
 
@@ -401,9 +393,7 @@ public class ExpressionStringBuilder extends AbstractExprVisitor<Void, StringBui
 
   @Override
   public Void visitNullConstant(TypedNullConstant e, StringBuilder sb) throws RuntimeException {
-    startBoundLiteral(e, sb);
     sb.append("NULL");
-    endBoundLiteral(e, sb);
     return null;
   }
 
