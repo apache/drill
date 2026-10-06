@@ -72,8 +72,7 @@ predicate. Reusing the first execution's filters or file list would be incorrect
 ## What can be reused
 
 Read queries can include joins, aggregates, subqueries, CTEs, ordering and limits.
-Every `GroupScan` in a plan must explicitly support caching. This change opts in
-HBase and Iceberg; other plugins retain the default of no support.
+Every source plugin must explicitly support caching and guarantee safe reconstruction of its scans. This change opts in HBase and Iceberg; other plugins retain the default of no support.
 
 Constants that determine SQL structure stay in the key: group/order expressions,
 window definitions, limit/offset, field selectors, and function configuration

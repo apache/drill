@@ -18,9 +18,6 @@
 package org.apache.drill.exec.planner.sql;
 
 import java.io.IOException;
-import java.nio.charset.StandardCharsets;
-import java.util.Map;
-import java.util.TreeMap;
 
 import org.apache.calcite.sql.SqlDescribeSchema;
 import org.apache.calcite.sql.SqlKind;
@@ -38,7 +35,6 @@ import org.apache.drill.exec.alias.AliasRegistry;
 import org.apache.drill.exec.exception.MetadataException;
 import org.apache.drill.exec.ops.QueryContext;
 import org.apache.drill.exec.ops.QueryContext.SqlStatementType;
-import org.apache.drill.exec.server.options.OptionValue;
 import org.apache.drill.exec.physical.PhysicalPlan;
 import org.apache.drill.exec.planner.physical.PlannerSettings;
 import org.apache.drill.exec.planner.sql.handlers.AbstractSqlHandler;
@@ -66,7 +62,6 @@ import org.apache.drill.exec.util.Pointer;
 import org.apache.drill.exec.work.foreman.ForemanSetupException;
 import org.apache.drill.exec.work.foreman.SqlUnsupportedException;
 import com.google.common.base.Throwables;
-import com.google.common.hash.Hashing;
 import org.apache.hadoop.security.AccessControlException;
 
 public class DrillSqlWorker {
@@ -306,94 +301,46 @@ public class DrillSqlWorker {
         && !hasMutableAliases(context)
         && PlanCacheEligibility.isSafeToCache(sqlNode, context.getFunctionRegistry())) {
       try {
-        PlanCacheParameterizer.Candidate candidate = PlanCacheParameterizer.parameterize(sqlNode);
-        PlanCache cache = context.getDrillbitContext().getPlanCache();
-        String key = context.getQueryUserName() + '\n'
-            + context.getSession().getDefaultSchemaPath() + '\n'
-            + candidate.template;
-        PlanCache.Entry entry = cache.get(key);
-        String optionsFingerprint = null;
-        if (entry != null) {
-          try {
-            optionsFingerprint = optionFingerprint(context);
-            if (entry.matchesContext(optionsFingerprint, context.getStorage())) {
-              PhysicalPlan bound = entry.bind(candidate.literals,
-                  context.getDrillbitContext().getPlanReader());
-              if (textPlan != null) {
-                textPlan.value = PlanCache.textWithBindings(entry.getTextPlan(), candidate.literals);
-              }
-              cache.recordBind();
-              context.setPlanCacheHit();
-              return bound;
-            }
-          } catch (RuntimeException | IOException e) {
-            logger.debug("Cached plan could not be rebound", e);
-          }
-          cache.invalidate(key);
-        }
-        // Capture the context before planning. Changes during planning invalidate
-        // this entry on its first hit.
+        // Capture the context once, before lookup and planning. Changes during
+        // planning invalidate this entry on its first hit.
         PlanCache.ContextSnapshot snapshot = PlanCache.ContextSnapshot.resolve(
-            parser.getDefaultSchema(), sqlNode,
-            context.getStorage());
+            parser.getDefaultSchema(), sqlNode, context);
         if (snapshot != null) {
-          if (optionsFingerprint == null) {
-            optionsFingerprint = optionFingerprint(context);
+          PlanCacheParameterizer.Candidate candidate = PlanCacheParameterizer.parameterize(sqlNode);
+          PlanCache cache = context.getDrillbitContext().getPlanCache();
+          String key = context.getQueryUserName() + '\n'
+              + context.getSession().getDefaultSchemaPath() + '\n'
+              + candidate.template;
+          PlanCache.Entry entry = cache.get(key);
+          if (entry != null) {
+            try {
+              if (entry.matchesContext(snapshot)) {
+                PhysicalPlan bound = entry.bind(candidate.literals,
+                    context.getDrillbitContext().getPlanReader());
+                PlanCache.bindTextPlan(textPlan, entry.getTextPlan(), candidate.literals);
+                cache.recordBind();
+                context.setPlanCacheHit();
+                return bound;
+              }
+            } catch (RuntimeException | IOException e) {
+              logger.debug("Cached plan could not be rebound", e);
+            }
+            cache.invalidate(key);
           }
-          snapshot = snapshot.withOptionsFingerprint(optionsFingerprint);
-        }
-        PhysicalPlan planned = handler.getPlan(candidate.sql);
-        final String templateTextPlan = textPlan == null ? null : textPlan.value;
-        if (textPlan != null) {
-          textPlan.value = PlanCache.textWithBindings(templateTextPlan, candidate.literals);
-        }
-        if (snapshot != null && cache.canCache(planned)) {
+          PhysicalPlan planned = handler.getPlan(candidate.sql);
+          final String templateTextPlan = PlanCache.bindTextPlan(textPlan, candidate.literals);
           final org.apache.drill.exec.planner.PhysicalPlanReader cacheReader =
               context.getDrillbitContext().getPlanReader();
-          final PlanCache.ContextSnapshot cacheContext = snapshot;
           context.setPendingPlanCacheInsert(() -> cache.writeAfterSuccess(key, planned,
-              templateTextPlan, cacheReader, cacheContext));
+              templateTextPlan, cacheReader, snapshot));
+          return planned;
         }
-        return planned;
       } catch (Exception e) {
         logger.debug("Plan cache attempt fell back to ordinary planning", e);
       }
     }
 
     return handler.getPlan(sqlNode);
-  }
-
-  private static String optionFingerprint(QueryContext context) {
-    // OptionManager iteration walks system defaults, system overrides, session
-    // overrides, and query overrides in precedence order. getOptionList() only
-    // exposes local session/query values and misses system-level changes.
-    Map<String, OptionValue> options = new TreeMap<>(String.CASE_INSENSITIVE_ORDER);
-    for (OptionValue option : context.getOptions()) {
-      options.put(option.name, option);
-    }
-    StringBuilder fingerprint = new StringBuilder();
-    for (OptionValue option : options.values()) {
-      fingerprint.append(option.name).append(':').append(option.kind).append('=');
-      switch (option.kind) {
-        case BOOLEAN:
-          fingerprint.append(option.bool_val);
-          break;
-        case LONG:
-          fingerprint.append(option.num_val);
-          break;
-        case DOUBLE:
-          fingerprint.append(option.float_val);
-          break;
-        case STRING:
-          fingerprint.append(option.string_val.length()).append(':').append(option.string_val);
-          break;
-        default:
-          throw new IllegalArgumentException("Unsupported option kind");
-      }
-      fingerprint.append('\n');
-    }
-    // Keep the cache key bounded even when the system has many registered options.
-    return Hashing.sha256().hashString(fingerprint, StandardCharsets.UTF_8).toString();
   }
 
   private static boolean hasMutableAliases(QueryContext context) {

@@ -44,15 +44,6 @@ import org.apache.hadoop.fs.Path;
 public interface GroupScan extends Scan, HasAffinity {
 
   /**
-   * The scan implementation must reconstruct value-dependent work from rebound
-   * expressions during physical-plan deserialization, including pruning and
-   * assignments that depend on the original predicate.
-   */
-  default boolean supportPlanCache() {
-    return false;
-  }
-
-  /**
    * columns list in GroupScan : 1) empty_column is for skipAll query.
    *                             2) NULL is interpreted as ALL_COLUMNS.
    *  How to handle skipAll query is up to each storage plugin, with different policy in corresponding RecordReader.

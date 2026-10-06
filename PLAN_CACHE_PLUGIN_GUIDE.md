@@ -18,10 +18,7 @@ limitations under the License.
 
 # Adding plan-cache support to a plugin
 
-Plan caching is disabled by default. A plugin is eligible only when both its
-metadata interface and every participating `GroupScan` opt in. The engine binds
-SQL literals in serialized Drill expressions; the plugin remains responsible for
-rebuilding scan state derived from those expressions.
+Plan caching is disabled by default. A plugin opts in through its metadata interface and guarantees that every scan of an eligible selection can be safely rebuilt. The engine binds SQL literals in serialized Drill expressions; the plugin remains responsible for rebuilding scan state derived from those expressions.
 
 ## Storage-plugin API
 
@@ -30,15 +27,11 @@ Implement these methods in [StoragePlugin](exec/java-exec/src/main/java/org/apac
 ```java
 boolean supportPlanCache();
 PlanCacheTable planCacheTable(DrillTableSelection selection) throws IOException;
-String planCacheTableVersion(String identifier) throws IOException;
 ```
 
-`planCacheTable` is called during a miss. Return a stable, opaque physical table
-identifier and a compatibility version. Return `null` for unsupported selections.
-`planCacheTableVersion` is called on a hit with that same identifier; it should
-read the current version without rebuilding the SQL schema. Return `null` if the
-table is missing or unsupported. Throwing also causes a fallback to normal
-planning. The engine separately compares the storage-plugin configuration.
+`planCacheTable` is called before each lookup to capture the current query's table dependencies. Return a stable, opaque physical table identifier and a compatibility version. Return `null` for missing tables or unsupported selections. Failed metadata reads also cause a fallback to normal planning. The engine compares this complete context snapshot, including effective options and storage-plugin configurations, with the cached entry's snapshot. A miss retains the same snapshot for publication after successful execution.
+
+The engine first checks every participating plugin's eligibility and returns immediately if any plugin does not support caching. Override `supportPlanCache(DrillTableSelection)` when support depends on the selection; its default delegates to `supportPlanCache()`. Keep this check free of table-version reads. DFS uses it to check the selected format plugin. Only after all checks pass does the engine call `planCacheTable` and compute configuration and option fingerprints.
 
 The version must change whenever the cached plan's table definition becomes
 incompatible. Do not use a data snapshot number if compatible data updates should
@@ -49,13 +42,11 @@ For a DFS format, implement `supportPlanCache()` and both
 `planCacheTableVersion(FileSelection)` and `planCacheTableVersion(Path)` in
 [FormatPlugin](exec/java-exec/src/main/java/org/apache/drill/exec/store/dfs/FormatPlugin.java).
 [FileSystemPlugin](exec/java-exec/src/main/java/org/apache/drill/exec/store/dfs/FileSystemPlugin.java)
-provides the storage-plugin bridge. The selection overload validates the original
-selection; the path overload validates a hit without rediscovering the schema.
+provides the storage-plugin bridge. The selection overload validates the current selection and supplies its compatibility version; it can delegate metadata reads to the path overload.
 
 ## Scan API and JSON reconstruction
 
-Override `GroupScan.supportPlanCache()`; its default is `false`. The engine rejects
-a plan containing even one unsupported scan.
+Declaring plugin support covers every `GroupScan` produced for an eligible selection. Ensure that all planning, pushdown and cloning paths preserve the inputs needed for reconstruction. Unsupported selections must be rejected during snapshot construction.
 
 Keep the bound `LogicalExpression` in the scan's JSON. Converting a predicate to
 a native filter or file list and dropping the source expression loses the
@@ -70,7 +61,7 @@ information needed to bind the next query. On deserialization:
 Serialize stable inputs rather than live connections, execution resources or old
 endpoint assignments. Validate the round trip with Drill's `PhysicalPlanReader`.
 If a parameter changes projection, schema, limit or another derived field that
-cannot be rebuilt, keep that argument structural or leave the scan ineligible.
+cannot be rebuilt, keep that argument structural or leave the selection ineligible.
 
 For explain output containing expressions, use
 `ExpressionStringBuilder.toExplainString()` via `getExplainDigest()` to display
@@ -96,7 +87,7 @@ pushdown and residual filtering, and an empty scan after rebinding. Verify that
 compatible data updates are visible on hits, while incompatible schema changes,
 deletions, plugin configuration changes and failed metadata reads reject the old
 entry. Include joins or subqueries so every table dependency is checked, and
-confirm that a mixed plan containing an unsupported scan is rejected.
+confirm that queries involving an unsupported plugin or selection bypass caching.
 
 Check `planCacheHit` in the query profile. In isolated tests, the Drillbit's hit
 counter can also establish reuse:
@@ -115,7 +106,4 @@ workloads. `awaitWrites()` is a test helper, not a SQL operation.
 
 ## Scope of the contract
 
-The cache validates saved physical identifiers. Sessions with temporary tables
-or mutable user/public aliases bypass caching, because those mappings can redirect
-a SQL name without changing the old physical table. Statistics changes alone do
-not trigger re-optimization.
+The cache compares the current query's physical identifiers and versions with those captured for the cached plan. Sessions with temporary tables or mutable user/public aliases bypass caching. Statistics changes alone do not trigger re-optimization.

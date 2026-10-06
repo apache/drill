@@ -37,7 +37,6 @@ import org.apache.drill.exec.proto.CoordinationProtos.DrillbitEndpoint;
 import org.apache.drill.exec.record.metadata.TupleMetadata;
 import org.apache.drill.exec.store.StoragePluginRegistry;
 import org.apache.drill.exec.store.dfs.DrillFileSystem;
-import org.apache.drill.exec.store.iceberg.format.IcebergFormatLocationTransformer;
 import org.apache.drill.exec.store.iceberg.format.IcebergFormatPlugin;
 import org.apache.drill.exec.store.iceberg.plan.DrillExprToIcebergTranslator;
 import org.apache.drill.exec.store.iceberg.snapshot.Snapshot;
@@ -183,16 +182,6 @@ public class IcebergGroupScan extends AbstractGroupScan {
     } catch (IOException e) {
       throw new DrillRuntimeException(e);
     }
-  }
-
-  @Override
-  public boolean supportPlanCache() {
-    return formatPlugin.supportPlanCache() && !isMetadataTablePath();
-  }
-
-  private boolean isMetadataTablePath() {
-    // Metadata table paths use the form <table-path>#<metadata-table-type>.
-    return path.contains(IcebergFormatLocationTransformer.METADATA_SEPARATOR);
   }
 
   @Override

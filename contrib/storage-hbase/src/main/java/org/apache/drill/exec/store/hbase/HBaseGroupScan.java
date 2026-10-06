@@ -506,12 +506,6 @@ public class HBaseGroupScan extends AbstractGroupScan implements DrillHBaseConst
 
   @Override
   @JsonIgnore
-  public boolean supportPlanCache() {
-    return storagePlugin.supportPlanCache() && (pushedFilter == null || baseScanSpec != null);
-  }
-
-  @Override
-  @JsonIgnore
   public boolean canPushdownProjects(List<SchemaPath> columns) {
     return true;
   }

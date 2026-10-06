@@ -339,6 +339,16 @@ public class FileSystemPlugin extends AbstractStoragePlugin {
   }
 
   @Override
+  public boolean supportPlanCache(DrillTableSelection selection) {
+    if (!(selection instanceof FormatSelection)) {
+      return false;
+    }
+    FormatSelection formatSelection = (FormatSelection) selection;
+    FormatPlugin format = getFormatPlugin(formatSelection.getFormat());
+    return format != null && format.supportPlanCache();
+  }
+
+  @Override
   public PlanCacheTable planCacheTable(DrillTableSelection selection) throws IOException {
     if (!(selection instanceof FormatSelection)) {
       return null;

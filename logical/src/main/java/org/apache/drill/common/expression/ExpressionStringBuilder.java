@@ -201,7 +201,7 @@ public class ExpressionStringBuilder extends AbstractExprVisitor<Void, StringBui
       return null;
     }
     if (lExpr.getDynamicParamIndex() < 0) {
-      // Small BIGINT values otherwise parse back as INT during a plan round trip.
+      // Preserve integer width in JSON; the parser restores this as a BIGINT literal.
       sb.append("cast(").append(lExpr.getLong()).append(" as BIGINT)");
     } else {
       sb.append(lExpr.getLong());

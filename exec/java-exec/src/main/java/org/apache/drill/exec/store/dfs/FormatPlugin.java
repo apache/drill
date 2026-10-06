@@ -48,7 +48,7 @@ public interface FormatPlugin {
 
   boolean supportsWrite();
 
-  /** Whether scans of this format can be rebuilt for a cached plan. */
+  /** Whether every scan of an eligible selection can be safely rebuilt for a cached plan. */
   default boolean supportPlanCache() {
     return false;
   }

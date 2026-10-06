@@ -27,6 +27,7 @@ import java.util.LinkedHashMap;
 import java.util.List;
 import java.util.Map;
 import java.util.Set;
+import java.util.TreeMap;
 import java.util.concurrent.ArrayBlockingQueue;
 import java.util.concurrent.ExecutionException;
 import java.util.concurrent.RejectedExecutionException;
@@ -54,16 +55,17 @@ import org.apache.drill.common.logical.StoragePluginConfig;
 import org.apache.drill.common.parser.LogicalExpressionParser;
 import org.apache.drill.common.types.TypeProtos.MajorType;
 import org.apache.drill.common.types.TypeProtos.MinorType;
+import org.apache.drill.exec.ops.QueryContext;
 import org.apache.drill.exec.physical.PhysicalPlan;
-import org.apache.drill.exec.physical.base.GroupScan;
 import org.apache.drill.exec.planner.PhysicalPlanReader;
 import org.apache.drill.exec.planner.logical.DrillTable;
 import org.apache.drill.exec.planner.logical.DrillTableSelection;
 import org.apache.drill.exec.rpc.NamedThreadFactory;
+import org.apache.drill.exec.server.options.OptionValue;
 import org.apache.drill.exec.store.StoragePlugin;
 import org.apache.drill.exec.store.StoragePluginRegistry;
-import org.apache.drill.exec.store.StoragePluginRegistry.PluginException;
 import org.apache.drill.exec.store.PlanCacheTable;
+import org.apache.drill.exec.util.Pointer;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import java.util.Objects;
@@ -100,8 +102,22 @@ public final class PlanCache implements AutoCloseable {
     successfulBinds.incrementAndGet();
   }
 
+  /** Updates optional explain output using the cached template. */
+  static void bindTextPlan(Pointer<String> textPlan, String template, List<SqlLiteral> literals) {
+    if (textPlan != null) {
+      textPlan.value = textWithBindings(template, literals);
+    }
+  }
+
+  /** Updates optional explain output and returns its original template for cache publication. */
+  static String bindTextPlan(Pointer<String> textPlan, List<SqlLiteral> literals) {
+    String template = textPlan == null ? null : textPlan.value;
+    bindTextPlan(textPlan, template, literals);
+    return template;
+  }
+
   /** Appends values from this query without changing the cached explain template. */
-  static String textWithBindings(String template, List<SqlLiteral> literals) {
+  private static String textWithBindings(String template, List<SqlLiteral> literals) {
     if (template == null || literals.isEmpty()) {
       return template;
     }
@@ -129,11 +145,6 @@ public final class PlanCache implements AutoCloseable {
     writer.submit(() -> { }).get(10, TimeUnit.SECONDS);
   }
 
-  public boolean canCache(PhysicalPlan plan) {
-    return plan.getSortedOperators().stream()
-        .noneMatch(op -> op instanceof GroupScan && !((GroupScan) op).supportPlanCache());
-  }
-
   public void writeAfterSuccess(String key, PhysicalPlan plan, String textPlan,
       PhysicalPlanReader reader, ContextSnapshot context) {
     try {
@@ -156,8 +167,8 @@ public final class PlanCache implements AutoCloseable {
   public boolean put(String key, PhysicalPlan plan, String textPlan,
       PhysicalPlanReader reader, ContextSnapshot context) throws IOException {
     // The engine checks generic context and expression compatibility. Each
-    // opted-in scan is responsible for rebuilding its value-dependent state.
-    if (context == null || context.optionsFingerprint == null || !canCache(plan)) {
+    // opted-in plugin is responsible for rebuilding its scans' value-dependent state.
+    if (context == null) {
       return false;
     }
     String json = reader.writeJson(plan);
@@ -183,8 +194,8 @@ public final class PlanCache implements AutoCloseable {
       this.context = context;
     }
 
-    public boolean matchesContext(String optionsFingerprint, StoragePluginRegistry plugins) {
-      return context.isCurrent(optionsFingerprint, plugins);
+    public boolean matchesContext(ContextSnapshot current) {
+      return context.matches(current);
     }
 
     public String getTextPlan() {
@@ -199,7 +210,7 @@ public final class PlanCache implements AutoCloseable {
     }
   }
 
-  /** Options, plugin configurations, and table versions checked after lookup. */
+  /** Options, plugin configurations, and table versions captured before lookup and planning. */
   public static final class ContextSnapshot {
     private final String optionsFingerprint;
     private final Map<TableIdentifier, String> tableVersions;
@@ -207,13 +218,9 @@ public final class PlanCache implements AutoCloseable {
 
     private ContextSnapshot(String optionsFingerprint, Map<TableIdentifier, String> tableVersions,
         Map<String, String> pluginConfigs) {
-      this.optionsFingerprint = optionsFingerprint;
+      this.optionsFingerprint = Objects.requireNonNull(optionsFingerprint, "optionsFingerprint");
       this.tableVersions = java.util.Collections.unmodifiableMap(tableVersions);
       this.pluginConfigs = java.util.Collections.unmodifiableMap(pluginConfigs);
-    }
-
-    public ContextSnapshot withOptionsFingerprint(String fingerprint) {
-      return new ContextSnapshot(Objects.requireNonNull(fingerprint), tableVersions, pluginConfigs);
     }
 
     private static final class TableIdentifier {
@@ -246,24 +253,26 @@ public final class PlanCache implements AutoCloseable {
 
     private static final class ResolvedTable {
       private final List<String> tableNames;
-      private final TableIdentifier identifier;
-      private final String version;
-      private final StoragePluginConfig pluginConfig;
+      private final String storageName;
+      private final StoragePlugin plugin;
+      private final DrillTableSelection selection;
 
-      private ResolvedTable(List<String> tableNames, TableIdentifier identifier, String version,
-          StoragePluginConfig pluginConfig) {
+      private ResolvedTable(List<String> tableNames, String storageName,
+          StoragePlugin plugin, DrillTableSelection selection) {
         this.tableNames = tableNames;
-        this.identifier = identifier;
-        this.version = version;
-        this.pluginConfig = pluginConfig;
+        this.storageName = storageName;
+        this.plugin = plugin;
+        this.selection = selection;
       }
     }
 
     /** Resolves every physical table in a query, including joins and subqueries. */
     public static ContextSnapshot resolve(SchemaPlus defaultSchema, SqlNode query,
-        StoragePluginRegistry plugins) {
+        QueryContext context) {
+      StoragePluginRegistry plugins = context.getStorage();
       List<ResolvedTable> dependencies = new ArrayList<>();
       try {
+        // Check every participating plugin before reading any table version.
         if (!collectQuery(defaultSchema, query, new HashSet<>(), dependencies)) {
           return null;
         }
@@ -274,23 +283,28 @@ public final class PlanCache implements AutoCloseable {
       Map<TableIdentifier, String> versions = new LinkedHashMap<>();
       Map<String, String> configs = new LinkedHashMap<>();
       for (ResolvedTable dependency : dependencies) {
-        String previous = versions.putIfAbsent(dependency.identifier, dependency.version);
-        if (previous != null && !previous.equals(dependency.version)) {
-          return null;
-        }
         try {
-          String fingerprint = configFingerprint(plugins, dependency.pluginConfig);
-          String previousConfig = configs.putIfAbsent(dependency.identifier.storageName,
-              fingerprint);
+          PlanCacheTable source = dependency.plugin.planCacheTable(dependency.selection);
+          if (source == null) {
+            return null;
+          }
+          TableIdentifier identifier = new TableIdentifier(dependency.storageName,
+              source.getIdentifier());
+          String previous = versions.putIfAbsent(identifier, source.getVersion());
+          if (previous != null && !previous.equals(source.getVersion())) {
+            return null;
+          }
+          String fingerprint = configFingerprint(plugins, dependency.plugin.getConfig());
+          String previousConfig = configs.putIfAbsent(dependency.storageName, fingerprint);
           if (previousConfig != null && !previousConfig.equals(fingerprint)) {
             return null;
           }
-        } catch (RuntimeException e) {
-          logger.debug("Plugin configuration could not be fingerprinted for the plan cache", e);
+        } catch (IOException | RuntimeException e) {
+          logger.debug("Table context could not be captured for the plan cache", e);
           return null;
         }
       }
-      return new ContextSnapshot(null, versions, configs);
+      return new ContextSnapshot(optionFingerprint(context), versions, configs);
     }
 
     private static boolean collectQuery(SchemaPlus schema, SqlNode node,
@@ -400,56 +414,53 @@ public final class PlanCache implements AutoCloseable {
         return null;
       }
       StoragePlugin storagePlugin = drillTable.getPlugin();
-      if (!storagePlugin.supportPlanCache()) {
+      if (!storagePlugin.supportPlanCache()
+          || !storagePlugin.supportPlanCache((DrillTableSelection) selection)) {
         return null;
       }
-      try {
-        PlanCacheTable source = storagePlugin.planCacheTable((DrillTableSelection) selection);
-        if (source == null) {
-          return null;
-        }
-        return new ResolvedTable(
-            java.util.Collections.unmodifiableList(new java.util.ArrayList<>(names)),
-            new TableIdentifier(drillTable.getStorageEngineName(), source.getIdentifier()),
-            source.getVersion(), storagePlugin.getConfig());
-      } catch (IOException e) {
-        logger.debug("Table version could not be read for the plan cache", e);
-        return null;
-      }
+      return new ResolvedTable(
+          java.util.Collections.unmodifiableList(new java.util.ArrayList<>(names)),
+          drillTable.getStorageEngineName(), storagePlugin, (DrillTableSelection) selection);
     }
 
-    public boolean isCurrent(String currentOptionsFingerprint, StoragePluginRegistry plugins) {
-      if (!Objects.equals(optionsFingerprint, currentOptionsFingerprint)) {
-        return false;
+    private boolean matches(ContextSnapshot current) {
+      return current != null
+          && optionsFingerprint.equals(current.optionsFingerprint)
+          && tableVersions.equals(current.tableVersions)
+          && pluginConfigs.equals(current.pluginConfigs);
+    }
+
+    private static String optionFingerprint(QueryContext context) {
+      // OptionManager iteration walks system defaults, system overrides, session
+      // overrides, and query overrides in precedence order. getOptionList() only
+      // exposes local session/query values and misses system-level changes.
+      Map<String, OptionValue> options = new TreeMap<>(String.CASE_INSENSITIVE_ORDER);
+      for (OptionValue option : context.getOptions()) {
+        options.put(option.name, option);
       }
-      Map<String, StoragePlugin> currentPlugins = new HashMap<>();
-      for (Map.Entry<String, String> entry : pluginConfigs.entrySet()) {
-        try {
-          StoragePlugin plugin = plugins.getPlugin(entry.getKey());
-          if (plugin == null || !plugin.supportPlanCache()
-              || !entry.getValue().equals(configFingerprint(plugins, plugin.getConfig()))) {
-            return false;
-          }
-          currentPlugins.put(entry.getKey(), plugin);
-        } catch (PluginException | RuntimeException e) {
-          logger.debug("Plugin configuration could not be checked for the plan cache", e);
-          return false;
+      StringBuilder fingerprint = new StringBuilder();
+      for (OptionValue option : options.values()) {
+        fingerprint.append(option.name).append(':').append(option.kind).append('=');
+        switch (option.kind) {
+          case BOOLEAN:
+            fingerprint.append(option.bool_val);
+            break;
+          case LONG:
+            fingerprint.append(option.num_val);
+            break;
+          case DOUBLE:
+            fingerprint.append(option.float_val);
+            break;
+          case STRING:
+            fingerprint.append(option.string_val.length()).append(':').append(option.string_val);
+            break;
+          default:
+            throw new IllegalArgumentException("Unsupported option kind");
         }
+        fingerprint.append('\n');
       }
-      for (Map.Entry<TableIdentifier, String> entry : tableVersions.entrySet()) {
-        TableIdentifier identifier = entry.getKey();
-        try {
-          StoragePlugin storagePlugin = currentPlugins.get(identifier.storageName);
-          if (!Objects.equals(entry.getValue(),
-              storagePlugin.planCacheTableVersion(identifier.tableId))) {
-            return false;
-          }
-        } catch (IOException e) {
-          logger.debug("Table version could not be read for the plan cache", e);
-          return false;
-        }
-      }
-      return true;
+      // Keep the cache key bounded even when the system has many registered options.
+      return Hashing.sha256().hashString(fingerprint, StandardCharsets.UTF_8).toString();
     }
 
     private static String configFingerprint(StoragePluginRegistry plugins,
