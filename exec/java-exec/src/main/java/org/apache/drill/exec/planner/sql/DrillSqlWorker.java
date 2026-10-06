@@ -37,6 +37,7 @@ import org.apache.drill.exec.exception.MetadataException;
 import org.apache.drill.exec.ops.QueryContext;
 import org.apache.drill.exec.ops.QueryContext.SqlStatementType;
 import org.apache.drill.exec.physical.PhysicalPlan;
+import org.apache.drill.exec.planner.PhysicalPlanReader;
 import org.apache.drill.exec.planner.physical.PlannerSettings;
 import org.apache.drill.exec.planner.sql.handlers.AbstractSqlHandler;
 import org.apache.drill.exec.planner.sql.handlers.AnalyzeTableHandler;
@@ -331,7 +332,7 @@ public class DrillSqlWorker {
             }
             cache.invalidate(key);
           }
-          final org.apache.drill.exec.planner.PhysicalPlanReader cacheReader =
+          final PhysicalPlanReader cacheReader =
               context.getDrillbitContext().getPlanReader();
           // Prepare insertion after planning; Foreman publishes it only after the query succeeds.
           prepareCacheInsert = planned -> {

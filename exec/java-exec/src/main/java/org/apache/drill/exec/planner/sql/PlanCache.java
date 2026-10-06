@@ -18,14 +18,17 @@
 package org.apache.drill.exec.planner.sql;
 
 import java.io.IOException;
+import java.math.BigDecimal;
 import java.math.RoundingMode;
 import java.nio.charset.StandardCharsets;
 import java.util.ArrayList;
-import java.util.HashSet;
+import java.util.Collections;
 import java.util.HashMap;
+import java.util.HashSet;
 import java.util.LinkedHashMap;
 import java.util.List;
 import java.util.Map;
+import java.util.Objects;
 import java.util.Set;
 import java.util.TreeMap;
 import java.util.concurrent.ArrayBlockingQueue;
@@ -47,6 +50,7 @@ import org.apache.calcite.sql.SqlWith;
 import org.apache.calcite.sql.SqlWithItem;
 import org.apache.calcite.schema.SchemaPlus;
 import org.apache.calcite.schema.Table;
+import org.apache.calcite.util.NlsString;
 import org.apache.drill.common.expression.ExpressionStringBuilder;
 import org.apache.drill.common.expression.LogicalExpression;
 import org.apache.drill.common.expression.LiteralExpression;
@@ -68,7 +72,6 @@ import org.apache.drill.exec.store.PlanCacheTable;
 import org.apache.drill.exec.util.Pointer;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
-import java.util.Objects;
 
 import com.fasterxml.jackson.databind.JsonNode;
 import com.fasterxml.jackson.databind.ObjectMapper;
@@ -219,8 +222,8 @@ public final class PlanCache implements AutoCloseable {
     private ContextSnapshot(String optionsFingerprint, Map<TableIdentifier, String> tableVersions,
         Map<String, String> pluginConfigs) {
       this.optionsFingerprint = Objects.requireNonNull(optionsFingerprint, "optionsFingerprint");
-      this.tableVersions = java.util.Collections.unmodifiableMap(tableVersions);
-      this.pluginConfigs = java.util.Collections.unmodifiableMap(pluginConfigs);
+      this.tableVersions = Collections.unmodifiableMap(tableVersions);
+      this.pluginConfigs = Collections.unmodifiableMap(pluginConfigs);
     }
 
     private static final class TableIdentifier {
@@ -418,7 +421,7 @@ public final class PlanCache implements AutoCloseable {
         return null;
       }
       return new ResolvedTable(
-          java.util.Collections.unmodifiableList(new java.util.ArrayList<>(names)),
+          Collections.unmodifiableList(new ArrayList<>(names)),
           drillTable.getStorageEngineName(), storagePlugin, (DrillTableSelection) selection);
     }
 
@@ -478,10 +481,10 @@ public final class PlanCache implements AutoCloseable {
   private static String serialize(SqlLiteral literal, MajorType type, int index) {
     Object value = literal.getValue();
     LogicalExpression expression;
-    if (value instanceof java.math.BigDecimal) {
-      java.math.BigDecimal number = (java.math.BigDecimal) value;
+    if (value instanceof BigDecimal) {
+      BigDecimal number = (BigDecimal) value;
       if (type.getMinorType() == MinorType.VARDECIMAL) {
-        java.math.BigDecimal decimal = number.setScale(type.getScale(), RoundingMode.UNNECESSARY);
+        BigDecimal decimal = number.setScale(type.getScale(), RoundingMode.UNNECESSARY);
         if (decimal.precision() > type.getPrecision()) {
           throw new IllegalArgumentException("Decimal parameter exceeds cached precision");
         }
@@ -500,8 +503,8 @@ public final class PlanCache implements AutoCloseable {
       }
     } else if (value instanceof Boolean) {
       expression = ValueExpressions.getBit((Boolean) value);
-    } else if (value instanceof org.apache.calcite.util.NlsString) {
-      String string = ((org.apache.calcite.util.NlsString) value).getValue();
+    } else if (value instanceof NlsString) {
+      String string = ((NlsString) value).getValue();
       expression = ValueExpressions.getChar(string, type.getPrecision());
     } else {
       throw new IllegalArgumentException("Unsupported parameter type");

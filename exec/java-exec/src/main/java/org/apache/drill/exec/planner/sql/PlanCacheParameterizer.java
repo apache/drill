@@ -34,6 +34,7 @@ import org.apache.calcite.sql.SqlNodeList;
 import org.apache.calcite.sql.SqlSelect;
 import org.apache.calcite.sql.type.SqlTypeName;
 import org.apache.calcite.sql.util.SqlShuttle;
+import org.apache.calcite.util.NlsString;
 import org.apache.drill.exec.planner.sql.conversion.SqlBoundDynamicParam;
 
 /** Extracts SQL literals into typed slots independently of cache eligibility. */
@@ -162,7 +163,7 @@ final class PlanCacheParameterizer extends SqlShuttle {
     }
     Object value = literal.getValue();
     if (!(value instanceof BigDecimal) && !(value instanceof Boolean)
-        && !(value instanceof org.apache.calcite.util.NlsString)) {
+        && !(value instanceof NlsString)) {
       // Temporal literals, including unresolved DATE literals, and structural
       // literals such as EXTRACT's time unit stay in the template key.
       return literal;
@@ -174,8 +175,8 @@ final class PlanCacheParameterizer extends SqlShuttle {
     if (value instanceof BigDecimal) {
       BigDecimal number = (BigDecimal) value;
       shape += ":" + number.precision() + ":" + number.scale();
-    } else if (value instanceof org.apache.calcite.util.NlsString) {
-      org.apache.calcite.util.NlsString string = (org.apache.calcite.util.NlsString) value;
+    } else if (value instanceof NlsString) {
+      NlsString string = (NlsString) value;
       shape += ":" + string.getValue().length() + ":" + string.getCharsetName()
           + ":" + string.getCollation();
     }
