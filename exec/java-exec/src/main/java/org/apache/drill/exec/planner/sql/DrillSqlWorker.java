@@ -18,6 +18,7 @@
 package org.apache.drill.exec.planner.sql;
 
 import java.io.IOException;
+import java.util.function.Consumer;
 
 import org.apache.calcite.sql.SqlDescribeSchema;
 import org.apache.calcite.sql.SqlKind;
@@ -296,6 +297,9 @@ public class DrillSqlWorker {
       context.getOptions().setLocalOption(ExecConstants.RETURN_RESULT_SET_FOR_DDL, true);
     }
 
+    // Keep the original SQL if no safe snapshot is available or cache preparation fails.
+    SqlNode planningSql = sqlNode;
+    Consumer<PhysicalPlan> prepareCacheInsert = null;
     if (context.getOptions().getOption(PlannerSettings.PLAN_CACHE)
         && !context.getSession().hasTemporaryTables()
         && !hasMutableAliases(context)
@@ -327,20 +331,29 @@ public class DrillSqlWorker {
             }
             cache.invalidate(key);
           }
-          PhysicalPlan planned = handler.getPlan(candidate.sql);
-          final String templateTextPlan = PlanCache.bindTextPlan(textPlan, candidate.literals);
           final org.apache.drill.exec.planner.PhysicalPlanReader cacheReader =
               context.getDrillbitContext().getPlanReader();
-          context.setPendingPlanCacheInsert(() -> cache.writeAfterSuccess(key, planned,
-              templateTextPlan, cacheReader, snapshot));
-          return planned;
+          // Prepare insertion after planning; Foreman publishes it only after the query succeeds.
+          prepareCacheInsert = planned -> {
+            String templateTextPlan = PlanCache.bindTextPlan(textPlan, candidate.literals);
+            context.setPendingPlanCacheInsert(() -> cache.writeAfterSuccess(key, planned,
+                templateTextPlan, cacheReader, snapshot));
+          };
+          // On a cache miss, plan the parameterized SQL to produce a reusable template.
+          planningSql = candidate.sql;
         }
-      } catch (Exception e) {
+      } catch (RuntimeException e) {
         logger.debug("Plan cache attempt fell back to ordinary planning", e);
       }
     }
 
-    return handler.getPlan(sqlNode);
+    // Plan exactly once, outside cache fallback. Validation can mutate the SQL tree,
+    // so retrying a failed planning attempt could reuse partially rewritten nodes.
+    PhysicalPlan planned = handler.getPlan(planningSql);
+    if (prepareCacheInsert != null) {
+      prepareCacheInsert.accept(planned);
+    }
+    return planned;
   }
 
   private static boolean hasMutableAliases(QueryContext context) {
