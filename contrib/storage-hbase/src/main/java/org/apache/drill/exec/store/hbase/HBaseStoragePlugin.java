@@ -64,28 +64,23 @@ public class HBaseStoragePlugin extends AbstractStoragePlugin {
   }
 
   @Override
-  public boolean supportPlanCache() {
-    return true;
+  public boolean supportPlanCache(DrillTableSelection selection) {
+    return selection instanceof HBaseScanSpec;
   }
 
   @Override
   public PlanCacheTable planCacheTable(DrillTableSelection selection) throws IOException {
-    if (!(selection instanceof HBaseScanSpec)) {
+    if (!supportPlanCache(selection)) {
       return null;
     }
-    String tableName = ((HBaseScanSpec) selection).getTableName();
-    String version = planCacheTableVersion(tableName);
-    return version == null ? null : new PlanCacheTable(tableName, version);
-  }
-
-  @Override
-  public String planCacheTableVersion(String identifier) throws IOException {
+    String identifier = ((HBaseScanSpec) selection).getTableName();
     try (Admin admin = getConnection().getAdmin()) {
       TableName tableName = TableName.valueOf(identifier);
       if (!admin.tableExists(tableName)) {
         return null;
       }
-      return Hashing.sha256().hashBytes(admin.getTableDescriptor(tableName).toByteArray()).toString();
+      String version = Hashing.sha256().hashBytes(admin.getTableDescriptor(tableName).toByteArray()).toString();
+      return new PlanCacheTable(identifier, version);
     }
   }
 

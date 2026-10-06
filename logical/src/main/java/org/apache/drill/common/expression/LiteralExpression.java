@@ -32,6 +32,12 @@ public abstract class LiteralExpression extends LogicalExpressionBase {
     return dynamicParamIndex;
   }
 
+  /** Whether this literal is bound to a zero-based SQL parameter slot. */
+  @JsonIgnore
+  public boolean isDynamicParam() {
+    return dynamicParamIndex >= 0;
+  }
+
   public void setDynamicParamIndex(int dynamicParamIndex) {
     if (dynamicParamIndex < 0) {
       throw new IllegalArgumentException("Dynamic parameter index must be non-negative");

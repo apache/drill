@@ -76,15 +76,11 @@ public interface StoragePlugin extends SchemaFactory, AutoCloseable {
    * Opts this plugin into plan caching. The engine validates query context and
    * rebinds expression parameters; the plugin must provide a plan-compatible
    * table version and safely rebuild every scan for an eligible selection,
-   * including value-dependent state for each execution.
+   * including value-dependent state for each execution. Check selection
+   * eligibility without reading table versions or building cache metadata.
    */
-  default boolean supportPlanCache() {
-    return false;
-  }
-
-  /** Checks selection eligibility without reading table versions or building cache metadata. */
   default boolean supportPlanCache(DrillTableSelection selection) {
-    return supportPlanCache();
+    return false;
   }
 
   /**
@@ -94,11 +90,6 @@ public interface StoragePlugin extends SchemaFactory, AutoCloseable {
    * Return null when that contract cannot be met.
    */
   default PlanCacheTable planCacheTable(DrillTableSelection selection) throws IOException {
-    return null;
-  }
-
-  /** Reads the current version by a previously resolved identifier, without schema traversal. */
-  default String planCacheTableVersion(String identifier) throws IOException {
     return null;
   }
 

@@ -34,6 +34,7 @@ import org.apache.drill.exec.planner.PlannerPhase;
 import org.apache.drill.exec.planner.common.DrillStatsTable.TableStatistics;
 import org.apache.drill.exec.server.DrillbitContext;
 import org.apache.drill.exec.server.options.OptionManager;
+import org.apache.drill.exec.store.PlanCacheTable;
 import com.google.common.collect.ImmutableSet;
 import org.apache.hadoop.conf.Configuration;
 import org.apache.hadoop.fs.FileSystem;
@@ -48,18 +49,19 @@ public interface FormatPlugin {
 
   boolean supportsWrite();
 
-  /** Whether every scan of an eligible selection can be safely rebuilt for a cached plan. */
-  default boolean supportPlanCache() {
+  /**
+   * Whether every scan of this selection can be safely rebuilt for a cached plan.
+   * Check eligibility without reading table versions or building cache metadata.
+   */
+  default boolean supportPlanCache(FileSelection selection) {
     return false;
   }
 
-  /** Version of the table definition that determines physical-plan compatibility. */
-  default String planCacheTableVersion(FileSelection selection) throws IOException {
-    return null;
-  }
-
-  /** Reads the current version of a previously resolved table without rebuilding its schema. */
-  default String planCacheTableVersion(Path tablePath) throws IOException {
+  /**
+   * Returns a stable table identifier and a physical-plan compatibility version,
+   * or null when the selection cannot be cached.
+   */
+  default PlanCacheTable planCacheTable(FileSelection selection) throws IOException {
     return null;
   }
 

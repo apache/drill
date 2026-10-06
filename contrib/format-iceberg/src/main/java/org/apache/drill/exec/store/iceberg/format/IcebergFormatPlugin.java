@@ -29,6 +29,7 @@ import org.apache.drill.exec.planner.common.DrillStatsTable;
 import org.apache.drill.exec.record.metadata.TupleMetadata;
 import org.apache.drill.exec.record.metadata.schema.SchemaProvider;
 import org.apache.drill.exec.server.DrillbitContext;
+import org.apache.drill.exec.store.PlanCacheTable;
 import org.apache.drill.exec.store.PluginRulesProviderImpl;
 import org.apache.drill.exec.store.StoragePluginRulesSupplier;
 import org.apache.drill.exec.store.dfs.FileSelection;
@@ -109,31 +110,24 @@ public class IcebergFormatPlugin implements FormatPlugin {
   }
 
   @Override
-  public boolean supportPlanCache() {
-    return config.getSnapshot() == null;
+  public boolean supportPlanCache(FileSelection selection) {
+    return selection != null && config.getSnapshot() == null
+      && !(selection instanceof IcebergMetadataFileSelection) && selection.getSelectionRoot() != null;
   }
 
   @Override
-  public String planCacheTableVersion(FileSelection selection) throws IOException {
-    if (!supportPlanCache() || selection instanceof IcebergMetadataFileSelection
-        || selection.getSelectionRoot() == null) {
+  public PlanCacheTable planCacheTable(FileSelection selection) throws IOException {
+    if (!supportPlanCache(selection)) {
       return null;
     }
-    return planCacheTableVersion(selection.getSelectionRoot());
-  }
-
-  @Override
-  public String planCacheTableVersion(Path tablePath) throws IOException {
-    if (!supportPlanCache()) {
-      return null;
-    }
-    Table table = new HadoopTables(fsConf).load(tablePath.toString());
+    String identifier = selection.getSelectionRoot().toString();
+    Table table = new HadoopTables(fsConf).load(identifier);
     if (!(table instanceof HasTableOperations)) {
       return null;
     }
     TableMetadata metadata = ((HasTableOperations) table).operations().current();
     return metadata == null || metadata.uuid() == null ? null
-      : metadata.uuid() + ":" + metadata.currentSchemaId();
+      : new PlanCacheTable(identifier, metadata.uuid() + ":" + metadata.currentSchemaId());
   }
 
   @Override

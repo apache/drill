@@ -55,7 +55,7 @@ import org.apache.drill.common.exceptions.ExpressionParsingException;
     // Keep parameter casts intact to retain their slot identity and conversion.
     if (type.equals(Types.required(MinorType.BIGINT))
         && input instanceof LiteralExpression
-        && ((LiteralExpression) input).getDynamicParamIndex() < 0) {
+        && !((LiteralExpression) input).isDynamicParam()) {
       if (input instanceof ValueExpressions.IntExpression) {
         return new ValueExpressions.LongExpression(
             ((ValueExpressions.IntExpression) input).getInt(), position);

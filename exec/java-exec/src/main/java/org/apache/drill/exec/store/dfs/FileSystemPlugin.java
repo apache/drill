@@ -64,7 +64,6 @@ import com.google.common.base.Strings;
 import org.apache.hadoop.conf.Configuration;
 import org.apache.hadoop.fs.CommonConfigurationKeys;
 import org.apache.hadoop.fs.FileSystem;
-import org.apache.hadoop.fs.Path;
 import org.apache.hadoop.fs.sftp.SFTPFileSystem;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -334,18 +333,13 @@ public class FileSystemPlugin extends AbstractStoragePlugin {
   }
 
   @Override
-  public boolean supportPlanCache() {
-    return true;
-  }
-
-  @Override
   public boolean supportPlanCache(DrillTableSelection selection) {
     if (!(selection instanceof FormatSelection)) {
       return false;
     }
     FormatSelection formatSelection = (FormatSelection) selection;
     FormatPlugin format = getFormatPlugin(formatSelection.getFormat());
-    return format != null && format.supportPlanCache();
+    return format != null && format.supportPlanCache(formatSelection.getSelection());
   }
 
   @Override
@@ -356,40 +350,19 @@ public class FileSystemPlugin extends AbstractStoragePlugin {
     FormatSelection formatSelection = (FormatSelection) selection;
     FileSelection files = formatSelection.getSelection();
     FormatPlugin format = getFormatPlugin(formatSelection.getFormat());
-    if (files == null || files.getSelectionRoot() == null
-        || format == null || !format.supportPlanCache()) {
+    if (format == null || !format.supportPlanCache(files)) {
       return null;
     }
-    String version = format.planCacheTableVersion(files);
-    if (version == null) {
+    PlanCacheTable table = format.planCacheTable(files);
+    if (table == null) {
       return null;
     }
     String formatName = format.getName();
     if (formatName == null || formatName.isEmpty()) {
       return null;
     }
-    String identifier = formatName.length() + ":" + formatName + files.getSelectionRoot();
-    return new PlanCacheTable(identifier, version);
-  }
-
-  @Override
-  public String planCacheTableVersion(String identifier) throws IOException {
-    int separator = identifier.indexOf(':');
-    if (separator < 1) {
-      return null;
-    }
-    try {
-      int nameLength = Integer.parseInt(identifier.substring(0, separator));
-      if (nameLength < 1 || nameLength >= identifier.length() - separator - 1) {
-        return null;
-      }
-      int nameEnd = separator + 1 + nameLength;
-      FormatPlugin format = getFormatPlugin(identifier.substring(separator + 1, nameEnd));
-      return format == null || !format.supportPlanCache() ? null
-          : format.planCacheTableVersion(new Path(identifier.substring(nameEnd)));
-    } catch (NumberFormatException e) {
-      return null;
-    }
+    String identifier = formatName.length() + ":" + formatName + table.getIdentifier();
+    return new PlanCacheTable(identifier, table.getVersion());
   }
 
   /**

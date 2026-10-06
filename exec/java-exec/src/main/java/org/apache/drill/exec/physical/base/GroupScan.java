@@ -87,12 +87,6 @@ public interface GroupScan extends Scan, HasAffinity {
   @JsonIgnore
   String getDigest();
 
-  /** Text shown for this scan in an explain plan; may hide bound literal values. */
-  @JsonIgnore
-  default String getExplainDigest() {
-    return getDigest();
-  }
-
   @JsonIgnore
   ScanStats getScanStats(PlannerSettings settings);
 

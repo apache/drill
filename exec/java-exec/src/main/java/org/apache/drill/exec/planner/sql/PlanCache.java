@@ -414,8 +414,7 @@ public final class PlanCache implements AutoCloseable {
         return null;
       }
       StoragePlugin storagePlugin = drillTable.getPlugin();
-      if (!storagePlugin.supportPlanCache()
-          || !storagePlugin.supportPlanCache((DrillTableSelection) selection)) {
+      if (!storagePlugin.supportPlanCache((DrillTableSelection) selection)) {
         return null;
       }
       return new ResolvedTable(
@@ -597,8 +596,9 @@ public final class PlanCache implements AutoCloseable {
   private static void collectTypes(LogicalExpression expression,
       Map<Integer, MajorType> types) {
     if (expression instanceof LiteralExpression) {
-      int index = ((LiteralExpression) expression).getDynamicParamIndex();
-      if (index >= 0) {
+      LiteralExpression literal = (LiteralExpression) expression;
+      if (literal.isDynamicParam()) {
+        int index = literal.getDynamicParamIndex();
         MajorType type = expression.getMajorType();
         MajorType previous = types.putIfAbsent(index, type);
         if (previous != null && !previous.equals(type)) {
