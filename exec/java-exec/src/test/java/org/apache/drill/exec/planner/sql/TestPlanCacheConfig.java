@@ -18,11 +18,14 @@
 package org.apache.drill.exec.planner.sql;
 
 import java.time.Duration;
+import java.util.concurrent.CountDownLatch;
+import java.util.concurrent.TimeUnit;
 
 import com.google.common.base.Ticker;
 import org.apache.drill.categories.PlannerTest;
 import org.apache.drill.common.config.DrillConfig;
 import org.apache.drill.exec.ExecConstants;
+import org.apache.drill.exec.metrics.DrillMetrics;
 import org.apache.drill.exec.physical.PhysicalPlan;
 import org.apache.drill.exec.planner.PhysicalPlanReader;
 import org.apache.drill.test.BaseTest;
@@ -156,11 +159,11 @@ public class TestPlanCacheConfig extends BaseTest {
   public void testCapacityCountsUtf8ExplainBytes() throws Exception {
     // Two key bytes, two JSON bytes, and three explain text bytes.
     try (PlanCache cache = new PlanCache(6, Duration.ZERO, Duration.ZERO, ticker)) {
-      assertTrue(cache.put("é", plan, "计", reader, context));
+      assertTrue(cache.put("é", reader.writeJson(plan), "计", reader, context));
       assertNull(cache.get("é"));
     }
     try (PlanCache cache = new PlanCache(7, Duration.ZERO, Duration.ZERO, ticker)) {
-      assertTrue(cache.put("é", plan, "计", reader, context));
+      assertTrue(cache.put("é", reader.writeJson(plan), "计", reader, context));
       assertNotNull(cache.get("é"));
       assertEquals("计", cache.get("é").getTextPlan());
     }
@@ -172,7 +175,7 @@ public class TestPlanCacheConfig extends BaseTest {
       put(cache, "é");
       assertNotNull(cache.get("é"));
       assertNull(cache.get("é").getTextPlan());
-      assertTrue(cache.put("é", plan, "", reader, context));
+      assertTrue(cache.put("é", reader.writeJson(plan), "", reader, context));
       assertNotNull(cache.get("é"));
       assertEquals("", cache.get("é").getTextPlan());
     }
@@ -192,7 +195,34 @@ public class TestPlanCacheConfig extends BaseTest {
       assertNull(cache.get("b"));
       assertNotNull(cache.get("a"));
       assertNotNull(cache.get("c"));
+      assertEquals(1L, metric("evictions"));
+      assertEquals(2L, metric("entries"));
     }
+  }
+
+  @Test
+  public void testRegisteredInvalidationAndEntryMetrics() throws Exception {
+    try (PlanCache cache = new PlanCache(1024, Duration.ZERO, Duration.ZERO, ticker)) {
+      assertEquals(0L, metric("invalidations"));
+      assertEquals(0L, metric("entries"));
+      put(cache, "key");
+      assertEquals(1L, metric("entries"));
+      cache.invalidate("key");
+      assertEquals(1L, metric("invalidations"));
+      assertEquals(0L, metric("entries"));
+    }
+    assertNull(DrillMetrics.getRegistry().getGauges().get("drill.plan_cache.entries"));
+  }
+
+  @Test
+  public void testClosingOlderCacheKeepsNewerCacheMetrics() {
+    try (PlanCache older = new PlanCache(1024, Duration.ZERO, Duration.ZERO, ticker);
+         PlanCache newer = new PlanCache(1024, Duration.ZERO, Duration.ZERO, ticker)) {
+      older.close();
+      newer.recordBind();
+      assertEquals(1L, metric("hits"));
+    }
+    assertNull(DrillMetrics.getRegistry().getGauges().get("drill.plan_cache.hits"));
   }
 
   @Test
@@ -217,7 +247,44 @@ public class TestPlanCacheConfig extends BaseTest {
   }
 
   private void put(PlanCache cache, String key) throws Exception {
-    assertTrue(cache.put(key, plan, null, reader, context));
+    assertTrue(cache.put(key, reader.writeJson(plan), null, reader, context));
+  }
+
+  @Test
+  public void testClearDiscardsActiveAndQueuedPublications() throws Exception {
+    CountDownLatch reading = new CountDownLatch(1);
+    CountDownLatch resume = new CountDownLatch(1);
+    when(reader.readPhysicalPlan("{}")).thenAnswer(invocation -> {
+      reading.countDown();
+      assertTrue(resume.await(10, TimeUnit.SECONDS));
+      return plan;
+    });
+    try (PlanCache cache = new PlanCache(1024, Duration.ZERO, Duration.ZERO, ticker)) {
+      long generation = cache.getGeneration();
+      try {
+        cache.writeAfterSuccess("active", "{}", null, reader, context, generation);
+        assertTrue(reading.await(10, TimeUnit.SECONDS));
+        cache.writeAfterSuccess("queued", "{}", null, reader, context, generation);
+        cache.clear();
+      } finally {
+        resume.countDown();
+      }
+      cache.awaitWrites();
+      assertNull(cache.get("active"));
+      assertNull(cache.get("queued"));
+      assertEquals(0L, metric("entries"));
+      assertEquals(1L, metric("invalidations"));
+      assertEquals(0L, metric("evictions"));
+
+      // A newly planned query can publish with the new generation.
+      cache.writeAfterSuccess("new", "{}", null, reader, context, cache.getGeneration());
+      cache.awaitWrites();
+      assertNotNull(cache.get("new"));
+    }
+  }
+
+  private long metric(String name) {
+    return (Long) DrillMetrics.getRegistry().getGauges().get("drill.plan_cache." + name).getValue();
   }
 
   private static final class ManualTicker extends Ticker {

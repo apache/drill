@@ -94,6 +94,24 @@ public class TestOptionsAuthEnabled extends BaseTestQuery {
   }
 
   @Test
+  public void clearPlanCacheAsAdminUser() throws Exception {
+    updateClient(ADMIN_USER, ADMIN_USER_PASSWORD);
+    test("ALTER SYSTEM CLEAR PLAN CACHE");
+  }
+
+  @Test
+  public void clearPlanCacheAsUserInAdminGroup() throws Exception {
+    updateClient(TEST_USER_1, TEST_USER_1_PASSWORD);
+    test("ALTER SYSTEM CLEAR PLAN CACHE");
+  }
+
+  @Test
+  public void cannotClearPlanCacheAsNonAdminUser() throws Exception {
+    updateClient(TEST_USER_2, TEST_USER_2_PASSWORD);
+    errorMsgTestHelper("ALTER SYSTEM CLEAR PLAN CACHE", "Not authorized to clear the SYSTEM plan cache.");
+  }
+
+  @Test
   public void trySettingAdminOptsAtSessionScopeAsAdmin() throws Exception {
     updateClient(ADMIN_USER, ADMIN_USER_PASSWORD);
     final String setOptionQuery =

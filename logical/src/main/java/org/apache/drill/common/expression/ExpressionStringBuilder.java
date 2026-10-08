@@ -186,12 +186,9 @@ public class ExpressionStringBuilder extends AbstractExprVisitor<Void, StringBui
   @Override
   public Void visitLongConstant(LongExpression lExpr, StringBuilder sb) throws RuntimeException {
     startBoundLiteral(lExpr, sb);
-    if (!lExpr.isDynamicParam()) {
-      // Preserve integer width in JSON; the parser restores this as a BIGINT literal.
-      sb.append("cast(").append(lExpr.getLong()).append(" as BIGINT)");
-    } else {
-      sb.append(lExpr.getLong());
-    }
+    // Bound parameters carry BIGINT in their wrapper; ordinary literals keep
+    // the existing representation used by explain output and scan digests.
+    sb.append(lExpr.getLong());
     endBoundLiteral(lExpr, sb);
     return null;
   }

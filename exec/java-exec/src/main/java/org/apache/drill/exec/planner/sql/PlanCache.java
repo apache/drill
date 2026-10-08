@@ -72,6 +72,7 @@ import org.apache.drill.common.parser.LogicalExpressionParser;
 import org.apache.drill.common.types.TypeProtos.MajorType;
 import org.apache.drill.common.types.TypeProtos.MinorType;
 import org.apache.drill.exec.ExecConstants;
+import org.apache.drill.exec.metrics.DrillMetrics;
 import org.apache.drill.exec.ops.QueryContext;
 import org.apache.drill.exec.physical.PhysicalPlan;
 import org.apache.drill.exec.planner.PhysicalPlanReader;
@@ -96,6 +97,7 @@ import com.google.common.cache.Cache;
 import com.google.common.cache.CacheBuilder;
 import com.google.common.hash.Hashing;
 import com.google.common.primitives.Ints;
+import com.codahale.metrics.Gauge;
 
 /** Drillbit-scoped, immutable JSON snapshots of query plans. */
 public final class PlanCache implements AutoCloseable {
@@ -104,6 +106,10 @@ public final class PlanCache implements AutoCloseable {
   private static final String MARKER = ExpressionStringBuilder.BOUND_DYNAMIC_PARAM + "(";
   private final Cache<String, Entry> entries;
   private final AtomicLong successfulBinds = new AtomicLong();
+  private final AtomicLong misses = new AtomicLong();
+  private final AtomicLong invalidations = new AtomicLong();
+  private final Map<String, Gauge<Long>> metrics = new LinkedHashMap<>();
+  private volatile long generation;
   private final ThreadPoolExecutor writer = new ThreadPoolExecutor(1, 1, 0L,
       TimeUnit.MILLISECONDS, new ArrayBlockingQueue<>(64),
       new NamedThreadFactory("plan-cache-writer-"));
@@ -124,7 +130,8 @@ public final class PlanCache implements AutoCloseable {
         .maximumWeight(maxSizeBytes)
         .weigher((String key, Entry value) -> Ints.saturatedCast(
             key.getBytes(StandardCharsets.UTF_8).length + value.contentSizeBytes))
-        .ticker(ticker);
+        .ticker(ticker)
+        .recordStats();
     // Passing zero to Guava would expire entries immediately, rather than disable the policy.
     if (!expireAfterWrite.isZero()) {
       builder.expireAfterWrite(expireAfterWrite);
@@ -135,6 +142,17 @@ public final class PlanCache implements AutoCloseable {
     entries = builder.build();
     logger.info("Plan cache settings: max_size_bytes={}, expire_after_write={}, expire_after_access={}"
         + " (zero expiration disables that policy)", maxSizeBytes, expireAfterWrite, expireAfterAccess);
+    registerMetric("hits", successfulBinds::get);
+    registerMetric("misses", misses::get);
+    registerMetric("invalidations", invalidations::get);
+    registerMetric("evictions", () -> entries.stats().evictionCount());
+    registerMetric("entries", entries::size);
+  }
+
+  private void registerMetric(String suffix, Gauge<Long> gauge) {
+    String name = "drill.plan_cache." + suffix;
+    metrics.put(name, gauge);
+    DrillMetrics.register(name, gauge);
   }
 
   public long getHitCount() {
@@ -143,6 +161,11 @@ public final class PlanCache implements AutoCloseable {
 
   public void recordBind() {
     successfulBinds.incrementAndGet();
+  }
+
+  /** Counts an eligible lookup that could not produce a compatible, bound plan. */
+  public void recordMiss() {
+    misses.incrementAndGet();
   }
 
   /** Updates optional explain output using the cached template. */
@@ -188,12 +211,12 @@ public final class PlanCache implements AutoCloseable {
     writer.submit(() -> { }).get(10, TimeUnit.SECONDS);
   }
 
-  public void writeAfterSuccess(String key, PhysicalPlan plan, String textPlan,
-      PhysicalPlanReader reader, ContextSnapshot context) {
+  public void writeAfterSuccess(String key, String json, String textPlan,
+      PhysicalPlanReader reader, ContextSnapshot context, long expectedGeneration) {
     try {
       writer.execute(() -> {
         try {
-          put(key, plan, textPlan, reader, context);
+          put(key, json, textPlan, reader, context, expectedGeneration);
         } catch (RuntimeException | IOException e) {
           logger.debug("Plan cache entry could not be published", e);
         }
@@ -204,26 +227,62 @@ public final class PlanCache implements AutoCloseable {
   }
 
   public void invalidate(String key) {
+    invalidations.incrementAndGet();
     entries.invalidate(key);
   }
 
-  public boolean put(String key, PhysicalPlan plan, String textPlan,
+  long getGeneration() {
+    return generation;
+  }
+
+  /** Clears local entries and prevents pre-clear plans from being published later. */
+  public synchronized void clear() {
+    generation++;
+    invalidations.incrementAndGet();
+    entries.invalidateAll();
+    entries.cleanUp();
+    logger.info("Local plan cache cleared; generation={}", generation);
+  }
+
+  public boolean put(String key, String json, String textPlan,
       PhysicalPlanReader reader, ContextSnapshot context) throws IOException {
+    return put(key, json, textPlan, reader, context, generation);
+  }
+
+  private boolean put(String key, String json, String textPlan,
+      PhysicalPlanReader reader, ContextSnapshot context, long expectedGeneration) throws IOException {
     // The engine checks generic context and expression compatibility. Each
     // opted-in plugin is responsible for rebuilding its scans' value-dependent state.
-    if (context == null) {
+    if (context == null || expectedGeneration != generation) {
       return false;
     }
-    String json = reader.writeJson(plan);
     // Confirm that standard PhysicalPlan JSON can be read back before publishing.
     reader.readPhysicalPlan(json);
-    entries.put(key, new Entry(json, textPlan, context));
+    // Readback may perform plugin I/O. Keep it outside the clear/publication lock,
+    // then check again so a concurrent clear cannot be undone by that readback.
+    synchronized (this) {
+      if (expectedGeneration != generation) {
+        logger.debug("Skipping plan cache publication after a cache clear");
+        return false;
+      }
+      entries.put(key, new Entry(json, textPlan, context));
+    }
+    logger.debug("Plan cache entry published; entries={}", entries.size());
     return true;
   }
 
   @Override
   public void close() {
     writer.shutdownNow();
+    // Test JVMs may contain several Drillbits. A closing cache must not remove
+    // gauges registered by a newer cache under the same names.
+    synchronized (DrillMetrics.class) {
+      metrics.forEach((name, gauge) -> {
+        if (DrillMetrics.getRegistry().getMetrics().get(name) == gauge) {
+          DrillMetrics.getRegistry().remove(name);
+        }
+      });
+    }
   }
 
   public static final class Entry {
@@ -473,6 +532,16 @@ public final class PlanCache implements AutoCloseable {
           && optionsFingerprint.equals(current.optionsFingerprint)
           && tableVersions.equals(current.tableVersions)
           && pluginConfigs.equals(current.pluginConfigs);
+    }
+
+    /** Options and plugin configurations identify separate reusable templates. */
+    String keyFingerprint() {
+      StringBuilder configs = new StringBuilder();
+      new TreeMap<>(pluginConfigs).forEach((name, fingerprint) -> configs
+          .append(name.length()).append(':').append(name).append('=').append(fingerprint).append('\n'));
+      // Keep table versions outside the key so incompatible entries can be invalidated.
+      return optionsFingerprint + '\n'
+          + Hashing.sha256().hashString(configs, StandardCharsets.UTF_8).toString();
     }
 
     private static String optionFingerprint(QueryContext context) {

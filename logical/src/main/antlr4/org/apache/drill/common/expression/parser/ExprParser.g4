@@ -48,24 +48,6 @@ import org.apache.drill.common.exceptions.ExpressionParsingException;
     return new ExpressionPosition(fullExpression, token.getTokenIndex());
   }
 
-  private LogicalExpression createCast(MajorType type, ExpressionPosition position,
-      LogicalExpression input) {
-    // BIGINT casts emitted for integer literals preserve their width in JSON.
-    // Restore the literal node so scan translators see the original predicate.
-    // Keep parameter casts intact to retain their slot identity and conversion.
-    if (type.equals(Types.required(MinorType.BIGINT))
-        && input instanceof LiteralExpression
-        && !((LiteralExpression) input).isDynamicParam()) {
-      if (input instanceof ValueExpressions.IntExpression) {
-        return new ValueExpressions.LongExpression(
-            ((ValueExpressions.IntExpression) input).getInt(), position);
-      }
-      if (input instanceof ValueExpressions.LongExpression) {
-        return input;
-      }
-    }
-    return FunctionCallFactory.createCast(type, position, input);
-  }
 }
 
 parse returns [LogicalExpression e]
@@ -102,7 +84,7 @@ castCall returns [LogicalExpression e]
       {  if ($repeat.ctx != null && $repeat.isRep.compareTo(Boolean.TRUE)==0)
            $e = FunctionCallFactory.createCast(TypeProtos.MajorType.newBuilder().mergeFrom($dataType.type).setMode(DataMode.REPEATED).build(), pos($Cast), $expression.e);
          else
-           $e = createCast($dataType.type, pos($Cast), $expression.e);}
+           $e = FunctionCallFactory.createCast($dataType.type, pos($Cast), $expression.e);}
   ;
 
 repeat returns [Boolean isRep]

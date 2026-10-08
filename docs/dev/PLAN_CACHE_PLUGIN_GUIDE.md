@@ -22,7 +22,7 @@ Plan caching is disabled by default. A plugin opts in through its metadata inter
 
 ## Storage-plugin API
 
-Implement these methods in [StoragePlugin](exec/java-exec/src/main/java/org/apache/drill/exec/store/StoragePlugin.java):
+Implement these methods in [StoragePlugin](../../exec/java-exec/src/main/java/org/apache/drill/exec/store/StoragePlugin.java):
 
 ```java
 boolean supportPlanCache(DrillTableSelection selection);
@@ -38,14 +38,14 @@ incompatible. Do not use a data snapshot number if compatible data updates shoul
 keep hitting. A path alone is insufficient when replacement can change the
 schema or table identity.
 
-DFS formats use the same two-method contract in [FormatPlugin](exec/java-exec/src/main/java/org/apache/drill/exec/store/dfs/FormatPlugin.java), with `FileSelection` as the input:
+DFS formats use the same two-method contract in [FormatPlugin](../../exec/java-exec/src/main/java/org/apache/drill/exec/store/dfs/FormatPlugin.java), with `FileSelection` as the input:
 
 ```java
 boolean supportPlanCache(FileSelection selection);
 PlanCacheTable planCacheTable(FileSelection selection) throws IOException;
 ```
 
-[FileSystemPlugin](exec/java-exec/src/main/java/org/apache/drill/exec/store/dfs/FileSystemPlugin.java) delegates eligibility and metadata reads to the selected format plugin. It prefixes the returned table identifier with the format name to distinguish formats within the storage plugin.
+[FileSystemPlugin](../../exec/java-exec/src/main/java/org/apache/drill/exec/store/dfs/FileSystemPlugin.java) delegates eligibility and metadata reads to the selected format plugin. It prefixes the returned table identifier with the format name to distinguish formats within the storage plugin.
 
 ## Scan API and JSON reconstruction
 
@@ -72,8 +72,8 @@ Keep the regular expression serialization for JSON so parameter slot numbers sur
 
 | Plugin | Compatibility version | Reconstruction |
 | --- | --- | --- |
-| [HBaseStoragePlugin](contrib/storage-hbase/src/main/java/org/apache/drill/exec/store/hbase/HBaseStoragePlugin.java) / [HBaseGroupScan](contrib/storage-hbase/src/main/java/org/apache/drill/exec/store/hbase/HBaseGroupScan.java) | Table descriptor fingerprint | Retains the selection before pushdown and the original predicate; rebuilds native row-key bounds/filters and discovers current regions. |
-| [IcebergFormatPlugin](contrib/format-iceberg/src/main/java/org/apache/drill/exec/store/iceberg/format/IcebergFormatPlugin.java) / [IcebergGroupScan](contrib/format-iceberg/src/main/java/org/apache/drill/exec/store/iceberg/IcebergGroupScan.java) | Table UUID and schema ID | Reloads the table and runs `planTasks()` for the current predicate and snapshot. Metadata tables and explicit snapshot selection return no support. |
+| [HBaseStoragePlugin](../../contrib/storage-hbase/src/main/java/org/apache/drill/exec/store/hbase/HBaseStoragePlugin.java) / [HBaseGroupScan](../../contrib/storage-hbase/src/main/java/org/apache/drill/exec/store/hbase/HBaseGroupScan.java) | Table descriptor fingerprint | Retains the selection before pushdown and the original predicate; rebuilds native row-key bounds/filters and discovers current regions. |
+| [IcebergFormatPlugin](../../contrib/format-iceberg/src/main/java/org/apache/drill/exec/store/iceberg/format/IcebergFormatPlugin.java) / [IcebergGroupScan](../../contrib/format-iceberg/src/main/java/org/apache/drill/exec/store/iceberg/IcebergGroupScan.java) | Table UUID and schema ID | Reloads the table and runs `planTasks()` for the current predicate and snapshot. Metadata tables and explicit snapshot selection return no support. |
 
 HBase descriptor equality means definition compatibility; a replacement with an
 identical descriptor can still be read safely because regions and filters are

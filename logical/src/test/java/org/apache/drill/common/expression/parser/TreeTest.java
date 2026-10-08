@@ -18,8 +18,10 @@
 package org.apache.drill.common.expression.parser;
 
 import org.apache.drill.common.exceptions.ExpressionParsingException;
+import org.apache.drill.common.expression.CastExpression;
 import org.apache.drill.common.expression.ExpressionStringBuilder;
 import org.apache.drill.common.expression.LogicalExpression;
+import org.apache.drill.common.expression.ValueExpressions.LongExpression;
 import org.apache.drill.common.parser.LogicalExpressionParser;
 import org.apache.drill.test.DrillTest;
 import org.junit.jupiter.api.Test;
@@ -28,6 +30,7 @@ import static org.hamcrest.CoreMatchers.containsString;
 import static org.hamcrest.MatcherAssert.assertThat;
 import static org.junit.jupiter.api.Assertions.assertEquals;
 import static org.junit.jupiter.api.Assertions.assertThrows;
+import static org.junit.jupiter.api.Assertions.assertTrue;
 
 class TreeTest extends DrillTest {
 
@@ -106,6 +109,30 @@ class TreeTest extends DrillTest {
   void testFunctionCallWithoutParams() {
     String expr = "now()";
     testExpressionParsing(expr, expr);
+  }
+
+  @Test
+  void testOrdinaryBigintSerializationKeepsExistingRepresentation() {
+    for (long value : new long[] {0, -1, Integer.MAX_VALUE, (long) Integer.MAX_VALUE + 1, Long.MIN_VALUE}) {
+      assertEquals(Long.toString(value), serializeExpression(new LongExpression(value)));
+    }
+    assertTrue(LogicalExpressionParser.parse("cast(1 as BIGINT)") instanceof CastExpression);
+  }
+
+  @Test
+  void testBoundBigintPreservesWidthAndSlotOnRoundTrip() {
+    for (long value : new long[] {0, -1, Integer.MIN_VALUE, Integer.MAX_VALUE, Long.MIN_VALUE, Long.MAX_VALUE}) {
+      LongExpression original = new LongExpression(value);
+      original.setDynamicParamIndex(3);
+      String serialized = serializeExpression(original);
+      assertEquals("bound_dynamic_param(3, BIGINT, " + value + ")", serialized);
+      LogicalExpression parsed = LogicalExpressionParser.parse(serialized);
+      assertTrue(parsed instanceof LongExpression);
+      LongExpression restored = (LongExpression) parsed;
+      assertEquals(value, restored.getLong());
+      assertEquals(original.getMajorType(), restored.getMajorType());
+      assertEquals(3, restored.getDynamicParamIndex());
+    }
   }
 
   /**

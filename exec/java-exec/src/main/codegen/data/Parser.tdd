@@ -30,6 +30,8 @@
 
   # List of keywords.
   keywords: [
+    "CLEAR",
+    "CACHE",
     "DAFFODIL",
     "DATABASES",
     "SCHEMAS",
@@ -111,6 +113,7 @@
   # List of methods for parsing extensions to "ALTER <scope>" calls.
   # Each must accept arguments "(SqlParserPos pos, String scope)".
   alterStatementParserMethods: [
+    "SqlClearPlanCache",
     "DrillSqlSetOption",
     "DrillSqlResetOption"
   ]
@@ -124,6 +127,8 @@
   # Copied from calcite-core config.fmpp
   # For details please see comment under CALCITE-2405.
   nonReservedKeywords: [
+      "CLEAR"
+      "CACHE"
       "A"
       "ABSENT"
       "ABSOLUTE"

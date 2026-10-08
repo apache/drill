@@ -23,7 +23,6 @@ import org.apache.drill.exec.ExecConstants;
 import org.apache.drill.exec.ops.QueryContext;
 import org.apache.drill.exec.server.options.OptionValue;
 import org.apache.drill.exec.server.options.QueryOptionManager;
-import org.apache.drill.exec.util.ImpersonationUtil;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
@@ -74,16 +73,6 @@ abstract class AbstractSqlSetHandler extends AbstractSqlHandler {
    * @param options Options object
    */
   void checkAdminPrivileges(QueryOptionManager options) {
-    if (context.isUserAuthenticationEnabled()
-        && !ImpersonationUtil.hasAdminPrivileges(
-            context.getQueryUserName(),
-            ExecConstants.ADMIN_USERS_VALIDATOR.getAdminUsers(options),
-            ExecConstants.ADMIN_USER_GROUPS_VALIDATOR.getAdminUserGroups(options))) {
-
-      throw UserException
-          .permissionError()
-          .message("Not authorized to change SYSTEM options.")
-          .build(logger);
-    }
+    checkAdminPrivileges(context, options, "Not authorized to change SYSTEM options.");
   }
 }
