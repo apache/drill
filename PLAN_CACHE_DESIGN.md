@@ -86,6 +86,37 @@ sessions containing temporary tables or mutable aliases bypass the cache.
 Unsupported scans, views without a compatible table identity, Iceberg metadata tables and explicit
 snapshot selections use normal planning.
 
+## Storage plugin roadmap
+
+HBase was chosen first because short queries under high concurrency are expected
+to benefit most from plan caching: validation and optimization can account for a
+substantial share of their latency. Since Drill is also an analytical engine,
+Iceberg was included to evaluate the benefit for analytical workloads over a
+data lake format. These initial integrations cover both point/range reads and
+analytical scans.
+
+Support for other commonly used plugins is planned in follow-up changes, in the
+following order:
+
+1. **DFS formats without filter pushdown**, such as CSV/TSV, JSON and Avro.
+   Filtering remains in Drill's Filter operator. On bind, reconstruct the current
+   file selection and redo directory partition pruning for the new values, with
+   a table compatibility version that detects schema changes.
+2. **Parquet.** Rebuild partition, file and row-group pruning for the current
+   values and data files. Reuse the existing Parquet metadata cache where possible
+   to reduce the cost of reconstruction.
+3. **JDBC.** Rebuild pushed-down SQL for the current parameter values rather than
+   reuse SQL containing the first execution's literals. Evaluate shared plugin
+   hooks for rebuilding pushdown on bind, so JDBC and other plugins that construct
+   native queries can avoid duplicating the integration logic.
+
+Each integration must retain the inputs needed to reconstruct value-dependent
+scan state and provide reliable compatibility checks, following the
+[plugin developer guide](PLAN_CACHE_PLUGIN_GUIDE.md). Benchmark cache-hit planning
+and end-to-end latency against ordinary planning, including metadata reads and
+bind-time reconstruction. For DFS and Parquet in particular, measure file listing
+and pruning costs to establish how much planning work a hit actually saves.
+
 ## Lifetime and observation
 
 An entry is published only after the first query succeeds. A bounded background
