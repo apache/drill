@@ -27,11 +27,27 @@ import org.apache.drill.exec.work.foreman.ForemanSetupException;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.apache.calcite.sql.SqlNode;
+import org.apache.drill.common.exceptions.UserException;
+import org.apache.drill.exec.ExecConstants;
+import org.apache.drill.exec.ops.QueryContext;
+import org.apache.drill.exec.server.options.QueryOptionManager;
+import org.apache.drill.exec.util.ImpersonationUtil;
 
 public abstract class AbstractSqlHandler {
   static final Logger logger = LoggerFactory.getLogger(AbstractSqlHandler.class);
 
   public abstract PhysicalPlan getPlan(SqlNode sqlNode) throws ValidationException, RelConversionException, IOException, ForemanSetupException;
+
+  /** Applies the same administrator policy to SYSTEM options and cache management. */
+  protected static void checkAdminPrivileges(QueryContext context, QueryOptionManager options, String message) {
+    if (context.isUserAuthenticationEnabled()
+        && !ImpersonationUtil.hasAdminPrivileges(
+            context.getQueryUserName(),
+            ExecConstants.ADMIN_USERS_VALIDATOR.getAdminUsers(options),
+            ExecConstants.ADMIN_USER_GROUPS_VALIDATOR.getAdminUserGroups(options))) {
+      throw UserException.permissionError().message(message).build(logger);
+    }
+  }
 
   @SuppressWarnings("unchecked")
   public static <T> T unwrap(Object o, Class<T> clazz) throws ForemanSetupException {

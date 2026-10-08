@@ -29,6 +29,7 @@ import org.apache.drill.exec.planner.common.DrillStatsTable;
 import org.apache.drill.exec.record.metadata.TupleMetadata;
 import org.apache.drill.exec.record.metadata.schema.SchemaProvider;
 import org.apache.drill.exec.server.DrillbitContext;
+import org.apache.drill.exec.store.PlanCacheTable;
 import org.apache.drill.exec.store.PluginRulesProviderImpl;
 import org.apache.drill.exec.store.StoragePluginRulesSupplier;
 import org.apache.drill.exec.store.dfs.FileSelection;
@@ -41,6 +42,10 @@ import org.apache.drill.exec.store.plan.rel.PluginRel;
 import org.apache.hadoop.conf.Configuration;
 import org.apache.hadoop.fs.FileSystem;
 import org.apache.hadoop.fs.Path;
+import org.apache.iceberg.HasTableOperations;
+import org.apache.iceberg.Table;
+import org.apache.iceberg.TableMetadata;
+import org.apache.iceberg.hadoop.HadoopTables;
 
 import java.io.IOException;
 import java.util.Collections;
@@ -102,6 +107,27 @@ public class IcebergFormatPlugin implements FormatPlugin {
   @Override
   public boolean supportsRead() {
     return true;
+  }
+
+  @Override
+  public boolean supportPlanCache(FileSelection selection) {
+    return selection != null && config.getSnapshot() == null
+      && !(selection instanceof IcebergMetadataFileSelection) && selection.getSelectionRoot() != null;
+  }
+
+  @Override
+  public PlanCacheTable planCacheTable(FileSelection selection) throws IOException {
+    if (!supportPlanCache(selection)) {
+      return null;
+    }
+    String identifier = selection.getSelectionRoot().toString();
+    Table table = new HadoopTables(fsConf).load(identifier);
+    if (!(table instanceof HasTableOperations)) {
+      return null;
+    }
+    TableMetadata metadata = ((HasTableOperations) table).operations().current();
+    return metadata == null || metadata.uuid() == null ? null
+      : new PlanCacheTable(identifier, metadata.uuid() + ":" + metadata.currentSchemaId());
   }
 
   @Override

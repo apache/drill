@@ -33,6 +33,7 @@ import org.apache.drill.exec.metrics.DrillCounters;
 import org.apache.drill.exec.oauth.OAuthTokenProvider;
 import org.apache.drill.exec.physical.impl.OperatorCreatorRegistry;
 import org.apache.drill.exec.planner.PhysicalPlanReader;
+import org.apache.drill.exec.planner.sql.PlanCache;
 import org.apache.drill.exec.planner.sql.DrillOperatorTable;
 import org.apache.drill.exec.proto.CoordinationProtos.DrillbitEndpoint;
 import org.apache.drill.exec.rpc.control.Controller;
@@ -63,6 +64,7 @@ public class DrillbitContext implements AutoCloseable {
 
   private final BootStrapContext context;
   private final PhysicalPlanReader reader;
+  private final PlanCache planCache;
   private final ClusterCoordinator coord;
   private final DataConnectionCreator connectionsPool;
   private final DrillbitEndpoint endpoint;
@@ -122,6 +124,9 @@ public class DrillbitContext implements AutoCloseable {
         ExecConstants.STORAGE_PLUGIN_REGISTRY_IMPL, StoragePluginRegistry.class, this);
 
     reader = new PhysicalPlanReader(config, classpathScan, lpPersistence, endpoint, storagePlugins);
+    planCache = new PlanCache(config.getLong(ExecConstants.PLAN_CACHE_MAX_SIZE_BYTES),
+        config.getDuration(ExecConstants.PLAN_CACHE_EXPIRE_AFTER_WRITE),
+        config.getDuration(ExecConstants.PLAN_CACHE_EXPIRE_AFTER_ACCESS));
     operatorCreatorRegistry = new OperatorCreatorRegistry(classpathScan);
     systemOptions = new SystemOptionManager(lpPersistence, provider, config, context.getDefinitions());
     functionRegistry = new FunctionImplementationRegistry(config, classpathScan, systemOptions);
@@ -252,6 +257,10 @@ public class DrillbitContext implements AutoCloseable {
     return reader;
   }
 
+  public PlanCache getPlanCache() {
+    return planCache;
+  }
+
   public PersistentStoreProvider getStoreProvider() {
     return provider;
   }
@@ -325,6 +334,7 @@ public class DrillbitContext implements AutoCloseable {
 
   @Override
   public void close() throws Exception {
+    planCache.close();
     getOptionManager().close();
     getFunctionImplementationRegistry().close();
     getRemoteFunctionRegistry().close();

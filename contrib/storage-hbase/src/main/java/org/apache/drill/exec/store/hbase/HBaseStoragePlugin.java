@@ -25,13 +25,20 @@ import org.apache.calcite.schema.SchemaPlus;
 import org.apache.drill.common.JSONOptions;
 import org.apache.drill.exec.ops.OptimizerRulesContext;
 import org.apache.drill.exec.planner.PlannerPhase;
+import org.apache.drill.exec.planner.logical.DrillTableSelection;
 import org.apache.drill.exec.server.DrillbitContext;
 import org.apache.drill.exec.store.AbstractStoragePlugin;
+import org.apache.drill.exec.store.PlanCacheTable;
 import org.apache.drill.exec.store.SchemaConfig;
 import org.apache.drill.exec.store.StoragePluginOptimizerRule;
 import com.google.common.collect.ImmutableSet;
+import com.google.common.hash.Hashing;
 import org.apache.hadoop.conf.Configuration;
+import org.apache.hadoop.hbase.TableNotFoundException;
+import org.apache.hadoop.hbase.TableName;
 import org.apache.hadoop.hbase.client.Connection;
+import org.apache.hadoop.hbase.client.Table;
+import org.apache.hadoop.hbase.client.TableDescriptorBuilder;
 
 import com.fasterxml.jackson.core.type.TypeReference;
 
@@ -56,6 +63,26 @@ public class HBaseStoragePlugin extends AbstractStoragePlugin {
   @Override
   public boolean supportsRead() {
     return true;
+  }
+
+  @Override
+  public boolean supportPlanCache(DrillTableSelection selection) {
+    return selection instanceof HBaseScanSpec;
+  }
+
+  @Override
+  public PlanCacheTable planCacheTable(DrillTableSelection selection) throws IOException {
+    if (!supportPlanCache(selection)) {
+      return null;
+    }
+    String identifier = ((HBaseScanSpec) selection).getTableName();
+    try (Table table = getConnection().getTable(TableName.valueOf(identifier))) {
+      String version = Hashing.sha256().hashBytes(
+          TableDescriptorBuilder.toByteArray(table.getDescriptor())).toString();
+      return new PlanCacheTable(identifier, version);
+    } catch (TableNotFoundException e) {
+      return null;
+    }
   }
 
   @Override

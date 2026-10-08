@@ -86,6 +86,8 @@ public class QueryContext implements AutoCloseable, OptimizerRulesContext, Schem
   /** Stores constants and their holders by type */
   private final Map<String, Map<MinorType, ValueHolder>> constantValueHolderCache;
   private SqlStatementType stmtType;
+  private Runnable pendingPlanCacheInsert;
+  private boolean planCacheHit;
 
   /*
    * Flag to indicate if close has been called, after calling close the first
@@ -379,6 +381,24 @@ public class QueryContext implements AutoCloseable, OptimizerRulesContext, Schem
     } finally {
       closed = true;
     }
+  }
+
+  public void setPendingPlanCacheInsert(Runnable insert) {
+    pendingPlanCacheInsert = insert;
+  }
+
+  public void setPlanCacheHit() {
+    planCacheHit = true;
+  }
+
+  public boolean isPlanCacheHit() {
+    return planCacheHit;
+  }
+
+  public Runnable takePendingPlanCacheInsert() {
+    Runnable insert = pendingPlanCacheInsert;
+    pendingPlanCacheInsert = null;
+    return insert;
   }
 
   /**
