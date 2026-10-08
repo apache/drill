@@ -34,9 +34,11 @@ import org.apache.drill.exec.store.StoragePluginOptimizerRule;
 import com.google.common.collect.ImmutableSet;
 import com.google.common.hash.Hashing;
 import org.apache.hadoop.conf.Configuration;
+import org.apache.hadoop.hbase.TableNotFoundException;
 import org.apache.hadoop.hbase.TableName;
-import org.apache.hadoop.hbase.client.Admin;
 import org.apache.hadoop.hbase.client.Connection;
+import org.apache.hadoop.hbase.client.Table;
+import org.apache.hadoop.hbase.client.TableDescriptorBuilder;
 
 import com.fasterxml.jackson.core.type.TypeReference;
 
@@ -74,13 +76,12 @@ public class HBaseStoragePlugin extends AbstractStoragePlugin {
       return null;
     }
     String identifier = ((HBaseScanSpec) selection).getTableName();
-    try (Admin admin = getConnection().getAdmin()) {
-      TableName tableName = TableName.valueOf(identifier);
-      if (!admin.tableExists(tableName)) {
-        return null;
-      }
-      String version = Hashing.sha256().hashBytes(admin.getTableDescriptor(tableName).toByteArray()).toString();
+    try (Table table = getConnection().getTable(TableName.valueOf(identifier))) {
+      String version = Hashing.sha256().hashBytes(
+          TableDescriptorBuilder.toByteArray(table.getDescriptor())).toString();
       return new PlanCacheTable(identifier, version);
+    } catch (TableNotFoundException e) {
+      return null;
     }
   }
 

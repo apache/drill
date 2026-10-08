@@ -45,6 +45,7 @@ import org.junit.runners.Suite.SuiteClasses;
   TestHBaseCFAsJSONString.class,
   TestHBaseConnectionManager.class,
   TestHBaseFilterPushDown.class,
+  TestHBasePlanCacheMetadata.class,
   TestHBaseProjectPushDown.class,
   TestHBaseQueries.class,
   TestHBaseRegexParser.class,
