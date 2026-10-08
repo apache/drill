@@ -17,6 +17,8 @@
  */
 package org.apache.drill.exec.planner.sql;
 
+import java.util.ArrayList;
+import java.util.Arrays;
 import java.util.List;
 import java.util.stream.Collectors;
 
@@ -28,6 +30,9 @@ import org.apache.drill.exec.metrics.DrillMetrics;
 import org.apache.drill.exec.ops.QueryContext;
 import org.apache.drill.exec.physical.PhysicalPlan;
 import org.apache.drill.exec.physical.base.PhysicalOperator;
+import org.apache.drill.exec.physical.rowSet.DirectRowSet;
+import org.apache.drill.exec.physical.rowSet.RowSetReader;
+import org.apache.drill.exec.planner.PhysicalPlanReader;
 import org.apache.drill.exec.planner.physical.PlannerSettings;
 import org.apache.drill.exec.planner.sql.conversion.SqlConverter;
 import org.apache.drill.exec.proto.UserBitShared.QueryId;
@@ -43,8 +48,10 @@ import org.junit.Test;
 import org.junit.experimental.categories.Category;
 
 import static org.junit.Assert.assertEquals;
-import static org.junit.Assert.assertNotNull;
+import static org.junit.Assert.assertFalse;
 import static org.junit.Assert.assertNotEquals;
+import static org.junit.Assert.assertNotNull;
+import static org.junit.Assert.assertTrue;
 
 @Category(SqlTest.class)
 public class TestPlanCachePlanning extends ClusterTest {
@@ -253,6 +260,65 @@ public class TestPlanCachePlanning extends ClusterTest {
       publish.run();
       cache().awaitWrites();
       assertEquals(0L, metric("entries"));
+    }
+  }
+
+  @Test
+  public void testBindingFailureInvalidatesAndReplansBeforeExecution() throws Exception {
+    UserSession session = UserSession.Builder.newBuilder()
+        .withCredentials(UserCredentials.newBuilder().setUserName("binding-failure-test").build())
+        .withOptionManager(cluster.drillbit().getContext().getOptionManager())
+        .setSupportComplexTypes(true).build();
+    session.getOptions().setLocalOption(PlannerSettings.ENABLE_PLAN_CACHE_OPTION, true);
+    String sql = "SELECT x AS fallback_value FROM (VALUES (1), (2)) AS t(x) WHERE x > %d";
+    PhysicalPlanReader reader = cluster.drillbit().getContext().getPlanReader();
+    try (QueryContext context = new QueryContext(session, cluster.drillbit().getContext(), QueryId.getDefaultInstance())) {
+      PhysicalPlan planned = DrillSqlWorker.getPlan(context, String.format(sql, 0), new Pointer<>());
+      context.takePendingPlanCacheInsert();
+      SqlConverter converter = new SqlConverter(context);
+      SqlNode parsed = converter.parse(String.format(sql, 0));
+      PlanCache.ContextSnapshot snapshot = PlanCache.ContextSnapshot.resolve(converter.getDefaultSchema(), parsed, context);
+      PlanCacheParameterizer.Candidate candidate = PlanCacheParameterizer.parameterize(parsed, converter.getTypeFactory());
+      String key = context.getQueryUserName() + '\n' + session.getDefaultSchemaPath() + '\n'
+          + snapshot.keyFingerprint() + '\n' + candidate.template;
+      String json = reader.writeJson(planned);
+      assertTrue(json.contains("bound_dynamic_param(0,"));
+      // Readable plan JSON with a nonexistent slot must fail binding before execution.
+      assertTrue(cache().put(key, json.replace("bound_dynamic_param(0,", "bound_dynamic_param(999,"),
+          null, reader, snapshot));
+    }
+
+    long hits = cache().getHitCount();
+    long invalidations = metric("invalidations");
+    try (QueryContext context = new QueryContext(session, cluster.drillbit().getContext(), QueryId.getDefaultInstance())) {
+      PhysicalPlan replanned = DrillSqlWorker.getPlan(context, String.format(sql, 0), new Pointer<>());
+      assertFalse(context.isPlanCacheHit());
+      assertEquals(invalidations + 1, metric("invalidations"));
+      assertEquals(Arrays.asList(1, 2), executeValues(replanned));
+      Runnable publish = context.takePendingPlanCacheInsert();
+      assertNotNull(publish);
+      publish.run();
+      cache().awaitWrites();
+    }
+    try (QueryContext context = new QueryContext(session, cluster.drillbit().getContext(), QueryId.getDefaultInstance())) {
+      PhysicalPlan rebound = DrillSqlWorker.getPlan(context, String.format(sql, 1), new Pointer<>());
+      assertTrue(context.isPlanCacheHit());
+      assertEquals(Arrays.asList(2), executeValues(rebound));
+      assertEquals(hits + 1, cache().getHitCount());
+    }
+  }
+
+  private List<Integer> executeValues(PhysicalPlan plan) throws Exception {
+    DirectRowSet rows = client.queryBuilder().physical(cluster.drillbit().getContext().getPlanReader().writeJson(plan)).rowSet();
+    try {
+      List<Integer> values = new ArrayList<>();
+      RowSetReader reader = rows.reader();
+      while (reader.next()) {
+        values.add(reader.scalar(0).getInt());
+      }
+      return values;
+    } finally {
+      rows.clear();
     }
   }
 }
