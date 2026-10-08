@@ -17,10 +17,13 @@
  */
 package org.apache.drill.exec.planner.sql;
 
+import static com.google.common.base.Preconditions.checkArgument;
+
 import java.io.IOException;
 import java.math.BigDecimal;
 import java.math.RoundingMode;
 import java.nio.charset.StandardCharsets;
+import java.time.Duration;
 import java.util.ArrayList;
 import java.util.Collections;
 import java.util.HashMap;
@@ -68,6 +71,7 @@ import org.apache.drill.common.logical.StoragePluginConfig;
 import org.apache.drill.common.parser.LogicalExpressionParser;
 import org.apache.drill.common.types.TypeProtos.MajorType;
 import org.apache.drill.common.types.TypeProtos.MinorType;
+import org.apache.drill.exec.ExecConstants;
 import org.apache.drill.exec.ops.QueryContext;
 import org.apache.drill.exec.physical.PhysicalPlan;
 import org.apache.drill.exec.planner.PhysicalPlanReader;
@@ -86,6 +90,8 @@ import com.fasterxml.jackson.databind.JsonNode;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import com.fasterxml.jackson.databind.node.ArrayNode;
 import com.fasterxml.jackson.databind.node.ObjectNode;
+import com.google.common.annotations.VisibleForTesting;
+import com.google.common.base.Ticker;
 import com.google.common.cache.Cache;
 import com.google.common.cache.CacheBuilder;
 import com.google.common.hash.Hashing;
@@ -95,15 +101,39 @@ public final class PlanCache implements AutoCloseable {
   private static final Logger logger = LoggerFactory.getLogger(PlanCache.class);
   private static final ObjectMapper JSON = new ObjectMapper();
   private static final String MARKER = ExpressionStringBuilder.BOUND_DYNAMIC_PARAM + "(";
-  private final Cache<String, Entry> entries = CacheBuilder.newBuilder()
-      .maximumWeight(32 * 1024 * 1024)
-      .weigher((String key, Entry value) -> value.json.length())
-      .expireAfterWrite(10, TimeUnit.MINUTES)
-      .build();
+  private final Cache<String, Entry> entries;
   private final AtomicLong successfulBinds = new AtomicLong();
   private final ThreadPoolExecutor writer = new ThreadPoolExecutor(1, 1, 0L,
       TimeUnit.MILLISECONDS, new ArrayBlockingQueue<>(64),
       new NamedThreadFactory("plan-cache-writer-"));
+
+  /** A zero expiration duration disables that policy; a zero capacity disables storage. */
+  public PlanCache(long maxSizeBytes, Duration expireAfterWrite, Duration expireAfterAccess) {
+    this(maxSizeBytes, expireAfterWrite, expireAfterAccess, Ticker.systemTicker());
+  }
+
+  @VisibleForTesting
+  PlanCache(long maxSizeBytes, Duration expireAfterWrite, Duration expireAfterAccess, Ticker ticker) {
+    checkArgument(maxSizeBytes >= 0, "%s must be non-negative", ExecConstants.PLAN_CACHE_MAX_SIZE_BYTES);
+    checkArgument(!expireAfterWrite.isNegative(), "%s must be non-negative",
+        ExecConstants.PLAN_CACHE_EXPIRE_AFTER_WRITE);
+    checkArgument(!expireAfterAccess.isNegative(), "%s must be non-negative",
+        ExecConstants.PLAN_CACHE_EXPIRE_AFTER_ACCESS);
+    CacheBuilder<String, Entry> builder = CacheBuilder.newBuilder()
+        .maximumWeight(maxSizeBytes)
+        .weigher((String key, Entry value) -> value.jsonSizeBytes)
+        .ticker(ticker);
+    // Passing zero to Guava would expire entries immediately, rather than disable the policy.
+    if (!expireAfterWrite.isZero()) {
+      builder.expireAfterWrite(expireAfterWrite);
+    }
+    if (!expireAfterAccess.isZero()) {
+      builder.expireAfterAccess(expireAfterAccess);
+    }
+    entries = builder.build();
+    logger.info("Plan cache settings: max_size_bytes={}, expire_after_write={}, expire_after_access={}"
+        + " (zero expiration disables that policy)", maxSizeBytes, expireAfterWrite, expireAfterAccess);
+  }
 
   public long getHitCount() {
     return successfulBinds.get();
@@ -196,11 +226,13 @@ public final class PlanCache implements AutoCloseable {
 
   public static final class Entry {
     private final String json;
+    private final int jsonSizeBytes;
     private final String textPlan;
     private final ContextSnapshot context;
 
     private Entry(String json, String textPlan, ContextSnapshot context) {
       this.json = json;
+      this.jsonSizeBytes = json.getBytes(StandardCharsets.UTF_8).length;
       this.textPlan = textPlan;
       this.context = context;
     }

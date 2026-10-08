@@ -124,7 +124,9 @@ public class DrillbitContext implements AutoCloseable {
         ExecConstants.STORAGE_PLUGIN_REGISTRY_IMPL, StoragePluginRegistry.class, this);
 
     reader = new PhysicalPlanReader(config, classpathScan, lpPersistence, endpoint, storagePlugins);
-    planCache = new PlanCache();
+    planCache = new PlanCache(config.getLong(ExecConstants.PLAN_CACHE_MAX_SIZE_BYTES),
+        config.getDuration(ExecConstants.PLAN_CACHE_EXPIRE_AFTER_WRITE),
+        config.getDuration(ExecConstants.PLAN_CACHE_EXPIRE_AFTER_ACCESS));
     operatorCreatorRegistry = new OperatorCreatorRegistry(classpathScan);
     systemOptions = new SystemOptionManager(lpPersistence, provider, config, context.getDefinitions());
     functionRegistry = new FunctionImplementationRegistry(config, classpathScan, systemOptions);

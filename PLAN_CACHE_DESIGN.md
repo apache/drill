@@ -90,9 +90,42 @@ snapshot selections use normal planning.
 
 An entry is published only after the first query succeeds. A bounded background
 queue performs serialization and read-back validation; a full queue simply skips
-publication. The cache is bounded by serialized-plan weight and entries expire
-after ten minutes. Cached row-count estimates come from the first optimization;
-new values do not trigger a new cost-based plan choice.
+publication. Cached row-count estimates come from the first optimization;
+new values and statistics changes alone do not trigger a new cost-based plan choice.
+
+The following boot options can be overridden in `drill-override.conf`. They are
+read once per Drillbit and changing them requires a restart. The effective settings
+are logged at startup. `planner.enable_plan_cache` remains the runtime on/off switch.
+
+```hocon
+drill.exec.plan_cache: {
+  max_size_bytes: 33554432,
+  expire_after_write: 0,
+  expire_after_access: 10m
+}
+```
+
+- `max_size_bytes` bounds the total UTF-8 byte size of cached physical-plan JSON
+  per Drillbit. The default is 32 MiB; keys, entry metadata and Java object overhead
+  are not included in this limit. A value of `0` disables cache storage.
+- `expire_after_write` sets a fixed lifetime since creation or replacement.
+  The default of `0` disables this policy; reads do not extend a configured lifetime.
+- `expire_after_access` sets an idle lifetime since the last read or write.
+  The default of `10m` removes unused entries while allowing active plans to remain
+  cached, subject to capacity eviction and compatibility checks.
+
+Durations accept HOCON units such as `30s`, `10m`, or `1h`. A duration of `0`
+disables only that expiration policy. When both policies are enabled, an entry
+expires as soon as either deadline is reached. When both are disabled, capacity
+eviction and explicit invalidation still apply. All three settings must be
+non-negative; invalid settings fail Drillbit startup.
+
+Capacity eviction favors recently accessed entries using Guava's segmented LRU
+policy, so entries can be evicted before their expiration deadlines or before the
+global size limit is reached. Expired entries are no longer returned by lookups;
+physical removal occurs during cache maintenance rather than on a background timer.
+Without write-based expiration, hot plans do not periodically re-optimize. Operators
+who need that behavior can configure a nonzero `expire_after_write` lifetime.
 
 The query profile's **Plan Cache Hit** field, or JSON `planCacheHit`, identifies a
 successful hit. Explain shows slot names and this execution's parameter values;
