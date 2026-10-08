@@ -39,20 +39,30 @@ import java.io.File;
 public class MSAccessFormatPlugin extends EasyFormatPlugin<MSAccessFormatConfig> {
 
   protected static final String DEFAULT_NAME = "msaccess";
+
+  /**
+   * Boot option that lets the reader follow linked tables to other database files. It is
+   * deliberately not part of {@link MSAccessFormatConfig}: every format config field can be
+   * overridden from a table function, which would let any query user turn the protection off.
+   */
+  public static final String ALLOW_LINKED_DATABASES = "drill.exec.storage.msaccess.allow_linked_databases";
   private final DrillbitContext context;
 
   private static class MSAccessReaderFactory extends FileReaderFactory {
 
     private final File tempDir;
     private final MSAccessFormatConfig config;
-    public MSAccessReaderFactory(File tempDir, MSAccessFormatConfig config) {
+    private final boolean allowLinkedDatabases;
+
+    public MSAccessReaderFactory(File tempDir, MSAccessFormatConfig config, boolean allowLinkedDatabases) {
       this.tempDir = tempDir;
       this.config = config;
+      this.allowLinkedDatabases = allowLinkedDatabases;
     }
 
     @Override
     public ManagedReader newReader(FileSchemaNegotiator negotiator) {
-      return new MSAccessBatchReader(negotiator, tempDir, config);
+      return new MSAccessBatchReader(negotiator, tempDir, config, allowLinkedDatabases);
     }
   }
 
@@ -82,7 +92,12 @@ public class MSAccessFormatPlugin extends EasyFormatPlugin<MSAccessFormatConfig>
   @Override
   protected void configureScan(FileScanLifecycleBuilder builder, EasySubScan scan) {
     builder.nullType(Types.optional(TypeProtos.MinorType.VARCHAR));
-    builder.readerFactory(new MSAccessReaderFactory(getTmpDir(), formatConfig));
+    builder.readerFactory(new MSAccessReaderFactory(getTmpDir(), formatConfig, allowLinkedDatabases()));
+  }
+
+  private boolean allowLinkedDatabases() {
+    DrillConfig config = context.getConfig();
+    return config.hasPath(ALLOW_LINKED_DATABASES) && config.getBoolean(ALLOW_LINKED_DATABASES);
   }
 
   /**
