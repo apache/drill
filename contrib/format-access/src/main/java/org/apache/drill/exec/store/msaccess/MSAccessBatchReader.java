@@ -22,9 +22,10 @@ import com.healthmarketscience.jackcess.Column;
 import com.healthmarketscience.jackcess.DataType;
 import com.healthmarketscience.jackcess.Database;
 import com.healthmarketscience.jackcess.DatabaseBuilder;
-import com.healthmarketscience.jackcess.util.LinkResolver;
 import com.healthmarketscience.jackcess.Row;
 import com.healthmarketscience.jackcess.Table;
+import com.healthmarketscience.jackcess.TableMetaData;
+import com.healthmarketscience.jackcess.util.LinkResolver;
 import org.apache.commons.lang3.StringUtils;
 import org.apache.drill.common.AutoCloseables;
 import org.apache.drill.common.exceptions.CustomErrorContext;
@@ -62,7 +63,8 @@ public class MSAccessBatchReader implements ManagedReader {
   /**
    * An Access file can name another database (a local path or a UNC share) as the source of a
    * linked table.  Jackcess's default resolver would open it as the Drillbit service account, so
-   * refuse instead unless the plugin config explicitly opts in.
+   * refuse instead unless {@link MSAccessFormatPlugin#ALLOW_LINKED_DATABASES} is set.  Linked tables
+   * are normally caught earlier with a clearer error; this is the backstop.
    */
   private static final LinkResolver REJECT_LINKED_DATABASES = (linkerDb, linkeeFileName) -> {
     throw new IOException("Refusing to open linked database referenced by this MS Access file: " + linkeeFileName);
@@ -75,6 +77,7 @@ public class MSAccessBatchReader implements ManagedReader {
   private final List<MSAccessColumn> columnList;
   private final MSAccessFormatConfig config;
   private final boolean metadataOnly;
+  private final boolean allowLinkedDatabases;
   private File tempFile;
   private Set<String> tableList;
   private Iterator<Row> rowIterator;
@@ -83,8 +86,10 @@ public class MSAccessBatchReader implements ManagedReader {
   private Table table;
   private Database db;
 
-  public MSAccessBatchReader(FileSchemaNegotiator negotiator, File tempDir, MSAccessFormatConfig config) {
+  public MSAccessBatchReader(FileSchemaNegotiator negotiator, File tempDir, MSAccessFormatConfig config,
+                             boolean allowLinkedDatabases) {
     this.tempDir = tempDir;
+    this.allowLinkedDatabases = allowLinkedDatabases;
     this.columnList = new ArrayList<>();
     this.config = config;
     this.file = negotiator.file();
@@ -133,10 +138,11 @@ public class MSAccessBatchReader implements ManagedReader {
   private TupleMetadata buildMetadataSchema(SchemaBuilder builder) {
     // Adds the table name
     builder.add("table", MinorType.VARCHAR);
-    builder.add("created_date", MinorType.TIMESTAMP);
-    builder.add("updated_date", MinorType.TIMESTAMP);
-    builder.add("row_count", MinorType.INT);
-    builder.add("col_count", MinorType.INT);
+    // Nullable because linked tables are listed without being opened, so these are unknown.
+    builder.addNullable("created_date", MinorType.TIMESTAMP);
+    builder.addNullable("updated_date", MinorType.TIMESTAMP);
+    builder.addNullable("row_count", MinorType.INT);
+    builder.addNullable("col_count", MinorType.INT);
     builder.addArray("columns", MinorType.VARCHAR);
 
     return builder.buildSchema();
@@ -144,11 +150,28 @@ public class MSAccessBatchReader implements ManagedReader {
 
   private TupleMetadata buildSchemaFromTable(SchemaBuilder builder, String tableName) {
     try {
+      TableMetaData metaData = db.getTableMetaData(tableName);
+      if (metaData == null) {
+        deleteTempFile();
+        throw UserException.validationError()
+            .message("Table " + tableName + " not found.")
+            .addContext(errorContext)
+            .build(logger);
+      }
+      if (isBlockedLink(metaData)) {
+        deleteTempFile();
+        throw UserException.permissionError()
+            .message("Table " + tableName + " is a linked table that refers to another database (" +
+                metaData.getLinkedDbName() + "). Reading linked tables is disabled. An administrator can " +
+                "enable it by setting " + MSAccessFormatPlugin.ALLOW_LINKED_DATABASES + " to true in drill-override.conf.")
+            .addContext(errorContext)
+            .build(logger);
+      }
       table = db.getTable(tableName);
     } catch (IOException e) {
       deleteTempFile();
       throw UserException.dataReadError(e)
-          .message("Table " + config.getTableName() + " not found. " + e.getMessage())
+          .message("Error opening table " + tableName + ": " + e.getMessage())
           .addContext(errorContext)
           .build(logger);
     }
@@ -260,7 +283,7 @@ public class MSAccessBatchReader implements ManagedReader {
       db = new DatabaseBuilder(convertInputStreamToFile(fsStream))
           .setReadOnly(true)
           .open();
-      if (!config.getAllowLinkedDatabases()) {
+      if (!allowLinkedDatabases) {
         db.setLinkResolver(REJECT_LINKED_DATABASES);
       }
       tableList = db.getTableNames();
@@ -273,9 +296,21 @@ public class MSAccessBatchReader implements ManagedReader {
     }
   }
 
+  private boolean isBlockedLink(TableMetaData metaData) {
+    return metaData.isLinked() && !allowLinkedDatabases;
+  }
+
   private void processMetadataRow(String tableName) throws IOException {
     Table table;
     try {
+      TableMetaData metaData = db.getTableMetaData(tableName);
+      if (metaData != null && isBlockedLink(metaData)) {
+        // List the linked table without opening it, so the rest of the file can still be explored.
+        rowWriter.start();
+        rowWriter.scalar("table").setString(tableName);
+        rowWriter.save();
+        return;
+      }
       table = db.getTable(tableName);
     } catch (IOException e) {
       deleteTempFile();
@@ -289,7 +324,7 @@ public class MSAccessBatchReader implements ManagedReader {
     rowWriter.scalar("table").setString(tableName);
     LocalDateTime createdDate = table.getCreatedDate();
     rowWriter.scalar("created_date").setTimestamp(createdDate.toInstant(ZoneOffset.UTC));
-    LocalDateTime updatedDate = table.getCreatedDate();
+    LocalDateTime updatedDate = table.getUpdatedDate();
     rowWriter.scalar("updated_date").setTimestamp(updatedDate.toInstant(ZoneOffset.UTC));
     rowWriter.scalar("row_count").setInt(table.getRowCount());
     rowWriter.scalar("col_count").setInt(table.getColumnCount());

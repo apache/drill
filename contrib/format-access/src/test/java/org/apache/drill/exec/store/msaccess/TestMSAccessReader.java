@@ -21,9 +21,11 @@ package org.apache.drill.exec.store.msaccess;
 import com.healthmarketscience.jackcess.Database;
 import com.healthmarketscience.jackcess.DatabaseBuilder;
 import org.apache.drill.categories.RowSetTest;
+import org.apache.drill.common.exceptions.UserRemoteException;
 import org.apache.drill.common.types.TypeProtos.MinorType;
 import org.apache.drill.exec.physical.rowSet.RowSet;
 import org.apache.drill.exec.physical.rowSet.RowSetBuilder;
+import org.apache.drill.exec.proto.UserBitShared.DrillPBError;
 import org.apache.drill.exec.record.metadata.SchemaBuilder;
 import org.apache.drill.exec.record.metadata.TupleMetadata;
 import org.apache.drill.test.ClusterFixture;
@@ -39,6 +41,8 @@ import java.io.File;
 
 import static org.apache.drill.test.rowSet.RowSetUtilities.strArray;
 import static org.junit.Assert.assertEquals;
+import static org.junit.Assert.assertFalse;
+import static org.junit.Assert.assertNotEquals;
 import static org.junit.Assert.assertTrue;
 import static org.junit.Assert.fail;
 
@@ -50,25 +54,21 @@ public class TestMSAccessReader extends ClusterTest {
     ClusterTest.startCluster(ClusterFixture.builder(dirTestWatcher));
   }
 
-  @Test
-  public void testLinkedTableResolvedWhenAllowed() throws Exception {
-    String sql = "SELECT * FROM table(dfs.`" + writeLinkedTableFile("linked_allowed.mdb").getName() +
-        "` (type=> 'msaccess', tableName => 'Linked', allowLinkedDatabases => true))";
-    try {
-      client.queryBuilder().sql(sql).run();
-      fail("Expected the (nonexistent) linked database to be opened");
-    } catch (Exception e) {
-      // Jackcess got as far as trying to open the linked path, which is what the option enables.
-      assertTrue(e.getMessage(), e.getMessage().contains("given file does not exist"));
+  /**
+   * Writes an Access file whose only table is linked to a database that does not exist. The target is
+   * a path under the test directory so that nothing outside the sandbox (e.g. an SMB share) is touched
+   * if the link were ever followed.
+   */
+  static File writeLinkedTableFile(String name, String linkedDbPath) throws Exception {
+    File mdb = new File(dirTestWatcher.getRootDir(), name);
+    try (Database db = DatabaseBuilder.create(Database.FileFormat.V2003, mdb)) {
+      db.createLinkedTable("Linked", linkedDbPath, "Table1");
     }
+    return mdb;
   }
 
   private static File writeLinkedTableFile(String name) throws Exception {
-    File mdb = new File(dirTestWatcher.getRootDir(), name);
-    try (Database db = DatabaseBuilder.create(Database.FileFormat.V2003, mdb)) {
-      db.createLinkedTable("Linked", "//evil.example.com/share/secret.mdb", "Table1");
-    }
-    return mdb;
+    return writeLinkedTableFile(name, new File(dirTestWatcher.getRootDir(), "missing_target.mdb").getAbsolutePath());
   }
 
   @Test
@@ -80,9 +80,45 @@ public class TestMSAccessReader extends ClusterTest {
     try {
       client.queryBuilder().sql(sql).run();
       fail("Expected the linked database to be refused");
-    } catch (Exception e) {
-      assertTrue(e.getMessage(), e.getMessage().contains("Refusing to open linked database"));
+    } catch (UserRemoteException e) {
+      assertEquals(DrillPBError.ErrorType.PERMISSION, e.getErrorType());
+      assertTrue(e.getMessage(), e.getMessage().contains("Table Linked is a linked table"));
+      assertTrue(e.getMessage(), e.getMessage().contains(MSAccessFormatPlugin.ALLOW_LINKED_DATABASES));
     }
+  }
+
+  @Test
+  public void testLinkedTableCannotBeEnabledFromTableFunction() throws Exception {
+    // Enabling linked tables is a boot option, so a query must not be able to switch it on.
+    File mdb = writeLinkedTableFile("linked_table_function.mdb");
+    String sql = "SELECT * FROM table(dfs.`" + mdb.getName() +
+        "` (type=> 'msaccess', tableName => 'Linked', allowLinkedDatabases => true))";
+    try {
+      client.queryBuilder().sql(sql).run();
+      fail("Expected the query to fail");
+    } catch (UserRemoteException e) {
+      assertNotEquals(e.getMessage(), DrillPBError.ErrorType.DATA_READ, e.getErrorType());
+      assertFalse(e.getMessage(), e.getMessage().contains("does not exist"));
+    }
+  }
+
+  @Test
+  public void testMetadataQueryListsLinkedTable() throws Exception {
+    File mdb = writeLinkedTableFile("linked_metadata.mdb");
+    String sql = "SELECT `table`, row_count, col_count FROM dfs.`" + mdb.getName() + "`";
+    RowSet results = client.queryBuilder().sql(sql).rowSet();
+
+    TupleMetadata expectedSchema = new SchemaBuilder()
+        .add("table", MinorType.VARCHAR)
+        .addNullable("row_count", MinorType.INT)
+        .addNullable("col_count", MinorType.INT)
+        .buildSchema();
+
+    RowSet expected = new RowSetBuilder(client.allocator(), expectedSchema)
+        .addRow("Linked", null, null)
+        .build();
+
+    new RowSetComparison(expected).verifyAndClearAll(results);
   }
 
   @Test
@@ -169,16 +205,16 @@ public class TestMSAccessReader extends ClusterTest {
 
     TupleMetadata expectedSchema = new SchemaBuilder()
         .add("table", MinorType.VARCHAR)
-        .add("created_date", MinorType.TIMESTAMP)
-        .add("updated_date", MinorType.TIMESTAMP)
-        .add("row_count", MinorType.INT)
-        .add("col_count", MinorType.INT)
+        .addNullable("created_date", MinorType.TIMESTAMP)
+        .addNullable("updated_date", MinorType.TIMESTAMP)
+        .addNullable("row_count", MinorType.INT)
+        .addNullable("col_count", MinorType.INT)
         .addArray("columns", MinorType.VARCHAR)
         .buildSchema();
 
     RowSet expected = new RowSetBuilder(client.allocator(), expectedSchema)
         .addRow("Table1", QueryTestUtil.ConvertDateToLong("2021-06-03T20:09:56.993Z"),
-            QueryTestUtil.ConvertDateToLong("2021-06-03T20:09:56.993Z"), 9, 6, strArray("ID", "Field1", "DateExt", "DateNormal", "DateExtStr", "DateNormalCalc"))
+            QueryTestUtil.ConvertDateToLong("2021-06-03T20:25:26.483Z"), 9, 6, strArray("ID", "Field1", "DateExt", "DateNormal", "DateExtStr", "DateNormalCalc"))
         .build();
 
     new RowSetComparison(expected).verifyAndClearAll(results);
