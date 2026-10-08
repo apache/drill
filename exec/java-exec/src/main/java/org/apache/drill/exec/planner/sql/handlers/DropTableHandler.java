@@ -31,6 +31,9 @@ import org.apache.drill.exec.planner.sql.DirectPlan;
 import org.apache.drill.exec.planner.sql.SchemaUtilities;
 import org.apache.drill.exec.planner.sql.parser.SqlDropTable;
 import org.apache.drill.exec.rpc.user.UserSession;
+import org.apache.drill.exec.security.AccessAuthorizerManager;
+import org.apache.drill.exec.security.DdlAccessChecker;
+import org.apache.drill.exec.security.spi.AccessType;
 import org.apache.drill.exec.store.AbstractSchema;
 
 // SqlHandler for dropping a table.
@@ -67,6 +70,13 @@ public class DropTableHandler extends DefaultSqlHandler {
       session.removeTemporaryTable(temporarySchema, originalTableName, drillConfig);
     } else {
       AbstractSchema drillSchema = SchemaUtilities.resolveToMutableDrillSchema(defaultSchema, tableSchema);
+
+      // Ranger DDL authorization: DROP privilege on the target table.
+      // Checked before the existence check so an unauthorized user cannot
+      // probe table existence via differing errors.
+      if (AccessAuthorizerManager.isEnabled(config.getContext().getConfig())) {
+        DdlAccessChecker.checkDdlAccess(context, drillSchema, originalTableName, AccessType.DROP);
+      }
       Table tableToDrop = SqlHandlerUtil.getTableFromSchema(drillSchema, originalTableName);
       // TableType.OTHER started getting reported for H2 DB when it was upgraded to v2.
       if (tableToDrop == null || (tableToDrop.getJdbcTableType() != Schema.TableType.TABLE &&

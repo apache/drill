@@ -73,6 +73,14 @@
     <appender-ref ref="FILE" />
   </logger>
 
+  <!-- Ranger audit logger: routes Log4jAuditProvider output into drillbit.log.
+       The logger name "xaaudit.org.apache.ranger.audit.provider.Log4jAuditProvider"
+       is constructed by Log4jAuditProvider static init as "xaaudit." + class.getName().
+       Audit events are logged at INFO level via AUDITLOG logger. -->
+  <logger name="xaaudit.org.apache.ranger.audit.provider.Log4jAuditProvider" additivity="false" level="info">
+    <appender-ref ref="FILE" />
+  </logger>
+
   <logger name="query.logger" additivity="false" level="info">
     <appender-ref ref="QUERY" />
     <!--     <appender-ref ref="SOCKET" /> -->

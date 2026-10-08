@@ -1,0 +1,99 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!--
+  Licensed to the Apache Software Foundation (ASF) under one
+  or more contributor license agreements.  See the NOTICE file
+  distributed with this work for additional information
+  regarding copyright ownership.  The ASF licenses this file
+  to you under the Apache License, Version 2.0 (the
+  "License"); you may not use this file except in compliance
+  with the License.  You may obtain a copy of the License at
+
+  http://www.apache.org/licenses/LICENSE-2.0
+
+  Unless required by applicable law or agreed to in writing,
+  software distributed under the License is distributed on an
+  "AS IS" BASIS, WITHOUT WARRANTIES OR CONDITIONS OF ANY
+  KIND, either express or implied.  See the License for the
+  specific language governing permissions and limitations
+  under the License.
+-->
+<project xmlns="http://maven.apache.org/POM/4.0.0"
+         xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
+         xsi:schemaLocation="http://maven.apache.org/POM/4.0.0 http://maven.apache.org/xsd/maven-4.0.0.xsd">
+  <modelVersion>4.0.0</modelVersion>
+
+  <parent>
+    <groupId>org.apache.drill</groupId>
+    <artifactId>auth-parent</artifactId>
+    <version>1.23.0-SNAPSHOT</version>
+  </parent>
+
+  <artifactId>drill-ranger-plugin-shim</artifactId>
+  <name>Drill : Ranger Drill Plugin Shim</name>
+  <description>
+    Thin shim between the Drillbit and the drill-ranger-plugin authorization
+    module. Lives on the Drillbit's main classpath and implements the
+    org.apache.drill.exec.security.spi.AccessAuthorizer SPI; delegates all
+    calls to DrillAccessControl (in drill-ranger-plugin) via reflection
+    through an isolated DrillRangerPluginClassLoader.
+
+    Mirrors Presto's ranger-presto-plugin-shim in the Ranger repository:
+      - drill-ranger-plugin-shim : Drillbit main classpath (this module)
+      - drill-ranger-plugin      : RangerPluginClassLoader isolated directory
+                                   (jars/ranger-drill-plugin-impl/)
+
+    The shim deliberately has NO compile-time dependency on
+    drill-ranger-plugin: DrillAccessControl is referenced only via a string
+    constant and reflection, so the two jars are coupled solely at runtime
+    through the plugin classloader.
+
+    The Drillbit discovers this module's RangerAccessAuthorizerFactory via
+    META-INF/services (ServiceLoader) registered in this jar.
+  </description>
+
+  <dependencies>
+    <!--
+      Drill engine authorization SPI (AccessAuthorizer / AccessAuthorizerFactory /
+      UserIdentity / AccessType), extracted into the standalone JDK-only
+      drill-security-spi module. Provided scope: at runtime the classes are
+      supplied by drill-security-spi.jar on the Drillbit classpath (jars/).
+      This is also the artifact the plugin side (drill-ranger-plugin) compiles
+      against — the plugin classloader's parent fallback resolves these types
+      to the same Class objects at runtime, so the shim can cast the
+      reflectively-created DrillAccessControl instance to AccessAuthorizer.
+    -->
+    <dependency>
+      <groupId>org.apache.drill</groupId>
+      <artifactId>drill-security-spi</artifactId>
+      <version>${project.version}</version>
+      <scope>provided</scope>
+    </dependency>
+    <!--
+      Base RangerPluginClassLoader that DrillRangerPluginClassLoader extends.
+      Provided scope: at runtime the jar is shipped in jars/3rdparty/ by the
+      distribution assembly.
+    -->
+    <dependency>
+      <groupId>org.apache.ranger</groupId>
+      <artifactId>ranger-plugin-classloader</artifactId>
+      <version>${ranger.version}</version>
+      <scope>provided</scope>
+    </dependency>
+    <dependency>
+      <groupId>org.slf4j</groupId>
+      <artifactId>slf4j-api</artifactId>
+      <scope>provided</scope>
+    </dependency>
+    <dependency>
+      <groupId>junit</groupId>
+      <artifactId>junit</artifactId>
+      <scope>test</scope>
+    </dependency>
+    <dependency>
+      <groupId>org.mockito</groupId>
+      <artifactId>mockito-core</artifactId>
+      <version>${mockito.version}</version>
+      <scope>test</scope>
+    </dependency>
+  </dependencies>
+</project>
