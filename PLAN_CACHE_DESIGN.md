@@ -105,9 +105,9 @@ drill.exec.plan_cache: {
 }
 ```
 
-- `max_size_bytes` bounds the total UTF-8 byte size of cached physical-plan JSON
-  per Drillbit. The default is 32 MiB; keys, entry metadata and Java object overhead
-  are not included in this limit. A value of `0` disables cache storage.
+- `max_size_bytes` bounds the total UTF-8 byte size of cache keys, physical-plan JSON,
+  and optional explain text per Drillbit. The default is 32 MiB; entry metadata and
+  Java object overhead are not included in this limit. A value of `0` disables cache storage.
 - `expire_after_write` sets a fixed lifetime since creation or replacement.
   The default of `0` disables this policy; reads do not extend a configured lifetime.
 - `expire_after_access` sets an idle lifetime since the last read or write.

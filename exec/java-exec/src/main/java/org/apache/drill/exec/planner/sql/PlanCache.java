@@ -95,6 +95,7 @@ import com.google.common.base.Ticker;
 import com.google.common.cache.Cache;
 import com.google.common.cache.CacheBuilder;
 import com.google.common.hash.Hashing;
+import com.google.common.primitives.Ints;
 
 /** Drillbit-scoped, immutable JSON snapshots of query plans. */
 public final class PlanCache implements AutoCloseable {
@@ -121,7 +122,8 @@ public final class PlanCache implements AutoCloseable {
         ExecConstants.PLAN_CACHE_EXPIRE_AFTER_ACCESS);
     CacheBuilder<String, Entry> builder = CacheBuilder.newBuilder()
         .maximumWeight(maxSizeBytes)
-        .weigher((String key, Entry value) -> value.jsonSizeBytes)
+        .weigher((String key, Entry value) -> Ints.saturatedCast(
+            key.getBytes(StandardCharsets.UTF_8).length + value.contentSizeBytes))
         .ticker(ticker);
     // Passing zero to Guava would expire entries immediately, rather than disable the policy.
     if (!expireAfterWrite.isZero()) {
@@ -226,13 +228,14 @@ public final class PlanCache implements AutoCloseable {
 
   public static final class Entry {
     private final String json;
-    private final int jsonSizeBytes;
+    private final long contentSizeBytes;
     private final String textPlan;
     private final ContextSnapshot context;
 
     private Entry(String json, String textPlan, ContextSnapshot context) {
       this.json = json;
-      this.jsonSizeBytes = json.getBytes(StandardCharsets.UTF_8).length;
+      this.contentSizeBytes = (long) json.getBytes(StandardCharsets.UTF_8).length
+          + (textPlan == null ? 0 : textPlan.getBytes(StandardCharsets.UTF_8).length);
       this.textPlan = textPlan;
       this.context = context;
     }
