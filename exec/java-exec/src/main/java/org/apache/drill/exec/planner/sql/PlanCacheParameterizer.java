@@ -117,7 +117,8 @@ final class PlanCacheParameterizer extends SqlShuttle {
     }
     if (call instanceof SqlSelect) {
       SqlSelect select = (SqlSelect) call;
-      // Keep structural SQL operands verbatim while visiting expressions.
+      // Preserve matching expressions across SELECT, GROUP BY, HAVING and
+      // QUALIFY. Parameterizing only some occurrences breaks validation or rewrites.
       boolean structuralProjection = preserveProjection
           || (select.getGroup() != null && !select.getGroup().isEmpty())
           || (select.getOrderList() != null && !select.getOrderList().isEmpty())
@@ -127,8 +128,10 @@ final class PlanCacheParameterizer extends SqlShuttle {
           structuralProjection ? select.getSelectList()
               : (SqlNodeList) visitNullable(select.getSelectList()),
           visitNullable(select.getFrom()), visitNullable(select.getWhere()),
-          select.getGroup(), visitNullable(select.getHaving()),
-          select.getWindowList(), visitNullable(select.getQualify()),
+          select.getGroup(),
+          structuralProjection ? select.getHaving() : visitNullable(select.getHaving()),
+          select.getWindowList(),
+          structuralProjection ? select.getQualify() : visitNullable(select.getQualify()),
           select.getOrderList(), select.getOffset(), select.getFetch(),
           select.getHints());
     }
