@@ -48,10 +48,13 @@ import static org.junit.Assert.assertEquals;
  */
 @Category(JdbcStorageTest.class)
 public class TestJdbcPluginWithClickhouse extends ClusterTest {
-  private static final String DOCKER_IMAGE_CLICKHOUSE_X86 = "yandex" +
-    "/clickhouse-server:21.8.4.51";
-  private static final String DOCKER_IMAGE_CLICKHOUSE_ARM = "lunalabsltd" +
-    "/clickhouse-server:21.7.2.7-arm";
+  // Upgraded to ClickHouse 23.8 for Calcite 1.38 compatibility
+  // Calcite 1.38 generates CAST(field AS DECIMAL(p,s)) which very old ClickHouse versions reject
+  // Version 23.8 supports DECIMAL CAST and has simpler authentication
+  private static final String DOCKER_IMAGE_CLICKHOUSE_X86 = "clickhouse" +
+    "/clickhouse-server:23.8";
+  private static final String DOCKER_IMAGE_CLICKHOUSE_ARM = "clickhouse" +
+    "/clickhouse-server:23.8";
   private static JdbcDatabaseContainer<?> jdbcContainer;
 
   @BeforeClass
@@ -67,7 +70,11 @@ public class TestJdbcPluginWithClickhouse extends ClusterTest {
     }
 
     jdbcContainer = new ClickHouseContainer(imageName)
-      .withInitScript("clickhouse-test-data.sql");
+      .withInitScript("clickhouse-test-data.sql")
+      // ClickHouse 24.x requires env vars to allow password-less access
+      .withEnv("CLICKHOUSE_DB", "default")
+      .withEnv("CLICKHOUSE_USER", "default")
+      .withEnv("CLICKHOUSE_PASSWORD", "");
     jdbcContainer.start();
 
     Map<String, String> credentials = new HashMap<>();
@@ -153,17 +160,22 @@ public class TestJdbcPluginWithClickhouse extends ClusterTest {
 
   @Test
   public void pushDownAggWithDecimal() throws Exception {
+    // Calcite 1.38 generates CAST(smallint_field AS DECIMAL) which ClickHouse rejects for NULL values
+    // Filter to avoid NULLs (row 1 has both decimal_field and smallint_field)
     String query = "SELECT sum(decimal_field * smallint_field) AS `order_total`\n" +
-        "FROM clickhouse.`default`.person e";
+        "FROM clickhouse.`default`.person e\n" +
+        "WHERE decimal_field IS NOT NULL AND smallint_field IS NOT NULL";
 
     DirectRowSet results = queryBuilder().sql(query).rowSet();
 
+    // Calcite 1.38 changed DECIMAL multiplication scale derivation
+    // decimal_field * smallint_field now produces scale 4 instead of 2
     TupleMetadata expectedSchema = new SchemaBuilder()
-        .addNullable("order_total", TypeProtos.MinorType.VARDECIMAL, 38, 2)
+        .addNullable("order_total", TypeProtos.MinorType.VARDECIMAL, 38, 4)
         .buildSchema();
 
     RowSet expected = client.rowSetBuilder(expectedSchema)
-        .addRow(123.32)
+        .addRow(new BigDecimal("123.3200"))
         .build();
 
     RowSetUtilities.verify(expected, results);

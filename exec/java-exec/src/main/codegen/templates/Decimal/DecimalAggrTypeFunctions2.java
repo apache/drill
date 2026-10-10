@@ -108,7 +108,7 @@ public static class ${type.inputType}${aggrtype.className} implements DrillAggFu
       out.scale = Math.max(outputScale.value, 6);
       java.math.BigDecimal average = ((java.math.BigDecimal) value.obj)
             .divide(java.math.BigDecimal.valueOf(count.value), out.scale, java.math.BigDecimal.ROUND_HALF_UP);
-      out.precision = org.apache.drill.exec.planner.types.DrillRelDataTypeSystem.DRILL_REL_DATATYPE_SYSTEM.getMaxNumericPrecision();
+      out.precision = org.apache.drill.exec.planner.types.DrillRelDataTypeSystem.DRILL_REL_DATATYPE_SYSTEM.getMaxPrecision(org.apache.calcite.sql.type.SqlTypeName.DECIMAL);
       byte[] bytes = average.unscaledValue().toByteArray();
       int len = bytes.length;
       out.buffer = buffer = buffer.reallocIfNeeded(len);

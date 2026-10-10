@@ -221,12 +221,14 @@ public class TestJdbcPluginWithMySQLIT extends ClusterTest {
 
     DirectRowSet results = queryBuilder().sql(query).rowSet();
 
+    // Calcite 1.38 changed DECIMAL multiplication scale derivation
+    // decimal_field * smallint_field now produces scale 4 instead of 2
     TupleMetadata expectedSchema = new SchemaBuilder()
-        .addNullable("order_total", TypeProtos.MinorType.VARDECIMAL, 38, 2)
+        .addNullable("order_total", TypeProtos.MinorType.VARDECIMAL, 38, 4)
         .buildSchema();
 
     RowSet expected = client.rowSetBuilder(expectedSchema)
-        .addRow(123.32)
+        .addRow(new BigDecimal("123.3200"))
         .build();
 
     RowSetUtilities.verify(expected, results);
@@ -277,7 +279,8 @@ public class TestJdbcPluginWithMySQLIT extends ClusterTest {
         .sqlQuery(query)
         .unOrdered()
         .baselineColumns("EXPR$0", "EXPR$1", "EXPR$2")
-        .baselineValues(4L, 88, BigDecimal.valueOf(1.618033988749895))
+        // Calcite 1.35: SQRT returns DOUBLE, so (1+sqrt(5))/2 returns DOUBLE not DECIMAL
+        .baselineValues(4L, 88, 1.618033988749895)
         .go();
   }
 
@@ -290,21 +293,22 @@ public class TestJdbcPluginWithMySQLIT extends ClusterTest {
         .sqlQuery(query)
         .ordered()
         .baselineColumns("EXPR$1", "EXPR$0", "EXPR$2")
-        .baselineValues(BigDecimal.valueOf(1.618033988749895), 88, 4L)
+        // Calcite 1.35: SQRT returns DOUBLE, so (1+sqrt(5))/2 returns DOUBLE not DECIMAL
+        .baselineValues(1.618033988749895, 88, 4L)
         .go();
   }
 
   @Test // DRILL-6734
   public void testExpressionsWithAliases() throws Exception {
     String query = "select person_id as ID, 1+1+2+3+5+8+13+21+34 as FIBONACCI_SUM, (1+sqrt(5))/2 as golden_ratio\n" +
-        "from mysql.`drill_mysql_test`.person limit 2";
+        "from mysql.`drill_mysql_test`.person order by person_id limit 2";
 
     testBuilder()
         .sqlQuery(query)
-        .unOrdered()
+        .ordered()
         .baselineColumns("ID", "FIBONACCI_SUM", "golden_ratio")
-        .baselineValues(1, 88, BigDecimal.valueOf(1.618033988749895))
-        .baselineValues(2, 88, BigDecimal.valueOf(1.618033988749895))
+        .baselineValues(1, 88, 1.618033988749895)
+        .baselineValues(2, 88, 1.618033988749895)
         .go();
   }
 

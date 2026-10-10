@@ -21,15 +21,21 @@ import org.apache.drill.exec.expr.DrillSimpleFunc;
 import org.apache.drill.exec.expr.annotations.FunctionTemplate;
 import org.apache.drill.exec.expr.annotations.FunctionTemplate.FunctionScope;
 import org.apache.drill.exec.expr.annotations.Output;
+import org.apache.drill.exec.expr.annotations.Param;
+import org.apache.drill.exec.expr.holders.RepeatedMapHolder;
 import org.apache.drill.exec.vector.complex.writer.BaseWriter;
 
 /**
- * This and {@link DummyConvertTo} class merely act as a placeholder so that Optiq
- * allows the 'flatten()' function in SQL.
+ * This class merely acts as a placeholder so that Calcite allows the 'flatten()' function in SQL.
+ *
+ * Calcite 1.35+ requires function signatures to match during validation, so we define
+ * the expected parameter here. The actual flatten operation is performed by the
+ * FlattenRecordBatch at execution time.
  */
 @FunctionTemplate(name = "flatten", scope = FunctionScope.SIMPLE)
 public class DummyFlatten implements DrillSimpleFunc {
 
+  @Param RepeatedMapHolder in;
   @Output BaseWriter.ComplexWriter out;
 
   @Override
