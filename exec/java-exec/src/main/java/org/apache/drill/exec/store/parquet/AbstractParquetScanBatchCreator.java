@@ -335,7 +335,9 @@ public abstract class AbstractParquetScanBatchCreator {
         ccf,
         footer,
         rowGroupScan.getColumns(),
-        containsCorruptDates);
+        containsCorruptDates,
+        // each parquet SubScan shares the same table schema constructed by a GroupScan
+        rowGroupScan.getSchema());
     }
 
     logger.debug("Query {} uses {}",
