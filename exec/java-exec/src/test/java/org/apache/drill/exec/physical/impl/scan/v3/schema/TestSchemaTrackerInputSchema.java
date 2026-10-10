@@ -464,7 +464,7 @@ public class TestSchemaTrackerInputSchema extends BaseTestSchemaTracker {
       fail();
     } catch (UserException e) {
       assertTrue(e.getMessage().contains("not compatible"));
-      assertTrue(e.getMessage().contains("Projected column: x[]"));
+      assertTrue(e.getMessage().contains("Projected column: x[2]"));
       assertTrue(e.getMessage().contains("Provided column: `x` BIGINT NOT NULL"));
     }
   }
@@ -478,7 +478,7 @@ public class TestSchemaTrackerInputSchema extends BaseTestSchemaTracker {
       fail();
     } catch (UserException e) {
       assertTrue(e.getMessage().contains("not compatible"));
-      assertTrue(e.getMessage().contains("Projected column: x[]"));
+      assertTrue(e.getMessage().contains("Projected column: x[2]"));
       assertTrue(e.getMessage().contains("Reader column: `x` BIGINT NOT NULL"));
     }
   }
