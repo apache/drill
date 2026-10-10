@@ -32,8 +32,9 @@ public class UserAgentFunctions {
   @FunctionTemplate(
     name = "parse_user_agent",
     isVarArg = true,
-    scope = FunctionTemplate.FunctionScope.SIMPLE
-  )
+    scope = FunctionTemplate.FunctionScope.SIMPLE,
+    desc = "Parses a user agent string into a map of fields such as DeviceClass, AgentName, AgentVersion "
+      + "and OperatingSystemName. Pass a field name as a second argument to return just that field.")
   public static class UserAgentFunction implements DrillSimpleFunc {
     @Param
     org.apache.drill.exec.expr.holders.NullableVarCharHolder[] input;
@@ -86,7 +87,9 @@ public class UserAgentFunctions {
   }
 
   @FunctionTemplate(name = "parse_user_agent",
-    scope = FunctionTemplate.FunctionScope.SIMPLE, nulls = FunctionTemplate.NullHandling.NULL_IF_NULL)
+    scope = FunctionTemplate.FunctionScope.SIMPLE, nulls = FunctionTemplate.NullHandling.NULL_IF_NULL,
+    desc = "Parses a user agent string into a map of fields such as DeviceClass, AgentName, AgentVersion "
+      + "and OperatingSystemName. Pass a field name as a second argument to return just that field.")
 
   public static class UserAgentFieldFunction implements DrillSimpleFunc {
     @Param

@@ -39,7 +39,9 @@ public class TimeBucketFunctions {
    */
   @FunctionTemplate(name = "time_bucket_ns",
     scope = FunctionTemplate.FunctionScope.SIMPLE,
-    nulls = FunctionTemplate.NullHandling.NULL_IF_NULL)
+    nulls = FunctionTemplate.NullHandling.NULL_IF_NULL,
+    desc = "Buckets a nanosecond timestamp into fixed-width intervals for time-series analysis. The "
+      + "second argument is the bucket width in nanoseconds.")
   public static class TimeBucketNSFunction implements DrillSimpleFunc {
 
     @Param
@@ -77,7 +79,9 @@ public class TimeBucketFunctions {
    */
   @FunctionTemplate(name = "time_bucket",
     scope = FunctionTemplate.FunctionScope.SIMPLE,
-    nulls = FunctionTemplate.NullHandling.NULL_IF_NULL)
+    nulls = FunctionTemplate.NullHandling.NULL_IF_NULL,
+    desc = "Buckets a timestamp into fixed-width intervals for time-series analysis. The second argument "
+      + "is the bucket width in milliseconds.")
   public static class TimeBucketFunction implements DrillSimpleFunc {
 
     @Param
@@ -115,7 +119,9 @@ public class TimeBucketFunctions {
    */
   @FunctionTemplate(name = "time_bucket",
     scope = FunctionTemplate.FunctionScope.SIMPLE,
-    nulls = FunctionTemplate.NullHandling.NULL_IF_NULL)
+    nulls = FunctionTemplate.NullHandling.NULL_IF_NULL,
+    desc = "Buckets a timestamp into fixed-width intervals for time-series analysis. The second argument "
+      + "is the bucket width in milliseconds.")
   public static class TimestampTimeBucketFunction implements DrillSimpleFunc {
 
     @Param
@@ -153,7 +159,9 @@ public class TimeBucketFunctions {
    */
   @FunctionTemplate(name = "time_bucket",
     scope = FunctionTemplate.FunctionScope.SIMPLE,
-    nulls = FunctionTemplate.NullHandling.NULL_IF_NULL)
+    nulls = FunctionTemplate.NullHandling.NULL_IF_NULL,
+    desc = "Buckets a timestamp into fixed-width intervals for time-series analysis. The second argument "
+      + "is the bucket width in milliseconds.")
   public static class DoubleTimeBucketFunction implements DrillSimpleFunc {
 
     @Param

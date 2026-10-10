@@ -88,7 +88,8 @@ public class ScanProjectionParser {
       }
     } else {
       ProjectedColumn col = project(tuple, nameSeg.getPath());
-      parseChildSeg(col, depth + 1, nameSeg);
+      // Array dimensions are counted from this column, whatever its depth in the path
+      parseChildSeg(col, 1, nameSeg);
     }
   }
 

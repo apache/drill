@@ -58,7 +58,10 @@ public class DateFunctions {
    */
   @FunctionTemplate(names = {"nearestDate","nearest_date"},
           scope = FunctionTemplate.FunctionScope.SIMPLE,
-          nulls = FunctionTemplate.NullHandling.NULL_IF_NULL)
+          nulls = FunctionTemplate.NullHandling.NULL_IF_NULL,
+    desc = "Rounds a timestamp down to the nearest time unit, for time-series bucketing. Units: YEAR, "
+      + "QUARTER, MONTH, WEEK_SUNDAY, WEEK_MONDAY, DAY, HOUR, HALF_HOUR, QUARTER_HOUR, MINUTE, "
+      + "30SECOND, 15SECOND, SECOND.")
   public static class NearestDateFunction implements DrillSimpleFunc {
 
     @Param
@@ -113,7 +116,10 @@ public class DateFunctions {
    */
   @FunctionTemplate(names = {"nearestDate","nearest_date"},
           scope = FunctionTemplate.FunctionScope.SIMPLE,
-          nulls = FunctionTemplate.NullHandling.NULL_IF_NULL)
+          nulls = FunctionTemplate.NullHandling.NULL_IF_NULL,
+    desc = "Rounds a timestamp down to the nearest time unit, for time-series bucketing. Units: YEAR, "
+      + "QUARTER, MONTH, WEEK_SUNDAY, WEEK_MONDAY, DAY, HOUR, HALF_HOUR, QUARTER_HOUR, MINUTE, "
+      + "30SECOND, 15SECOND, SECOND.")
   public static class NearestDateFunctionWithString implements DrillSimpleFunc {
 
     @Param
@@ -150,7 +156,9 @@ public class DateFunctions {
 
   @FunctionTemplate(names = {"yearweek","year_week"},
     scope = FunctionTemplate.FunctionScope.SIMPLE,
-    nulls = FunctionTemplate.NullHandling.NULL_IF_NULL)
+    nulls = FunctionTemplate.NullHandling.NULL_IF_NULL,
+    desc = "Returns the ISO year and week of a date as one integer, year * 100 + week. 2024-01-15 "
+      + "returns 202403.")
   public static class YearWeekFunction implements DrillSimpleFunc {
     @Param
     VarCharHolder inputHolder;
@@ -175,7 +183,9 @@ public class DateFunctions {
 
   @FunctionTemplate(names = {"to_timestamp"},
     scope = FunctionTemplate.FunctionScope.SIMPLE,
-    nulls = FunctionTemplate.NullHandling.NULL_IF_NULL)
+    nulls = FunctionTemplate.NullHandling.NULL_IF_NULL,
+    desc = "Converts a string to a TIMESTAMP. the built-in overloads take a Joda format pattern; this "
+      + "overload infers the format when no pattern is supplied.")
   public static class TimestampFunction implements DrillSimpleFunc {
     /**
      * This version of the TO_TIMESTAMP function converts strings into timestamps
