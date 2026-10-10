@@ -18,7 +18,6 @@
 package org.apache.drill.yarn.client;
 
 
-import org.apache.drill.common.util.GuavaPatcher;
 import org.apache.drill.common.util.ProtobufPatcher;
 import org.apache.drill.yarn.core.DoyConfigException;
 import org.apache.drill.yarn.core.DrillOnYarnConfig;
@@ -83,11 +82,6 @@ public class DrillOnYarn {
      * This code removes these final modifiers.
      */
     ProtobufPatcher.patch();
-    /*
-     * Some libraries, such as Hadoop or HBase, depend on incompatible versions of Guava.
-     * This code adds back some methods to so that the libraries can work with single Guava version.
-     */
-    GuavaPatcher.patch();
   }
 
   public static void main(String argv[]) {
