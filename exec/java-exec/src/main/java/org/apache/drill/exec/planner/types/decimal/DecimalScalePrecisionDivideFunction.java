@@ -19,6 +19,8 @@ package org.apache.drill.exec.planner.types.decimal;
 
 import static org.apache.drill.exec.planner.types.DrillRelDataTypeSystem.DRILL_REL_DATATYPE_SYSTEM;
 
+import org.apache.calcite.sql.type.SqlTypeName;
+
 public class DecimalScalePrecisionDivideFunction extends DrillBaseComputeScalePrecision {
 
   public DecimalScalePrecisionDivideFunction(int leftPrecision, int leftScale, int rightPrecision, int rightScale) {
@@ -32,7 +34,8 @@ public class DecimalScalePrecisionDivideFunction extends DrillBaseComputeScalePr
     int maxResultIntegerDigits = Math.min(leftPrecision - leftScale + rightScale, MAX_NUMERIC_PRECISION);
     outputScale = Math.max(6, leftScale + rightPrecision + 1);
     outputScale = Math.min(outputScale, MAX_NUMERIC_PRECISION - maxResultIntegerDigits);
-    outputScale = Math.min(outputScale, DRILL_REL_DATATYPE_SYSTEM.getMaxNumericScale());
+    // Use getMaxScale(DECIMAL) instead of deprecated getMaxNumericScale()
+    outputScale = Math.min(outputScale, DRILL_REL_DATATYPE_SYSTEM.getMaxScale(SqlTypeName.DECIMAL));
     outputPrecision = maxResultIntegerDigits + outputScale;
     adjustScaleAndPrecision();
   }

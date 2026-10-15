@@ -20,7 +20,6 @@ package org.apache.drill.exec.planner.sql.conversion;
 import org.apache.calcite.adapter.java.JavaTypeFactory;
 import org.apache.calcite.avatica.util.Casing;
 import org.apache.calcite.jdbc.DynamicSchema;
-import org.apache.calcite.jdbc.JavaTypeFactoryImpl;
 import org.apache.calcite.plan.ConventionTraitDef;
 import org.apache.calcite.plan.RelOptCluster;
 import org.apache.calcite.plan.RelOptCostFactory;
@@ -42,7 +41,6 @@ import org.apache.calcite.sql.parser.SqlParser;
 import org.apache.calcite.sql.util.ChainedSqlOperatorTable;
 import org.apache.calcite.sql.validate.SqlConformance;
 import org.apache.calcite.sql.validate.SqlValidator;
-import org.apache.calcite.sql.validate.SqlValidatorUtil;
 import org.apache.calcite.sql2rel.SqlToRelConverter;
 import org.apache.drill.common.config.DrillConfig;
 import org.apache.drill.common.exceptions.UserException;
@@ -57,6 +55,7 @@ import org.apache.drill.exec.planner.physical.DrillDistributionTraitDef;
 import org.apache.drill.exec.planner.physical.PlannerSettings;
 import org.apache.drill.exec.planner.sql.DrillConformance;
 import org.apache.drill.exec.planner.sql.DrillConvertletTable;
+import org.apache.drill.exec.planner.sql.DrillSqlValidator;
 import org.apache.drill.exec.planner.sql.SchemaUtilities;
 import org.apache.drill.exec.planner.sql.parser.impl.DrillParserWithCompoundIdConverter;
 import org.apache.drill.exec.planner.sql.parser.impl.DrillSqlParseException;
@@ -135,7 +134,7 @@ public class SqlConverter {
         .withRelBuilderFactory(DrillRelFactories.LOGICAL_BUILDER);
     this.isInnerQuery = false;
     this.isExpandedView = false;
-    this.typeFactory = new JavaTypeFactoryImpl(DrillRelDataTypeSystem.DRILL_REL_DATATYPE_SYSTEM);
+    this.typeFactory = new org.apache.drill.exec.planner.types.DrillTypeFactory(DrillRelDataTypeSystem.DRILL_REL_DATATYPE_SYSTEM);
     this.defaultSchema = context.getNewDefaultSchema();
     this.rootSchema = SchemaUtilities.rootSchema(defaultSchema);
     this.temporarySchema = context.getConfig().getString(ExecConstants.DEFAULT_TEMPORARY_WORKSPACE);
@@ -152,7 +151,8 @@ public class SqlConverter {
     );
     this.opTab = new ChainedSqlOperatorTable(Arrays.asList(context.getDrillOperatorTable(), catalog));
     this.costFactory = (settings.useDefaultCosting()) ? null : new DrillCostBase.DrillCostFactory();
-    this.validator = SqlValidatorUtil.newValidator(opTab, catalog, typeFactory,
+    // Use custom DrillSqlValidator for Calcite 1.35+ compatibility with star identifiers
+    this.validator = new DrillSqlValidator(opTab, catalog, typeFactory,
         SqlValidator.Config.DEFAULT.withConformance(parserConfig.conformance())
           .withTypeCoercionEnabled(true)
           .withIdentifierExpansion(true));
@@ -176,7 +176,8 @@ public class SqlConverter {
     this.catalog = catalog;
     this.opTab = parent.opTab;
     this.planner = parent.planner;
-    this.validator = SqlValidatorUtil.newValidator(opTab, catalog, typeFactory,
+    // Use custom DrillSqlValidator for Calcite 1.35+ compatibility with star identifiers
+    this.validator = new DrillSqlValidator(opTab, catalog, typeFactory,
       SqlValidator.Config.DEFAULT.withConformance(parserConfig.conformance())
         .withTypeCoercionEnabled(true)
         .withIdentifierExpansion(true));
@@ -200,16 +201,49 @@ public class SqlConverter {
         builder.message("Failure parsing a view your query is dependent upon.");
       }
       throw builder.build(logger);
+    } catch (Exception e) {
+      // For Calcite 1.35+ compatibility: Catch any other parsing exceptions that may be wrapped
+      // Check if this is actually a parse error by examining the cause chain
+      Throwable cause = e;
+      while (cause != null) {
+        if (cause instanceof SqlParseException) {
+          DrillSqlParseException dex = new DrillSqlParseException(sql, (SqlParseException) cause);
+          UserException.Builder builder = UserException
+              .parseError(dex)
+              .addContext(dex.getSqlWithErrorPointer());
+          if (isInnerQuery) {
+            builder.message("Failure parsing a view your query is dependent upon.");
+          }
+          throw builder.build(logger);
+        }
+        cause = cause.getCause();
+      }
+      // Not a parse error - treat as validation error since it happened during SQL parsing
+      UserException.Builder builder = UserException
+          .validationError(e)
+          .message("Error parsing SQL");
+      if (isInnerQuery) {
+        builder.message("Failure parsing a view your query is dependent upon.");
+      }
+      throw builder.build(logger);
     }
   }
 
   public SqlNode validate(final SqlNode parsedNode) {
     try {
+      // Rewrite COUNT() to COUNT(*) for Calcite 1.35+ compatibility
+      SqlNode rewritten = parsedNode.accept(new org.apache.drill.exec.planner.sql.parser.CountFunctionRewriter());
+
+      // Rewrite special function identifiers (CURRENT_TIMESTAMP, SESSION_USER, etc.) to function calls
+      // for Calcite 1.35+ compatibility
+      rewritten = rewritten.accept(new org.apache.drill.exec.planner.sql.parser.SpecialFunctionRewriter());
+
+      final SqlNode finalRewritten = rewritten;
       if (isImpersonationEnabled) {
         return ImpersonationUtil.getProcessUserUGI().doAs(
-          (PrivilegedAction<SqlNode>) () -> validator.validate(parsedNode));
+          (PrivilegedAction<SqlNode>) () -> validator.validate(finalRewritten));
       } else {
-        return validator.validate(parsedNode);
+        return validator.validate(finalRewritten);
       }
     } catch (RuntimeException e) {
       UserException.Builder builder = UserException
@@ -225,11 +259,13 @@ public class SqlConverter {
     initCluster(initPlanner());
     DrillViewExpander viewExpander = new DrillViewExpander(this);
     util.getViewExpansionContext().setViewExpander(viewExpander);
-    final SqlToRelConverter sqlToRelConverter = new SqlToRelConverter(
+    // Use DrillSqlToRelConverter for Calcite 1.38+ DECIMAL type checking compatibility
+    final SqlToRelConverter sqlToRelConverter = new DrillSqlToRelConverter(
         viewExpander, validator, catalog, cluster,
         DrillConvertletTable.INSTANCE, sqlToRelConverterConfig);
 
     boolean topLevelQuery = !isInnerQuery || isExpandedView;
+
     RelRoot rel = sqlToRelConverter.convertQuery(validatedNode, false, topLevelQuery);
 
     // If extra expressions used in ORDER BY were added to the project list,
@@ -239,7 +275,7 @@ public class SqlConverter {
 
       RelNode relNode = rel.rel;
       List<RexNode> expressions = rel.fields.stream()
-          .map(f -> builder.makeInputRef(relNode, f.left))
+          .map(f -> builder.makeInputRef(relNode, f.getKey()))
           .collect(Collectors.toList());
 
       RelNode project = LogicalProject.create(rel.rel, Collections.emptyList(), expressions, rel.validatedRowType);

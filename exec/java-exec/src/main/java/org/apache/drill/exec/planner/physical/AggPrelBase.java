@@ -45,6 +45,7 @@ import org.apache.calcite.sql.type.OperandTypes;
 import org.apache.calcite.sql.type.ReturnTypes;
 import org.apache.calcite.util.Optionality;
 
+import java.math.BigDecimal;
 import java.util.Collections;
 import java.util.Iterator;
 import java.util.List;
@@ -178,10 +179,11 @@ public abstract class AggPrelBase extends DrillAggregateRelBase implements Prel 
                   sumAggFun,
                   aggCall.e.isDistinct(),
                   aggCall.e.isApproximate(),
-                  false,
+                  aggCall.e.ignoreNulls(),
+                  com.google.common.collect.ImmutableList.of(),  // Phase 2 aggregates don't use rexList
                   Collections.singletonList(aggExprOrdinal),
                   aggCall.e.filterArg,
-                  null,
+                  aggCall.e.distinctKeys != null ? aggCall.e.distinctKeys : org.apache.calcite.util.ImmutableBitSet.of(),
                   RelCollations.EMPTY,
                   aggCall.e.getType(),
                   aggCall.e.getName());
@@ -193,10 +195,11 @@ public abstract class AggPrelBase extends DrillAggregateRelBase implements Prel 
                   aggCall.e.getAggregation(),
                   aggCall.e.isDistinct(),
                   aggCall.e.isApproximate(),
-                  false,
+                  aggCall.e.ignoreNulls(),
+                  com.google.common.collect.ImmutableList.of(),  // Phase 2 aggregates don't use rexList
                   Collections.singletonList(aggExprOrdinal),
                   aggCall.e.filterArg,
-                  null,
+                  aggCall.e.distinctKeys != null ? aggCall.e.distinctKeys : org.apache.calcite.util.ImmutableBitSet.of(),
                   RelCollations.EMPTY,
                   aggCall.e.getType(),
                   aggCall.e.getName());
@@ -209,17 +212,64 @@ public abstract class AggPrelBase extends DrillAggregateRelBase implements Prel 
 
   protected LogicalExpression toDrill(AggregateCall call, List<String> fn) {
     List<LogicalExpression> args = Lists.newArrayList();
-    for (Integer i : call.getArgList()) {
-      LogicalExpression expr = FieldReference.getWithQuotedRef(fn.get(i));
-      expr = getArgumentExpression(call, fn, expr);
-      args.add(expr);
+
+    // Handle LITERAL_AGG - an internal Calcite function introduced in 1.35
+    // It returns a constant value and uses rexList instead of argList
+    if ("LITERAL_AGG".equalsIgnoreCase(call.getAggregation().getName())) {
+      // For LITERAL_AGG, the literal value is in rexList, not argList
+      // We pass the literal as an argument to the literal_agg function
+      if (call.rexList != null && !call.rexList.isEmpty()) {
+        org.apache.calcite.rex.RexNode rexNode = call.rexList.get(0);
+        if (rexNode instanceof org.apache.calcite.rex.RexLiteral) {
+          org.apache.calcite.rex.RexLiteral literal = (org.apache.calcite.rex.RexLiteral) rexNode;
+          Object value = literal.getValue();
+          // Convert the literal to a Drill constant expression and add it as an argument
+          if (value == null) {
+            args.add(NullExpression.INSTANCE);
+          } else if (value instanceof Boolean) {
+            args.add(new ValueExpressions.BooleanExpression(value.toString(), ExpressionPosition.UNKNOWN));
+          } else if (value instanceof Number) {
+            if (value instanceof Long || value instanceof Integer) {
+              args.add(new ValueExpressions.LongExpression(((Number) value).longValue()));
+            } else if (value instanceof Double || value instanceof Float) {
+              args.add(new ValueExpressions.DoubleExpression(((Number) value).doubleValue(), ExpressionPosition.UNKNOWN));
+            } else if (value instanceof BigDecimal) {
+              args.add(new ValueExpressions.Decimal28Expression((BigDecimal) value, ExpressionPosition.UNKNOWN));
+            } else {
+              // Default to long for other number types
+              args.add(new ValueExpressions.LongExpression(((Number) value).longValue()));
+            }
+          } else if (value instanceof String) {
+            String strValue = (String) value;
+            args.add(ValueExpressions.getChar(strValue, strValue.length()));
+          } else if (value instanceof org.apache.calcite.util.NlsString) {
+            String strValue = ((org.apache.calcite.util.NlsString) value).getValue();
+            args.add(ValueExpressions.getChar(strValue, strValue.length()));
+          } else {
+            // Fallback: add a constant 1
+            args.add(new ValueExpressions.LongExpression(1L));
+          }
+        }
+      }
+      // If we couldn't get the literal, add a default constant
+      if (args.isEmpty()) {
+        args.add(new ValueExpressions.LongExpression(1L));
+      }
+    } else {
+      // Regular aggregate function - use argList
+      for (Integer i : call.getArgList()) {
+        LogicalExpression expr = FieldReference.getWithQuotedRef(fn.get(i));
+        expr = getArgumentExpression(call, fn, expr);
+        args.add(expr);
+      }
+
+      if (SqlKind.COUNT.name().equals(call.getAggregation().getName()) && args.isEmpty()) {
+        LogicalExpression expr = new ValueExpressions.LongExpression(1L);
+        expr = getArgumentExpression(call, fn, expr);
+        args.add(expr);
+      }
     }
 
-    if (SqlKind.COUNT.name().equals(call.getAggregation().getName()) && args.isEmpty()) {
-      LogicalExpression expr = new ValueExpressions.LongExpression(1L);
-      expr = getArgumentExpression(call, fn, expr);
-      args.add(expr);
-    }
     return new FunctionCall(call.getAggregation().getName().toLowerCase(), args, ExpressionPosition.UNKNOWN);
   }
 
@@ -269,10 +319,11 @@ public abstract class AggPrelBase extends DrillAggregateRelBase implements Prel 
       aggregateCalls.add(AggregateCall.create(aggCall.getAggregation(),
           aggCall.isDistinct(),
           aggCall.isApproximate(),
-          false,
+          aggCall.ignoreNulls(),
+          aggCall.rexList != null ? aggCall.rexList : com.google.common.collect.ImmutableList.of(),
           arglist,
           aggCall.filterArg,
-          null,
+          aggCall.distinctKeys != null ? aggCall.distinctKeys : org.apache.calcite.util.ImmutableBitSet.of(),
           RelCollations.EMPTY,
           aggCall.type,
           aggCall.name));

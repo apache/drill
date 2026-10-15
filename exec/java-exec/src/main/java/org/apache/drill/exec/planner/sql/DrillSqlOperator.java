@@ -119,6 +119,37 @@ public class DrillSqlOperator extends SqlFunction {
     return super.getSyntax();
   }
 
+  @Override
+  public org.apache.calcite.rel.type.RelDataType deriveType(
+      org.apache.calcite.sql.validate.SqlValidator validator,
+      org.apache.calcite.sql.validate.SqlValidatorScope scope,
+      org.apache.calcite.sql.SqlCall call) {
+    // For Calcite 1.35+ compatibility: Handle function signature mismatches
+    // Calcite 1.35 changed string literal typing to CHAR(1) for single characters instead of VARCHAR
+    // and has stricter type checking that occurs before reaching our permissive operand type checker
+    // We override deriveType to use Drill's type inference instead of Calcite's strict matching
+    try {
+      return super.deriveType(validator, scope, call);
+    } catch (RuntimeException e) {
+      // Check if this is a "No match found" type mismatch error
+      // This can occur at any level of the call stack during type derivation
+      String message = e.getMessage();
+      if (message != null && message.contains("No match found for function signature")) {
+        // Use the return type inference directly since we know the function exists in Drill
+        // The actual type checking will happen during execution planning
+        try {
+          org.apache.calcite.sql.SqlCallBinding callBinding =
+              new org.apache.calcite.sql.SqlCallBinding(validator, scope, call);
+          return getReturnTypeInference().inferReturnType(callBinding);
+        } catch (Exception ex) {
+          // If type inference also fails, re-throw the original exception
+          throw e;
+        }
+      }
+      throw e;
+    }
+  }
+
   public static class DrillSqlOperatorBuilder {
     private String name;
     private final List<DrillFuncHolder> functions = Lists.newArrayList();

@@ -27,8 +27,6 @@ import org.apache.calcite.rel.RelNode;
 import org.apache.calcite.rel.core.Aggregate;
 import org.apache.calcite.rel.core.AggregateCall;
 import org.apache.calcite.rel.metadata.RelMetadataQuery;
-import org.apache.calcite.sql.SqlKind;
-import org.apache.calcite.sql.type.SqlTypeName;
 import org.apache.calcite.util.BitSets;
 import org.apache.calcite.util.ImmutableBitSet;
 import org.apache.drill.common.expression.ExpressionPosition;
@@ -82,22 +80,10 @@ public class DrillAggregateRel extends DrillAggregateRelBase implements DrillRel
 
   @Override
   public RelOptCost computeSelfCost(RelOptPlanner planner, RelMetadataQuery mq) {
-    for (AggregateCall aggCall : getAggCallList()) {
-      String name = aggCall.getAggregation().getName();
-      // For avg, stddev_pop, stddev_samp, var_pop and var_samp, the ReduceAggregatesRule is supposed
-      // to convert them to use sum and count. Here, we make the cost of the original functions high
-      // enough such that the planner does not choose them and instead chooses the rewritten functions.
-      // Except when AVG, STDDEV_POP, STDDEV_SAMP, VAR_POP and VAR_SAMP are used with DECIMAL type.
-      if ((name.equals(SqlKind.AVG.name())
-            || name.equals(SqlKind.STDDEV_POP.name())
-            || name.equals(SqlKind.STDDEV_SAMP.name())
-            || name.equals(SqlKind.VAR_POP.name())
-            || name.equals(SqlKind.VAR_SAMP.name()))
-          && aggCall.getType().getSqlTypeName() != SqlTypeName.DECIMAL) {
-        return planner.getCostFactory().makeHugeCost();
-      }
-    }
-
+    // For Calcite 1.35+ compatibility: In earlier versions, AVG/STDDEV/VAR were always rewritten to SUM/COUNT
+    // by returning a huge cost to force the rewrite. In Calcite 1.35+, these functions work correctly as-is,
+    // so we no longer apply the cost penalty. The ReduceAggregatesRule may still rewrite them when beneficial,
+    // but it's no longer mandatory.
     return computeLogicalAggCost(planner, mq);
   }
 

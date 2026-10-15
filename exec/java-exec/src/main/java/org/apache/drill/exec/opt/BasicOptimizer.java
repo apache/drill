@@ -152,7 +152,7 @@ public class BasicOptimizer extends Optimizer {
       input = new Sort(input, ods, false);
 
       return new WindowPOP(input, window.getWithins(), window.getAggregations(),
-          window.getOrderings(), false, null, null);
+          window.getOrderings(), false, null, null, WindowPOP.Exclusion.EXCLUDE_NO_OTHER);
     }
 
     @Override

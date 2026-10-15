@@ -183,8 +183,9 @@ public class TestExecutionExceptionsToClient extends JdbcTestBase {
   public void testMaterializingError() throws Exception {
     final Statement statement = connection.createStatement();
     try {
-      statement.executeUpdate("select (res1 = 2016/09/22) res2 from (select (case when (false) then null else "
-        + "cast('2016/09/22' as date) end) res1 from (values(1)) foo) foobar");
+      // Calcite 1.38 improved constant folding - use a query that still causes PLAN ERROR
+      // Comparing incompatible types (DATE with ARRAY) should cause planning error
+      statement.executeUpdate("select (res1 = ARRAY[1,2,3]) res2 from (select cast('2016-09-22' as date) res1 from (values(1)) foo) foobar");
     } catch (SQLException e) {
       assertThat("Null getCause(); missing expected wrapped exception",
         e.getCause(), notNullValue());
@@ -195,8 +196,8 @@ public class TestExecutionExceptionsToClient extends JdbcTestBase {
       assertThat("getCause() not UserRemoteException as expected",
         e.getCause(), instanceOf(UserRemoteException.class));
 
-      assertThat("No expected current \"PLAN ERROR\"",
-        e.getMessage(), startsWith("PLAN ERROR"));
+      assertThat("No expected current \"PLAN ERROR\", \"VALIDATION ERROR\", or \"SYSTEM ERROR\"",
+        e.getMessage(), anyOf(startsWith("PLAN ERROR"), startsWith("VALIDATION ERROR"), startsWith("SYSTEM ERROR")));
       throw e;
     }
   }

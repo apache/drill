@@ -22,16 +22,24 @@ import org.apache.drill.exec.expr.annotations.FunctionTemplate;
 import org.apache.drill.exec.expr.annotations.FunctionTemplate.FunctionScope;
 import org.apache.drill.exec.expr.annotations.FunctionTemplate.NullHandling;
 import org.apache.drill.exec.expr.annotations.Output;
+import org.apache.drill.exec.expr.annotations.Param;
 import org.apache.drill.exec.expr.holders.VarBinaryHolder;
+import org.apache.drill.exec.expr.holders.VarCharHolder;
 
 /**
- * This and {@link DummyConvertFrom} class merely act as a placeholder so that Optiq
+ * This and {@link DummyConvertFrom} class merely act as a placeholder so that Calcite
  * allows 'convert_to()' and 'convert_from()' functions in SQL.
+ *
+ * Calcite 1.35+ requires function signatures to match during validation, so we define
+ * the expected parameters here. The actual function implementation is selected at runtime
+ * based on the format parameter value.
  */
 @FunctionTemplate(name = "convert_to", scope = FunctionScope.SIMPLE, nulls = NullHandling.NULL_IF_NULL,
                   outputWidthCalculatorType = FunctionTemplate.OutputWidthCalculatorType.DEFAULT)
 public class DummyConvertTo implements DrillSimpleFunc {
 
+  @Param VarBinaryHolder in;
+  @Param VarCharHolder format;
   @Output VarBinaryHolder out;
 
   @Override
