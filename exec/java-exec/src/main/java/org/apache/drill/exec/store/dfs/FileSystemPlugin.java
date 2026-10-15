@@ -51,11 +51,13 @@ import org.apache.drill.exec.oauth.TokenRegistry;
 import org.apache.drill.exec.ops.OptimizerRulesContext;
 import org.apache.drill.exec.physical.base.AbstractGroupScan;
 import org.apache.drill.exec.planner.PlannerPhase;
+import org.apache.drill.exec.planner.logical.DrillTableSelection;
 import org.apache.drill.exec.server.DrillbitContext;
 import org.apache.drill.exec.server.options.SessionOptionManager;
 import org.apache.drill.exec.store.AbstractStoragePlugin;
 import org.apache.drill.exec.store.ClassPathFileSystem;
 import org.apache.drill.exec.store.LocalSyncableFileSystem;
+import org.apache.drill.exec.store.PlanCacheTable;
 import org.apache.drill.exec.store.SchemaConfig;
 import com.google.common.annotations.VisibleForTesting;
 import com.google.common.base.Strings;
@@ -328,6 +330,39 @@ public class FileSystemPlugin extends AbstractStoragePlugin {
 
   public FormatPlugin getFormatPlugin(String name) {
     return formatCreator.getFormatPluginByName(name);
+  }
+
+  @Override
+  public boolean supportPlanCache(DrillTableSelection selection) {
+    if (!(selection instanceof FormatSelection)) {
+      return false;
+    }
+    FormatSelection formatSelection = (FormatSelection) selection;
+    FormatPlugin format = getFormatPlugin(formatSelection.getFormat());
+    return format != null && format.supportPlanCache(formatSelection.getSelection());
+  }
+
+  @Override
+  public PlanCacheTable planCacheTable(DrillTableSelection selection) throws IOException {
+    if (!(selection instanceof FormatSelection)) {
+      return null;
+    }
+    FormatSelection formatSelection = (FormatSelection) selection;
+    FileSelection files = formatSelection.getSelection();
+    FormatPlugin format = getFormatPlugin(formatSelection.getFormat());
+    if (format == null || !format.supportPlanCache(files)) {
+      return null;
+    }
+    PlanCacheTable table = format.planCacheTable(files);
+    if (table == null) {
+      return null;
+    }
+    String formatName = format.getName();
+    if (formatName == null || formatName.isEmpty()) {
+      return null;
+    }
+    String identifier = formatName.length() + ":" + formatName + table.getIdentifier();
+    return new PlanCacheTable(identifier, table.getVersion());
   }
 
   /**

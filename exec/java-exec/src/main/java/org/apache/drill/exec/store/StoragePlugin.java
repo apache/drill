@@ -28,6 +28,7 @@ import org.apache.drill.common.logical.FormatPluginConfig;
 import org.apache.drill.common.logical.StoragePluginConfig;
 import org.apache.drill.exec.ops.OptimizerRulesContext;
 import org.apache.drill.exec.physical.base.AbstractGroupScan;
+import org.apache.drill.exec.planner.logical.DrillTableSelection;
 import org.apache.drill.exec.planner.PlannerPhase;
 import org.apache.drill.exec.metastore.MetadataProviderManager;
 import org.apache.drill.exec.server.options.SessionOptionManager;
@@ -70,6 +71,27 @@ public interface StoragePlugin extends SchemaFactory, AutoCloseable {
    * Indicates if Drill can write a table to this format (e.g. as JSON, csv, etc.).
    */
   boolean supportsWrite();
+
+  /**
+   * Opts this plugin into plan caching. The engine validates query context and
+   * rebinds expression parameters; the plugin must provide a plan-compatible
+   * table version and safely rebuild every scan for an eligible selection,
+   * including value-dependent state for each execution. Check selection
+   * eligibility without reading table versions or building cache metadata.
+   */
+  default boolean supportPlanCache(DrillTableSelection selection) {
+    return false;
+  }
+
+  /**
+   * Returns a stable table identifier and a version that changes whenever the
+   * cached operator structure is no longer compatible. Data-only changes may
+   * keep the version only if the scan reads current data on deserialization.
+   * Return null when that contract cannot be met.
+   */
+  default PlanCacheTable planCacheTable(DrillTableSelection selection) throws IOException {
+    return null;
+  }
 
   /**
    * Indicates if Drill can insert to a table to this plugin.

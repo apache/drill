@@ -58,6 +58,9 @@ public class PlannerSettings implements Context{
 
   public static final OptionValidator CONSTANT_FOLDING = new BooleanValidator("planner.enable_constant_folding",
       new OptionDescription("If one side of a filter condition is a constant expression, constant folding evaluates the expression in the planning phase and replaces the expression with the constant value. For example, Drill can rewrite WHERE age + 5 < 42 as WHERE age < 37."));
+  public static final String ENABLE_PLAN_CACHE_OPTION = "planner.enable_plan_cache";
+  public static final BooleanValidator PLAN_CACHE = new BooleanValidator(ENABLE_PLAN_CACHE_OPTION,
+      new OptionDescription("Enables reuse of compatible physical plans for parameterized SQL queries."));
   public static final String DISABLE_EXCHANGE_OPTION = "planner.disable_exchanges";
   public static final OptionValidator EXCHANGE = new BooleanValidator(DISABLE_EXCHANGE_OPTION,
       new OptionDescription("Toggles the state of hashing to a random exchange."));

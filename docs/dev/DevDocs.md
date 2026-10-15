@@ -27,3 +27,8 @@ For information about the Jetty 12 upgrade, known limitations, and developer gui
 ## Materialized Views
 
 For information about materialized view support, including SQL syntax, query rewriting, and metastore integration, see [MaterializedViews.md](MaterializedViews.md)
+
+## Physical Plan Cache
+
+For cache design, configuration and trade-offs, see [PLAN_CACHE_DESIGN.md](PLAN_CACHE_DESIGN.md).
+For storage-plugin integration and scan reconstruction requirements, see [PLAN_CACHE_PLUGIN_GUIDE.md](PLAN_CACHE_PLUGIN_GUIDE.md).

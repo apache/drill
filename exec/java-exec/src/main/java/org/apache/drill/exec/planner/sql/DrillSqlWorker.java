@@ -18,6 +18,7 @@
 package org.apache.drill.exec.planner.sql;
 
 import java.io.IOException;
+import java.util.function.Consumer;
 
 import org.apache.calcite.sql.SqlDescribeSchema;
 import org.apache.calcite.sql.SqlKind;
@@ -31,11 +32,15 @@ import org.apache.calcite.tools.RelConversionException;
 import org.apache.calcite.tools.ValidationException;
 import org.apache.drill.common.exceptions.UserException;
 import org.apache.drill.exec.ExecConstants;
+import org.apache.drill.exec.alias.AliasRegistry;
 import org.apache.drill.exec.exception.MetadataException;
 import org.apache.drill.exec.ops.QueryContext;
 import org.apache.drill.exec.ops.QueryContext.SqlStatementType;
 import org.apache.drill.exec.physical.PhysicalPlan;
+import org.apache.drill.exec.planner.PhysicalPlanReader;
+import org.apache.drill.exec.planner.physical.PlannerSettings;
 import org.apache.drill.exec.planner.sql.handlers.AbstractSqlHandler;
+import org.apache.drill.exec.planner.sql.handlers.ClearPlanCacheHandler;
 import org.apache.drill.exec.planner.sql.handlers.AnalyzeTableHandler;
 import org.apache.drill.exec.planner.sql.handlers.DefaultSqlHandler;
 import org.apache.drill.exec.planner.sql.handlers.DescribeSchemaHandler;
@@ -51,6 +56,7 @@ import org.apache.drill.exec.planner.sql.handlers.SqlHandlerConfig;
 import org.apache.drill.exec.planner.sql.parser.DrillSqlCall;
 import org.apache.drill.exec.planner.sql.parser.DrillSqlDescribeTable;
 import org.apache.drill.exec.planner.sql.parser.DrillSqlResetOption;
+import org.apache.drill.exec.planner.sql.parser.SqlClearPlanCache;
 import org.apache.drill.exec.planner.sql.parser.SqlSchema;
 import org.apache.drill.exec.planner.sql.conversion.SqlConverter;
 import org.apache.drill.exec.proto.UserBitShared.DrillPBError;
@@ -218,7 +224,6 @@ public class DrillSqlWorker {
    */
   private static PhysicalPlan getQueryPlan(QueryContext context, String sql, Pointer<String> textPlan)
       throws ForemanSetupException, RelConversionException, IOException, ValidationException {
-
     final SqlConverter parser = new SqlConverter(context);
     injector.injectChecked(context.getExecutionControls(), "sql-parsing", ForemanSetupException.class);
     final SqlNode sqlNode = checkAndApplyAutoLimit(parser, context, sql);
@@ -270,6 +275,11 @@ public class DrillSqlWorker {
       case DROP_VIEW:
       case OTHER_DDL:
       case OTHER:
+        if (sqlNode instanceof SqlClearPlanCache) {
+          handler = new ClearPlanCacheHandler(context);
+          context.setSQLStatementType(SqlStatementType.OTHER);
+          break;
+        }
         if (sqlNode instanceof DrillSqlCall) {
           handler = ((DrillSqlCall) sqlNode).getSqlHandler(config);
           if (handler instanceof AnalyzeTableHandler || handler instanceof MetastoreAnalyzeTableHandler) {
@@ -295,7 +305,95 @@ public class DrillSqlWorker {
       context.getOptions().setLocalOption(ExecConstants.RETURN_RESULT_SET_FOR_DDL, true);
     }
 
-    return handler.getPlan(sqlNode);
+    // Keep the original SQL if no safe snapshot is available or cache preparation fails.
+    SqlNode planningSql = sqlNode;
+    Consumer<PhysicalPlan> prepareCacheInsert = null;
+    if (context.getOptions().getOption(PlannerSettings.PLAN_CACHE)
+        && !context.getSession().hasTemporaryTables()
+        && !hasMutableAliases(context)
+        && PlanCacheEligibility.isSafeToCache(sqlNode, context.getFunctionRegistry())) {
+      try {
+        PlanCache cache = context.getDrillbitContext().getPlanCache();
+        long cacheGeneration = cache.getGeneration();
+        // Capture the context once, before lookup and planning. Changes during
+        // planning invalidate this entry on its first hit.
+        PlanCache.ContextSnapshot snapshot = PlanCache.ContextSnapshot.resolve(
+            parser.getDefaultSchema(), sqlNode, context);
+        if (snapshot != null) {
+          PlanCacheParameterizer.Candidate candidate =
+              PlanCacheParameterizer.parameterize(sqlNode, parser.getTypeFactory());
+          String key = context.getQueryUserName() + '\n'
+              + context.getSession().getDefaultSchemaPath() + '\n'
+              + snapshot.keyFingerprint() + '\n'
+              + candidate.template;
+          PlanCache.Entry entry = cache.get(key);
+          if (entry != null) {
+            try {
+              if (entry.matchesContext(snapshot)) {
+                PhysicalPlan bound = entry.bind(candidate.literals,
+                    context.getDrillbitContext().getPlanReader());
+                PlanCache.bindTextPlan(textPlan, entry.getTextPlan(), candidate.literals);
+                cache.recordBind();
+                context.setPlanCacheHit();
+                logger.debug("Plan cache hit");
+                return bound;
+              }
+              logger.debug("Plan cache entry invalidated because its context changed; replanning");
+            } catch (RuntimeException | IOException e) {
+              logger.debug("Plan cache entry invalidated because rebinding failed; replanning", e);
+            }
+            cache.invalidate(key);
+          } else {
+            logger.debug("Plan cache miss");
+          }
+          cache.recordMiss();
+          final PhysicalPlanReader cacheReader =
+              context.getDrillbitContext().getPlanReader();
+          // Prepare insertion after planning; Foreman publishes it only after the query succeeds.
+          prepareCacheInsert = planned -> {
+            String templateTextPlan = PlanCache.bindTextPlan(textPlan, candidate.literals);
+            final String json;
+            try {
+              // Capture before parallelization/execution mutates the operators.
+              // Pending publication and the writer queue retain only immutable JSON.
+              json = cacheReader.writeJson(planned);
+            } catch (IOException | RuntimeException e) {
+              logger.debug("Plan could not be serialized for the plan cache; skipping publication", e);
+              return;
+            }
+            context.setPendingPlanCacheInsert(() -> cache.writeAfterSuccess(key, json,
+                templateTextPlan, cacheReader, snapshot, cacheGeneration));
+          };
+          // On a cache miss, plan the parameterized SQL to produce a reusable template.
+          planningSql = candidate.sql;
+        }
+      } catch (RuntimeException e) {
+        logger.debug("Plan cache attempt fell back to ordinary planning", e);
+      }
+    }
+
+    // Plan exactly once, outside cache fallback. Validation can mutate the SQL tree,
+    // so retrying a failed planning attempt could reuse partially rewritten nodes.
+    PhysicalPlan planned = handler.getPlan(planningSql);
+    if (prepareCacheInsert != null) {
+      prepareCacheInsert.accept(planned);
+    }
+    return planned;
+  }
+
+  private static boolean hasMutableAliases(QueryContext context) {
+    // Table-version checks cannot detect an alias redirected to another table.
+    AliasRegistry[] registries = {
+        context.getAliasRegistryProvider().getStorageAliasesRegistry(),
+        context.getAliasRegistryProvider().getTableAliasesRegistry()
+    };
+    for (AliasRegistry registry : registries) {
+      if (registry.getPublicAliases().getAllAliases().hasNext()
+          || registry.getUserAliases(context.getQueryUserName()).getAllAliases().hasNext()) {
+        return true;
+      }
+    }
+    return false;
   }
 
   private static boolean isAutoLimitShouldBeApplied(SqlNode sqlNode, int queryMaxRows) {

@@ -93,6 +93,10 @@ public class PhysicalPlanReader {
     return mapper.writeValueAsString(op);
   }
 
+  public String writeJson(PhysicalPlan plan) throws JsonProcessingException {
+    return mapper.writeValueAsString(plan);
+  }
+
   public PhysicalPlan readPhysicalPlan(String json) throws IOException {
     logger.debug("Reading physical plan {}", json);
     return physicalPlanReader.readValue(json);

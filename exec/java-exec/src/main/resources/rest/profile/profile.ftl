@@ -313,6 +313,7 @@
                 <th>State</th>
                 <th>Foreman</th>
                 <th>Total Fragments</th>
+                <th>Plan Cache Hit</th>
      <#if queued>
                 <th>Total Cost</th>
                 <th>Queue</th>
@@ -324,6 +325,7 @@
                   <td>${model.getQueryStateDisplayName()}</td>
                   <td>${model.getProfile().getForeman().getAddress()}</td>
                   <td>${model.getProfile().getTotalFragments()}</td>
+                  <td>${model.getPlanCacheStatus()}</td>
      <#if queued>
                   <td>${model.getProfile().getTotalCost()}</td>
                   <td>${queueName}</td>
