@@ -17,6 +17,7 @@
  */
 package org.apache.drill.exec.resolver;
 
+import java.util.Arrays;
 import java.util.HashMap;
 import java.util.HashSet;
 import java.util.List;
@@ -749,6 +750,17 @@ public class TypeCastRules {
     }
 
     return result;
+  }
+
+  public static MajorType getLeastRestrictiveMajorType(MajorType... majorTypes) {
+    MinorType[] minorTypes = Arrays.stream(majorTypes).map(MajorType::getMinorType).toArray(MinorType[]::new);
+    DataMode[] dataModes = Arrays.stream(majorTypes).map(MajorType::getMode).toArray(DataMode[]::new);
+    MinorType leastRestrictiveMinorType = getLeastRestrictiveType(minorTypes);
+    DataMode leastRestrictiveDataMode = getLeastRestrictiveDataMode(dataModes);
+    return MajorType.newBuilder()
+        .setMinorType(leastRestrictiveMinorType)
+        .setMode(leastRestrictiveDataMode)
+        .build();
   }
 
   /**
