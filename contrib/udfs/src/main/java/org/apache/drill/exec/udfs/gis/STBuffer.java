@@ -32,7 +32,8 @@ import javax.inject.Inject;
 * is less than or equal to radius
 */
 @FunctionTemplate(name = "st_buffer", scope = FunctionTemplate.FunctionScope.SIMPLE,
-  nulls = FunctionTemplate.NullHandling.NULL_IF_NULL)
+  nulls = FunctionTemplate.NullHandling.NULL_IF_NULL,
+  desc = "Returns a geometry covering every point within the given radius of the input geometry.")
 public class STBuffer implements DrillSimpleFunc {
   @Param
   VarBinaryHolder geom1Param;

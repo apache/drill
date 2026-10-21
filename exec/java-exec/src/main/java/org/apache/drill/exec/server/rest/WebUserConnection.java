@@ -56,7 +56,7 @@ public class WebUserConnection extends BaseWebUserConnection {
   private int autoLimitRowCount;
   private int rowCount;
 
-  WebUserConnection(WebSessionResources webSessionResources) {
+  public WebUserConnection(WebSessionResources webSessionResources) {
     super(webSessionResources);
   }
 
@@ -119,7 +119,7 @@ public class WebUserConnection extends BaseWebUserConnection {
 
   public static class AnonWebUserConnection extends WebUserConnection {
 
-    AnonWebUserConnection(WebSessionResources webSessionResources) {
+    public AnonWebUserConnection(WebSessionResources webSessionResources) {
       super(webSessionResources);
     }
 

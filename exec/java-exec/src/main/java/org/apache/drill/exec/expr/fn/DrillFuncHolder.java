@@ -139,6 +139,17 @@ public abstract class DrillFuncHolder extends AbstractFuncHolder {
   }
 
   /**
+   * Human-readable description of what the function does, or an empty string when
+   * the function does not declare one. Surfaced to clients (and to the AI assistant)
+   * through the metadata REST API.
+   *
+   * @return the description, never null
+   */
+  public String getDesc() {
+    return attributes.getDesc();
+  }
+
+  /**
    * Generates string representation of function input parameters:
    * PARAMETER_TYPE_1-PARAMETER_MODE_1,PARAMETER_TYPE_2-PARAMETER_MODE_2
    * Example: VARCHAR-REQUIRED,VARCHAR-OPTIONAL

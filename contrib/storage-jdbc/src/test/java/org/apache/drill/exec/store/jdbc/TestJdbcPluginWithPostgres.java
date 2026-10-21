@@ -32,6 +32,7 @@ import org.junit.AfterClass;
 import org.junit.BeforeClass;
 import org.junit.Test;
 import org.junit.experimental.categories.Category;
+import org.testcontainers.DockerClientFactory;
 import org.testcontainers.containers.PostgreSQLContainer;
 import org.testcontainers.containers.JdbcDatabaseContainer;
 import org.testcontainers.utility.DockerImageName;
@@ -43,6 +44,7 @@ import java.util.Map;
 import java.util.TimeZone;
 
 import static org.junit.Assert.assertEquals;
+import static org.junit.Assume.assumeTrue;
 
 /**
  * JDBC storage plugin tests against Postgres.
@@ -56,6 +58,10 @@ public class TestJdbcPluginWithPostgres extends ClusterTest {
 
   @BeforeClass
   public static void initPostgres() throws Exception {
+    assumeTrue(
+      "Docker is not available, skipping container tests",
+      DockerClientFactory.instance().isDockerAvailable()
+    );
     startCluster(ClusterFixture.builder(dirTestWatcher));
     String postgresDBName = "drill_postgres_test";
     TimeZone.setDefault(TimeZone.getTimeZone("UTC"));

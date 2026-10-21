@@ -35,6 +35,7 @@ import org.junit.BeforeClass;
 import org.junit.Ignore;
 import org.junit.Test;
 import org.junit.experimental.categories.Category;
+import org.testcontainers.DockerClientFactory;
 import org.testcontainers.containers.MSSQLServerContainer;
 import org.testcontainers.utility.DockerImageName;
 
@@ -55,6 +56,10 @@ public class TestJdbcPluginWithMSSQL extends ClusterTest {
 
   @BeforeClass
   public static void initMSSQL() throws Exception {
+    Assume.assumeTrue(
+      "Docker is not available, skipping container tests",
+      DockerClientFactory.instance().isDockerAvailable()
+    );
     Assume.assumeTrue(System.getProperty("os.arch").matches("(amd64|x86_64)"));
 
     startCluster(ClusterFixture.builder(dirTestWatcher));

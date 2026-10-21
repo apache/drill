@@ -101,6 +101,7 @@ public class WebServer implements AutoCloseable {
   private static final int PORT_HUNT_TRIES = 100;
   private static final String BASE_STATIC_PATH = "/rest/static/";
   private static final String DRILL_ICON_RESOURCE_RELATIVE_PATH = "img/drill.ico";
+  private static final String SQLLAB_WEBAPP_PATH = "/webapp/";
 
   private final DrillConfig config;
   private final MetricRegistry metrics;
@@ -243,6 +244,19 @@ public class WebServer implements AutoCloseable {
       servletContextHandler.setSecurityHandler(drillSecurityHandler);
     }
 
+    // Configured response headers must apply to every response, including the
+    // SPA pages served by SpaServletFilter (which short-circuits the chain).
+    // Register it first so it sets the headers before any downstream filter
+    // or servlet commits the response.
+    FilterHolder responseHeadersSettingFilter = new FilterHolder(ResponseHeadersSettingFilter.class);
+    responseHeadersSettingFilter.setInitParameters(ResponseHeadersSettingFilter.retrieveResponseHeaders(config));
+    servletContextHandler.addFilter(responseHeadersSettingFilter, "/*", EnumSet.of(DispatcherType.REQUEST));
+
+    // Serve the React SPA for paths that aren't claimed by a JAX-RS resource.
+    // Registered before the CSRF/CORS filters and Jersey so it can short-circuit
+    // SPA paths without invoking the rest of the chain.
+    servletContextHandler.addFilter(SpaServletFilter.class, "/*", EnumSet.of(DispatcherType.REQUEST));
+
     // Applying filters for CSRF protection.
     servletContextHandler.addFilter(CsrfTokenInjectFilter.class, "/*", EnumSet.of(DispatcherType.REQUEST));
     for (String path : new String[]{"/query", "/storage/create_update", "/option/*"}) {
@@ -260,7 +274,7 @@ public class WebServer implements AutoCloseable {
       holder.setInitParameter(CrossOriginFilter.ALLOW_CREDENTIALS_PARAM,
           String.valueOf(config.getBoolean(ExecConstants.HTTP_CORS_CREDENTIALS)));
 
-      for (String path : new String[]{"*.json", "/storage/*/enable/*", "/status*"}) {
+      for (String path : new String[]{"*.json", "/storage/*/enable/*", "/status*", "/api/*"}) {
         servletContextHandler.addFilter(holder, path, EnumSet.of(DispatcherType.REQUEST));
       }
     }
@@ -271,10 +285,6 @@ public class WebServer implements AutoCloseable {
 
     // Allowing CORS for metrics only
     servletContextHandler.addFilter(filterHolder, STATUS_METRICS_PATH, null);
-
-    FilterHolder responseHeadersSettingFilter = new FilterHolder(ResponseHeadersSettingFilter.class);
-    responseHeadersSettingFilter.setInitParameters(ResponseHeadersSettingFilter.retrieveResponseHeaders(config));
-    servletContextHandler.addFilter(responseHeadersSettingFilter, "/*", EnumSet.of(DispatcherType.REQUEST));
 
     return servletContextHandler;
   }

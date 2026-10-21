@@ -31,7 +31,8 @@ import javax.inject.Inject;
  * Returns TRUE if the supplied geometries have some, but not all, interior points in common
  */
 @FunctionTemplate(name = "st_crosses", scope = FunctionTemplate.FunctionScope.SIMPLE,
-  nulls = FunctionTemplate.NullHandling.NULL_IF_NULL)
+  nulls = FunctionTemplate.NullHandling.NULL_IF_NULL,
+  desc = "Returns true when two geometries share some, but not all, interior points.")
 public class STCrosses implements DrillSimpleFunc {
   @Param
   VarBinaryHolder geom1Param;

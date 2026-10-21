@@ -34,7 +34,8 @@ import javax.inject.Inject;
 /**
  * Returns a geometry that represents the point set union of the Geometries
  */
-@FunctionTemplate(name = "st_unionaggregate", scope = FunctionTemplate.FunctionScope.POINT_AGGREGATE)
+@FunctionTemplate(name = "st_unionaggregate", scope = FunctionTemplate.FunctionScope.POINT_AGGREGATE,
+  desc = "Aggregate. Returns the point-set union of every geometry in the group.")
 public class STUnionAggregate implements DrillAggFunc {
 
   @Param NullableVarBinaryHolder in;

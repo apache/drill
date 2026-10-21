@@ -31,7 +31,8 @@ import javax.inject.Inject;
  * Returns Y maxima of a bounding box 2d or 3d or a geometry
  */
 @FunctionTemplate(name = "st_ymax", scope = FunctionTemplate.FunctionScope.SIMPLE,
-  nulls = FunctionTemplate.NullHandling.NULL_IF_NULL)
+  nulls = FunctionTemplate.NullHandling.NULL_IF_NULL,
+  desc = "Returns the maximum Y coordinate of the bounding box of a geometry.")
 public class STYMax implements DrillSimpleFunc {
   @Param
   VarBinaryHolder geom1Param;

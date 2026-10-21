@@ -31,7 +31,9 @@ import javax.inject.Inject;
  * Returns true if the given geometries represent the same geometry. Directionality is ignored
  */
 @FunctionTemplate(name = "st_equals", scope = FunctionTemplate.FunctionScope.SIMPLE,
-  nulls = FunctionTemplate.NullHandling.NULL_IF_NULL)
+  nulls = FunctionTemplate.NullHandling.NULL_IF_NULL,
+  desc = "Returns true when two geometries describe the same shape, ignoring point order and "
+    + "direction.")
 public class STEquals implements DrillSimpleFunc {
   @Param
   VarBinaryHolder geom1Param;
