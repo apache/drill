@@ -36,7 +36,9 @@ public class ThreatHuntingFunctions {
    */
   @FunctionTemplate(names = {"punctuation_pattern", "punctuationPattern"},
     scope = FunctionTemplate.FunctionScope.SIMPLE,
-    nulls = FunctionTemplate.NullHandling.NULL_IF_NULL)
+    nulls = FunctionTemplate.NullHandling.NULL_IF_NULL,
+    desc = "Extracts only the punctuation from a string, with spaces as underscores. Used to cluster log "
+      + "lines that share a structure.")
   public static class PunctuationPatternFunction implements DrillSimpleFunc {
 
     @Param
@@ -78,7 +80,9 @@ public class ThreatHuntingFunctions {
    */
   @FunctionTemplate(name = "entropy",
     scope = FunctionTemplate.FunctionScope.SIMPLE,
-    nulls = FunctionTemplate.NullHandling.NULL_IF_NULL)
+    nulls = FunctionTemplate.NullHandling.NULL_IF_NULL,
+    desc = "Returns the Shannon entropy of a string. High values suggest random or encoded content such "
+      + "as a DGA domain or a key.")
   public static class StringEntropyFunction implements DrillSimpleFunc {
 
     @Param
@@ -130,7 +134,9 @@ public class ThreatHuntingFunctions {
    */
   @FunctionTemplate(names = {"entropy_per_byte", "entropyPerByte"},
     scope = FunctionTemplate.FunctionScope.SIMPLE,
-    nulls = FunctionTemplate.NullHandling.NULL_IF_NULL)
+    nulls = FunctionTemplate.NullHandling.NULL_IF_NULL,
+    desc = "Returns the Shannon entropy of a string divided by its length, so values compare across "
+      + "strings of different sizes.")
 
   public static class NormedStringEntropyFunction implements DrillSimpleFunc {
 

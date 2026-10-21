@@ -29,7 +29,8 @@ import org.apache.drill.exec.expr.holders.VarBinaryHolder;
 import javax.inject.Inject;
 
 @FunctionTemplate(name = "st_dwithin", scope = FunctionTemplate.FunctionScope.SIMPLE,
-  nulls = FunctionTemplate.NullHandling.NULL_IF_NULL)
+  nulls = FunctionTemplate.NullHandling.NULL_IF_NULL,
+  desc = "Returns true when two geometries lie within a given distance of each other.")
 public class STDWithin implements DrillSimpleFunc {
   @Param
   VarBinaryHolder geom1Param;

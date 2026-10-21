@@ -32,7 +32,8 @@ import javax.inject.Inject;
  and at least one point of the interior of B lies in the interior of A.
 */
 @FunctionTemplate(name = "st_contains", scope = FunctionTemplate.FunctionScope.SIMPLE,
-  nulls = FunctionTemplate.NullHandling.NULL_IF_NULL)
+  nulls = FunctionTemplate.NullHandling.NULL_IF_NULL,
+  desc = "Returns true when the first geometry completely contains the second.")
 public class STContains implements DrillSimpleFunc {
   @Param
   VarBinaryHolder geom1Param;

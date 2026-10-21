@@ -95,7 +95,8 @@ public class StringFunctions{
     }
   }
 
-  @FunctionTemplate(name = "ilike", scope = FunctionScope.SIMPLE, nulls = NullHandling.NULL_IF_NULL)
+  @FunctionTemplate(name = "ilike", scope = FunctionScope.SIMPLE, nulls = NullHandling.NULL_IF_NULL,
+      desc = "Case-insensitive LIKE. Supports the same % and _ wildcards.")
   public static class ILike implements DrillSimpleFunc {
 
     @Param VarCharHolder input;
@@ -212,6 +213,7 @@ public class StringFunctions{
    * Replace all substring that match the regular expression with replacement.
    */
   @FunctionTemplate(name = "regexp_replace", scope = FunctionScope.SIMPLE, nulls = NullHandling.NULL_IF_NULL,
+      desc = "Replaces every substring matching a Java regular expression with the replacement string.",
                     outputWidthCalculatorType = OutputWidthCalculatorType.CUSTOM_CLONE_DEFAULT)
   public static class RegexpReplace implements DrillSimpleFunc {
 
@@ -267,7 +269,8 @@ public class StringFunctions{
    *
    * This differs from the "similar" function in that accepts a standard regex, rather than a SQL regex.
    */
-  @FunctionTemplate(name = "regexp_matches", scope = FunctionScope.SIMPLE, nulls = NullHandling.NULL_IF_NULL)
+  @FunctionTemplate(name = "regexp_matches", scope = FunctionScope.SIMPLE, nulls = NullHandling.NULL_IF_NULL,
+      desc = "Returns true when the string matches the given Java regular expression. The pattern must match the entire value.")
   public static class RegexpMatches implements DrillSimpleFunc {
 
     @Param VarCharHolder input;
@@ -491,6 +494,7 @@ public class StringFunctions{
    * is positive, from end if is negative.
    */
   @FunctionTemplate(name = "split_part", scope = FunctionScope.SIMPLE, nulls = NullHandling.NULL_IF_NULL,
+      desc = "Splits a string on a delimiter and returns the part at the given 1-based index. Negative indexes are not supported.",
                     outputWidthCalculatorType = OutputWidthCalculatorType.CUSTOM_FIXED_WIDTH_DEFAULT)
   public static class SplitPart implements DrillSimpleFunc {
     @Param
@@ -1563,6 +1567,7 @@ public class StringFunctions{
   }
 
   @FunctionTemplate(name = "split", scope = FunctionScope.SIMPLE,
+      desc = "Splits a string on a single-character delimiter and returns an array of the parts. Use SPLIT_PART to pick one part directly.",
       outputWidthCalculatorType = OutputWidthCalculatorType.CUSTOM_FIXED_WIDTH_DEFAULT)
   public static class SplitNullableInput implements DrillSimpleFunc {
     @Param NullableVarCharHolder in;
@@ -1792,6 +1797,7 @@ public class StringFunctions{
   // Converts a hex encoded string into a varbinary type.
   // "\xca\xfe\xba\xbe" => (byte[]) {(byte)0xca, (byte)0xfe, (byte)0xba, (byte)0xbe}
   @FunctionTemplate(name = "binary_string", scope = FunctionScope.SIMPLE, nulls = NullHandling.NULL_IF_NULL,
+      desc = "Converts a string containing byte escapes into VARBINARY. The inverse of STRING_BINARY.",
                     outputWidthCalculatorType = OutputWidthCalculatorType.CUSTOM_CLONE_DEFAULT)
   public static class BinaryString implements DrillSimpleFunc {
     @Param  VarCharHolder in;
@@ -1813,6 +1819,7 @@ public class StringFunctions{
   // Converts a varbinary type into a hex encoded string.
   // (byte[]) {(byte)0xca, (byte)0xfe, (byte)0xba, (byte)0xbe}  => "\xca\xfe\xba\xbe"
   @FunctionTemplate(name = "string_binary", scope = FunctionScope.SIMPLE, nulls = NullHandling.NULL_IF_NULL,
+      desc = "Renders VARBINARY as a printable string with byte escapes. Useful for inspecting binary columns from HBase or Kafka.",
                     outputWidthCalculatorType = OutputWidthCalculatorType.CUSTOM_CLONE_DEFAULT)
   public static class StringBinary implements DrillSimpleFunc {
     @Param  VarBinaryHolder in;

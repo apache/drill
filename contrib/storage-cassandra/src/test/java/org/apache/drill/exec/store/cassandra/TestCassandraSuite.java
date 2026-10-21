@@ -27,6 +27,7 @@ import org.junit.BeforeClass;
 import org.junit.experimental.categories.Category;
 import org.junit.runner.RunWith;
 import org.junit.runners.Suite;
+import org.testcontainers.DockerClientFactory;
 import org.testcontainers.containers.CassandraContainer;
 
 @Category(SlowTest.class)
@@ -42,6 +43,10 @@ public class TestCassandraSuite extends BaseTest {
 
   @BeforeClass
   public static void initCassandra() {
+    org.junit.Assume.assumeTrue(
+      "Docker is not available, skipping container tests",
+      DockerClientFactory.instance().isDockerAvailable()
+    );
     synchronized (TestCassandraSuite.class) {
       if (initCount.get() == 0) {
         startCassandra();

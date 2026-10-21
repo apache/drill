@@ -18,27 +18,74 @@
 package org.apache.drill.exec.server.rest;
 
 import jakarta.annotation.security.RolesAllowed;
-import jakarta.inject.Inject;
 import jakarta.ws.rs.GET;
 import jakarta.ws.rs.Path;
 import jakarta.ws.rs.Produces;
 import jakarta.ws.rs.core.MediaType;
-import jakarta.ws.rs.core.SecurityContext;
 
-import org.apache.drill.exec.server.rest.DrillRestServer.UserAuthEnabled;
 import org.apache.drill.exec.server.rest.auth.DrillUserPrincipal;
-import org.glassfish.jersey.server.mvc.Viewable;
 
-@Path("/threads")
+import java.lang.management.ManagementFactory;
+import java.lang.management.ThreadInfo;
+import java.lang.management.ThreadMXBean;
+import java.util.ArrayList;
+import java.util.Arrays;
+import java.util.HashMap;
+import java.util.List;
+import java.util.Map;
+
+/**
+ * Exposes a JVM thread dump for the Drillbit. Admin-only — stack traces can
+ * leak sensitive context (in-flight query SQL, credentials in handlers).
+ */
+@Path("/api/v1/threads")
 @RolesAllowed(DrillUserPrincipal.ADMIN_ROLE)
 public class ThreadsResources {
 
-  @Inject UserAuthEnabled authEnabled;
-  @Inject SecurityContext sc;
-
   @GET
-  @Produces(MediaType.TEXT_HTML)
-  public Viewable getMetrics() {
-    return ViewableWithPermissions.create(authEnabled.get(), "/rest/threads/threads.ftl", sc);
+  @Produces(MediaType.APPLICATION_JSON)
+  public Map<String, Object> dumpThreads() {
+    ThreadMXBean bean = ManagementFactory.getThreadMXBean();
+    ThreadInfo[] infos = bean.dumpAllThreads(bean.isObjectMonitorUsageSupported(),
+        bean.isSynchronizerUsageSupported());
+
+    List<Map<String, Object>> threads = new ArrayList<>(infos.length);
+    for (ThreadInfo info : infos) {
+      Map<String, Object> entry = new HashMap<>();
+      entry.put("id", info.getThreadId());
+      entry.put("name", info.getThreadName());
+      entry.put("state", info.getThreadState().name());
+      entry.put("daemon", info.isDaemon());
+      entry.put("priority", info.getPriority());
+      entry.put("blockedCount", info.getBlockedCount());
+      entry.put("blockedTime", info.getBlockedTime());
+      entry.put("waitedCount", info.getWaitedCount());
+      entry.put("waitedTime", info.getWaitedTime());
+      entry.put("lockName", info.getLockName());
+      entry.put("lockOwnerId", info.getLockOwnerId());
+      entry.put("lockOwnerName", info.getLockOwnerName());
+      entry.put("stackTrace", renderStackTrace(info.getStackTrace()));
+      threads.add(entry);
+    }
+
+    Map<String, Object> result = new HashMap<>();
+    result.put("count", threads.size());
+    result.put("peakCount", bean.getPeakThreadCount());
+    result.put("daemonCount", bean.getDaemonThreadCount());
+    result.put("totalStartedCount", bean.getTotalStartedThreadCount());
+    long[] deadlockedIds = bean.findDeadlockedThreads();
+    result.put("deadlockedThreadIds", deadlockedIds == null
+        ? List.of()
+        : Arrays.stream(deadlockedIds).boxed().toArray());
+    result.put("threads", threads);
+    return result;
+  }
+
+  private static List<String> renderStackTrace(StackTraceElement[] frames) {
+    List<String> rendered = new ArrayList<>(frames.length);
+    for (StackTraceElement frame : frames) {
+      rendered.add(frame.toString());
+    }
+    return rendered;
   }
 }

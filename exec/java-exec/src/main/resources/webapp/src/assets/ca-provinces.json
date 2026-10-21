@@ -1,0 +1,18 @@
+{
+  "type": "FeatureCollection",
+  "features": [
+    {"type": "Feature", "properties": {"name": "Alberta", "code": "AB"}, "geometry": {"type": "Point", "coordinates": [-114.0719, 56.1304]}},
+    {"type": "Feature", "properties": {"name": "British Columbia", "code": "BC"}, "geometry": {"type": "Point", "coordinates": [-122.3045, 53.7267]}},
+    {"type": "Feature", "properties": {"name": "Manitoba", "code": "MB"}, "geometry": {"type": "Point", "coordinates": [-99.7674, 56.1304]}},
+    {"type": "Feature", "properties": {"name": "New Brunswick", "code": "NB"}, "geometry": {"type": "Point", "coordinates": [-66.4619, 46.5891]}},
+    {"type": "Feature", "properties": {"name": "Newfoundland and Labrador", "code": "NL"}, "geometry": {"type": "Point", "coordinates": [-56.1304, 53.1355]}},
+    {"type": "Feature", "properties": {"name": "Northwest Territories", "code": "NT"}, "geometry": {"type": "Point", "coordinates": [-117.4995, 62.0822]}},
+    {"type": "Feature", "properties": {"name": "Nova Scotia", "code": "NS"}, "geometry": {"type": "Point", "coordinates": [-62.6012, 45.3631]}},
+    {"type": "Feature", "properties": {"name": "Nunavut", "code": "NU"}, "geometry": {"type": "Point", "coordinates": [-95.7129, 70.2998]}},
+    {"type": "Feature", "properties": {"name": "Ontario", "code": "ON"}, "geometry": {"type": "Point", "coordinates": [-85.3232, 51.3782]}},
+    {"type": "Feature", "properties": {"name": "Prince Edward Island", "code": "PE"}, "geometry": {"type": "Point", "coordinates": [-62.6012, 46.2382]}},
+    {"type": "Feature", "properties": {"name": "Quebec", "code": "QC"}, "geometry": {"type": "Point", "coordinates": [-73.5673, 52.9399]}},
+    {"type": "Feature", "properties": {"name": "Saskatchewan", "code": "SK"}, "geometry": {"type": "Point", "coordinates": [-106.4613, 56.1304]}},
+    {"type": "Feature", "properties": {"name": "Yukon", "code": "YT"}, "geometry": {"type": "Point", "coordinates": [-135.0568, 62.6671]}}
+  ]
+}

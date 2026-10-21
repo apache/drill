@@ -22,6 +22,7 @@ import java.lang.management.MemoryMXBean;
 import java.util.Collection;
 import java.util.List;
 import java.util.Map;
+import java.util.concurrent.CancellationException;
 import java.util.concurrent.TimeUnit;
 
 import org.apache.drill.common.exceptions.UserException;
@@ -40,6 +41,8 @@ public class RestQueryRunner extends BaseQueryRunner {
   private static final MemoryMXBean memMXBean = ManagementFactory.getMemoryMXBean();
 
   private final QueryWrapper query;
+  private boolean cancelRequested;
+  private boolean cancelSent;
 
   public RestQueryRunner(final QueryWrapper query, final WorkManager workManager, final WebUserConnection webUserConnection) {
     super(workManager, webUserConnection);
@@ -47,6 +50,11 @@ public class RestQueryRunner extends BaseQueryRunner {
   }
 
   public QueryResult run() throws Exception {
+    synchronized (this) {
+      if (cancelRequested) {
+        throw new CancellationException("Query was cancelled before it started");
+      }
+    }
     applyUserName(query.getUserName());
     applyOptions(query.getOptions());
     applyDefaultSchema(query.getDefaultSchema());
@@ -59,6 +67,7 @@ public class RestQueryRunner extends BaseQueryRunner {
     startQuery(QueryType.valueOf(query.getQueryType()),
         query.getQuery(),
         webUserConnection);
+    cancelIfRequested();
 
     // Heap usage threshold/trigger to provide resiliency on web server for queries submitted via HTTP
     double memoryFailureThreshold = workManager.getContext().getConfig().getDouble(ExecConstants.HTTP_MEMORY_HEAP_FAILURE_THRESHOLD);
@@ -100,6 +109,30 @@ public class RestQueryRunner extends BaseQueryRunner {
     }
 
     return new QueryResult(queryId, webUserConnection, webUserConnection.results);
+  }
+
+  /**
+   * Cancels the running query through its local foreman, or the query about to start
+   * if it has not been submitted yet. {@link #run()} then returns once Drill has
+   * finished cancelling. Safe to call from any thread, and more than once.
+   */
+  public void cancel() {
+    synchronized (this) {
+      cancelRequested = true;
+    }
+    cancelIfRequested();
+  }
+
+  private void cancelIfRequested() {
+    QueryId id;
+    synchronized (this) {
+      if (!cancelRequested || cancelSent || queryId == null) {
+        return;
+      }
+      cancelSent = true;
+      id = queryId;
+    }
+    workManager.getBee().cancelForeman(id, null);
   }
 
   // Detect possible excess heap

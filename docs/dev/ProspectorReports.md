@@ -1,0 +1,227 @@
+# Prospector Reports
+
+Prospector analyses are good enough to be worth keeping, but today they live
+and die inside the chat panel. This design gives a Prospector answer two
+durable forms: a page in a project's wiki, and a PDF.
+
+Status: implemented. See the plan at [plans/2026-09-17-prospector-reports.md](plans/2026-09-17-prospector-reports.md).
+
+## Goals
+
+- Ask Prospector to compose a standalone report from the current conversation.
+- Offer to save it, without the user having to know the feature exists.
+- Save the report into a project, grouped under a `Reports` folder in the wiki.
+- Download any wiki page as a PDF.
+
+## Non-goals (v1)
+
+- **Email delivery.** Drill has SMTP settings (`rest/smtp/SmtpConfig.java`,
+  `/api/v1/smtp/config`) but no mail sender anywhere in the tree, and no
+  `jakarta.mail` dependency. The config endpoint only opens a socket and does an
+  EHLO handshake. Adding a real sender is its own piece of work; see
+  [Later](#later).
+- **Headless or scheduled report generation.** v1 renders the PDF in the
+  browser, so a report requires a user in front of it.
+- **Server-side PDF rendering.** See [Later](#later).
+- **Naming the model in the provenance footer.** Decided against. The footer
+  records the timestamp and the source conversation, and says the report came
+  from Prospector, but does not name the model or provider. Those live only on
+  the admin-only `AiConfig`; putting them in the footer would mean mirroring
+  them onto `/api/v1/ai/status`, which every authenticated user can read, and
+  so disclosing the deployment's LLM choice to all of them. That trade is not
+  worth it for a footer. This is a settled decision, not a deferral.
+
+The data model is chosen so that neither non-goal requires a migration when it
+lands: the report is stored as markdown, and the PDF is always a derived
+artifact.
+
+## Design
+
+### 1. Generating the report
+
+`QuickActionBar` already takes an `onAction: (prompt: string) => void` and its
+buttons are literal prompt strings (see the `logAnalysisMode` block). A
+**Generate Report** action is one more button of the same kind, carrying a
+report-composition prompt: compose a standalone document from everything
+analyzed in this conversation, leading with an executive summary, then key
+actors, a timeline, findings as tables, indicators, and recommendations.
+
+The reply streams back as an ordinary assistant message. No new endpoint, no
+change to the streaming path, no new state. The prompt is a constant in the
+frontend alongside the existing quick-action prompts.
+
+There is a close precedent to follow: `ProjectWikiPage.tsx` already generates a
+whole wiki page from the LLM, sending a long structured prompt through
+`streamChat` with `context: { feature: 'wiki_generation' }` and writing the
+result with `createWikiPage`. Report generation uses the same shape, tagged
+`feature: 'report_generation'` so it is separable in the AI analytics
+dashboard.
+
+### 2. Offering to save
+
+Most users will never find a Save action they have to go looking for, so
+Prospector offers. There are two routes to the offer, and they converge on the
+same save path rather than coordinating with each other.
+
+**The chip.** When an assistant message finishes streaming, a heuristic runs
+over its markdown. If it looks like a report, a chip appears beneath the bubble:
+*This looks like a report — Save to project · Dismiss*. The heuristic is plain
+string work, no model involvement:
+
+- two or more markdown headings (`^#{1,3} `), and
+- either a table row (`^\|`) or at least 1,500 characters of content, and
+- the message is a completed assistant message with no pending tool calls.
+
+Tune conservatively. A chip that appears under every long answer teaches people
+to ignore it, and a missed report costs one click on a menu item.
+
+**The tool.** `save_report` joins the existing client-side tools in
+`useProspector.ts`, next to `save_query`, `create_visualization` and
+`create_dashboard`. The system prompt tells Prospector that after producing a
+full report it should offer to save it; if the user agrees in conversation, it
+calls `save_report` and the same save path runs.
+
+Two routes, one action, so the chip and the model cannot contradict each other.
+A chip with no prose offer reads as ordinary UI; a prose offer with no chip
+still works, because the user answers and the tool fires.
+
+**Dismissal is sticky.** A hash of the dismissed message's content is stored with
+the conversation, so a dismissed suggestion does not return on re-render or
+reload.
+
+### 3. Saving into a project
+
+The chip and the tool both open a small modal:
+
+- Project — defaults to the current project when Prospector is open inside one.
+- Title — pre-filled from the markdown's first `#` heading, falling back to a
+  timestamped default.
+
+On confirm it POSTs to the existing `POST /api/v1/projects/{id}/wiki` with
+`folder` set to `Reports`.
+
+**Existing titles offer an update.** Before saving, the project's wiki pages in
+the `Reports` folder are checked for a case-insensitive title match. On a hit
+the modal offers *Update existing* alongside *Save as new*. Reports get
+regenerated while their wording is refined, and without this the wiki fills with
+near-identical pages and no indication which is current.
+
+**Saved markdown carries provenance.** A footer is appended on save: generation
+timestamp and the source conversation. The reports this feature exists to
+preserve recommend operational action — the example that prompted it names a
+compromised host and recommends reimaging it. A reader finding that page months
+later needs to know it was generated and when. Three lines of markdown, and it
+is the honest thing to ship.
+
+**Findings carry their queries.** The numbers in a report — packet counts, byte
+totals, ports — come from `execute_sql` calls Prospector made earlier in the
+conversation. On save, those calls are collected from the message history up to
+the report message, de-duplicated, and appended as an *Appendix: queries run*
+with each statement in a fenced `sql` block. This is what separates a report a
+second analyst can verify from one they can only take on faith. It is the most
+involved of the four additions, because it means walking tool-call history
+rather than just the one message.
+
+### 4. The `folder` field
+
+`WikiPage` is flat today: `id`, `title`, `content`, `order`, `createdAt`,
+`updatedAt`. Grouping needs one optional field.
+
+Add `folder` (nullable `String`) to `WikiPage` and `WikiPageRequest` in
+`ProjectResources.java`, and to the `WikiPage` interface in `types/index.ts`.
+Null or absent means the page sits at the root, so every page that exists today
+is unaffected and no migration is needed.
+
+`ProjectWikiPage.tsx` groups its page list by `folder`, rendering root-level
+pages as it does now and each distinct folder as a collapsible group. This is a
+generic wiki feature; reports are just its first user.
+
+### 5. PDF download
+
+A **Download PDF** button on the wiki page view, available for any wiki page.
+
+It works through a `@media print` stylesheet plus `window.print()`. The browser
+does the rendering, which means selectable and searchable text, working links,
+page breaks that fall between blocks rather than through them, correct emoji and
+table rendering, and a file measured in tens of kilobytes.
+
+Wiki pages and Prospector messages both render markdown through the shared
+`components/MarkdownView.tsx`, so one set of print rules covers both.
+
+The print stylesheet hides the application shell — sidebar, header, tab bar,
+action buttons — and prints the rendered markdown alone, with
+`break-inside: avoid` on tables and code blocks. The button sets
+`document.title` to the report title beforehand so the browser suggests a
+sensible filename, then restores it.
+
+The trade-off accepted here: the user passes through the browser's print dialog
+and picks "Save as PDF" rather than getting an immediate download.
+
+#### Why not the dashboard's exporter
+
+`DashboardViewPage.tsx:560` already exports to PDF with `html2canvas` + `jsPDF`,
+and reusing it would give a one-click download. It was rejected because it
+screenshots the DOM: the entire report becomes an image, so the text is neither
+selectable nor searchable, the file runs to several megabytes, and page breaks
+slice through tables and paragraphs. That is acceptable for a dashboard, which
+is a picture anyway, and poor for a multi-page text document.
+
+Emitting PDF text primitives from the markdown AST with `jsPDF` was also
+rejected: it means hand-writing a layout engine for headings, lists and tables,
+and `jsPDF`'s built-in fonts have no emoji coverage.
+
+## Files touched
+
+| File | Change |
+|---|---|
+| `components/prospector/QuickActionBar.tsx` | Generate Report action and its prompt |
+| `components/prospector/ChatMessageBubble.tsx` | Suggestion chip, Save to project action |
+| `components/prospector/SaveReportModal.tsx` | New: project, title, update-vs-new |
+| `hooks/useProspector.ts` | `save_report` tool and handler; dismissed-suggestion state |
+| `utils/report.ts` | New: report heuristic, title extraction, provenance footer, query appendix |
+| `api/projects.ts` | `folder` on the wiki page create/update calls |
+| `types/index.ts` | `folder?: string` on `WikiPage` |
+| `components/MarkdownView.tsx` | Print-safe class hooks on the rendered output |
+| `pages/ProjectWikiPage.tsx` | Group by folder; Download PDF button; print styles |
+| `rest/ProjectResources.java` | `folder` on `WikiPage` and `WikiPageRequest` |
+| `docs/dev/ui/pages/project-wiki.md` | Folders, reports, PDF download |
+| `docs/dev/ui/components/prospector.md` | Report generation and the save flow |
+
+## Testing
+
+The heuristic and the markdown assembly are the logic worth covering, and they
+are pure functions in `utils/report.ts`:
+
+- The report heuristic accepts a headed, tabular document and rejects a short
+  answer, a single-heading reply and a bare SQL response.
+- Title extraction pulls the first `#` heading and falls back to a timestamped
+  default when there is none.
+- The query appendix de-duplicates repeated statements and omits itself entirely
+  when the conversation ran no queries.
+
+Backend: the `folder` field is a Jackson passthrough with no logic in it, so it
+gets no dedicated assertion. It is covered by the TypeScript types either side
+and by saving a report and reloading the project.
+
+`WikiPage` is constructed positionally in `ProjectContextBlockTest`, so adding a
+field to its `@JsonCreator` constructor breaks that test's call sites. Run
+`mvn test-compile -pl exec/java-exec` when changing the record: `mvn compile`
+does not build test sources and will pass over the breakage.
+
+The print stylesheet and `window.print()` are verified by hand; asserting on
+browser print output is not worth the harness.
+
+## Later
+
+Both deferred pieces build on the stored markdown without changing it.
+
+**Email.** Needs a real sender: `angus-mail` (Apache-licensed, roughly 700KB,
+excluded from `jdbc-all`) driven by the existing `SmtpConfig`. Hand-rolling
+SMTP AUTH, the STARTTLS upgrade and multipart MIME over the existing socket code
+is possible but is protocol work with security-relevant edges, and the
+dependency does it correctly.
+
+**Headless generation.** A scheduled report needs the PDF produced on the
+server, which means a markdown-to-HTML-to-PDF renderer and an embedded font with
+emoji coverage. Because v1 stores markdown and treats the PDF as derived, that
+renderer can be added as a new consumer of the same records.

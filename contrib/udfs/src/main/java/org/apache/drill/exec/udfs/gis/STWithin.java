@@ -28,7 +28,8 @@ import org.apache.drill.exec.expr.holders.VarBinaryHolder;
 import javax.inject.Inject;
 
 @FunctionTemplate(name = "st_within", scope = FunctionTemplate.FunctionScope.SIMPLE,
-  nulls = FunctionTemplate.NullHandling.NULL_IF_NULL)
+  nulls = FunctionTemplate.NullHandling.NULL_IF_NULL,
+  desc = "Returns true when the first geometry lies completely inside the second.")
 public class STWithin implements DrillSimpleFunc {
   @Param
   VarBinaryHolder geom1Param;

@@ -50,7 +50,8 @@ public class Mappify {
    * scalar value fields
    * value fields need to be of the same data type
    */
-  @FunctionTemplate(names = {"mappify", "kvgen"}, scope = FunctionTemplate.FunctionScope.SIMPLE, isRandom = true)
+  @FunctionTemplate(names = {"mappify", "kvgen"}, scope = FunctionTemplate.FunctionScope.SIMPLE, isRandom = true,
+      desc = "Converts a map into an array of key/value pairs, for data whose field names are themselves values. Usually wrapped in FLATTEN to turn those pairs into rows.")
   public static class ConvertMapToKeyValuePairs implements DrillSimpleFunc {
 
     @Param  FieldReader reader;

@@ -32,7 +32,8 @@ public class CryptoFunctions {
    * This class returns the md2 digest of a given input string.
    *  Usage is SELECT md2( <input string> ) FROM ...
    */
-  @FunctionTemplate(name = "md2", scope = FunctionTemplate.FunctionScope.SIMPLE, nulls = FunctionTemplate.NullHandling.NULL_IF_NULL)
+  @FunctionTemplate(name = "md2", scope = FunctionTemplate.FunctionScope.SIMPLE, nulls = FunctionTemplate.NullHandling.NULL_IF_NULL,
+    desc = "Returns the MD2 digest of the input string as hexadecimal.")
   public static class MD2Function implements DrillSimpleFunc {
 
     @Param
@@ -68,7 +69,8 @@ public class CryptoFunctions {
    *  Usage is shown below:
    *  select md5( 'testing' ) from (VALUES(1));
    */
-  @FunctionTemplate(name = "md5", scope = FunctionTemplate.FunctionScope.SIMPLE, nulls = FunctionTemplate.NullHandling.NULL_IF_NULL)
+  @FunctionTemplate(name = "md5", scope = FunctionTemplate.FunctionScope.SIMPLE, nulls = FunctionTemplate.NullHandling.NULL_IF_NULL,
+    desc = "Returns the MD5 digest of the input string as hexadecimal.")
   public static class MD5Function implements DrillSimpleFunc {
 
     @Param
@@ -106,7 +108,9 @@ public class CryptoFunctions {
    *
    * > select sha1( 'testing' ) from (VALUES(1));
    */
-  @FunctionTemplate(names = {"sha", "sha1"}, scope = FunctionTemplate.FunctionScope.SIMPLE, nulls = FunctionTemplate.NullHandling.NULL_IF_NULL)
+  @FunctionTemplate(names = {"sha", "sha1"}, scope = FunctionTemplate.FunctionScope.SIMPLE, nulls = FunctionTemplate.NullHandling.NULL_IF_NULL,
+    desc = "Returns the SHA-1 160-bit checksum of the input string as 40 hexadecimal digits per RFC "
+      + "3174. sha and sha1 are aliases.")
   public static class SHA1Function implements DrillSimpleFunc {
 
     @Param
@@ -144,7 +148,9 @@ public class CryptoFunctions {
    * or NULL if the argument was NULL. Note that sha2() and sha256() are aliases for the same function.
    * > select sha2( 'testing' ) from (VALUES(1));
    */
-  @FunctionTemplate(names = {"sha256", "sha2"}, scope = FunctionTemplate.FunctionScope.SIMPLE, nulls = FunctionTemplate.NullHandling.NULL_IF_NULL)
+  @FunctionTemplate(names = {"sha256", "sha2"}, scope = FunctionTemplate.FunctionScope.SIMPLE, nulls = FunctionTemplate.NullHandling.NULL_IF_NULL,
+    desc = "Returns the SHA-2 256-bit checksum of the input string as hexadecimal. sha256 and sha2 are "
+      + "aliases.")
   public static class SHA256Function implements DrillSimpleFunc {
 
     @Param
@@ -183,7 +189,8 @@ public class CryptoFunctions {
    *  Usage is shown below:
    *  select sha384( 'testing' ) from (VALUES(1));
    */
-  @FunctionTemplate(name = "sha384", scope = FunctionTemplate.FunctionScope.SIMPLE, nulls = FunctionTemplate.NullHandling.NULL_IF_NULL)
+  @FunctionTemplate(name = "sha384", scope = FunctionTemplate.FunctionScope.SIMPLE, nulls = FunctionTemplate.NullHandling.NULL_IF_NULL,
+    desc = "Returns the SHA-384 digest of the input string as hexadecimal.")
   public static class SHA384Function implements DrillSimpleFunc {
 
     @Param
@@ -221,7 +228,8 @@ public class CryptoFunctions {
    *  Usage is shown below:
    *  select sha512( 'testing' ) from (VALUES(1));
    */
-  @FunctionTemplate(name = "sha512", scope = FunctionTemplate.FunctionScope.SIMPLE, nulls = FunctionTemplate.NullHandling.NULL_IF_NULL)
+  @FunctionTemplate(name = "sha512", scope = FunctionTemplate.FunctionScope.SIMPLE, nulls = FunctionTemplate.NullHandling.NULL_IF_NULL,
+    desc = "Returns the SHA-512 digest of the input string as hexadecimal.")
   public static class SHA512Function implements DrillSimpleFunc {
 
     @Param
@@ -260,7 +268,8 @@ public class CryptoFunctions {
    * binary string containing the encrypted output.
    * Usage:  SELECT aes_encrypt( 'encrypted_text', 'my_secret_key' ) AS aes FROM (VALUES(1));
    */
-  @FunctionTemplate(name = "aes_encrypt", scope = FunctionTemplate.FunctionScope.SIMPLE, nulls = FunctionTemplate.NullHandling.NULL_IF_NULL)
+  @FunctionTemplate(name = "aes_encrypt", scope = FunctionTemplate.FunctionScope.SIMPLE, nulls = FunctionTemplate.NullHandling.NULL_IF_NULL,
+    desc = "Encrypts a string with AES using the given key. Reverse it with AES_DECRYPT.")
   public static class AESEncryptFunction implements DrillSimpleFunc {
 
     @Param
@@ -312,7 +321,8 @@ public class CryptoFunctions {
    *  If either function argument is NULL, the function returns NULL.
    *  Usage:  SELECT aes_decrypt( <encrypted_text>, <key> ) FROM ...
    */
-  @FunctionTemplate(name = "aes_decrypt", scope = FunctionTemplate.FunctionScope.SIMPLE, nulls = FunctionTemplate.NullHandling.NULL_IF_NULL)
+  @FunctionTemplate(name = "aes_decrypt", scope = FunctionTemplate.FunctionScope.SIMPLE, nulls = FunctionTemplate.NullHandling.NULL_IF_NULL,
+    desc = "Decrypts an AES-encrypted string with the given key, returning the original cleartext.")
   public static class AESDecryptFunction implements DrillSimpleFunc {
 
     @Param

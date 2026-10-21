@@ -33,7 +33,8 @@ import javax.inject.Inject;
  * Return a new geometry with its coordinates transformed to a different spatial reference
  */
 @FunctionTemplate(name = "st_transform", scope = FunctionTemplate.FunctionScope.SIMPLE,
-  nulls = FunctionTemplate.NullHandling.NULL_IF_NULL)
+  nulls = FunctionTemplate.NullHandling.NULL_IF_NULL,
+  desc = "Reprojects a geometry into a different spatial reference system.")
 public class STTransform implements DrillSimpleFunc {
   @Param
   VarBinaryHolder geom1Param;
