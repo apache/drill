@@ -127,6 +127,11 @@ public class WorkflowRunner implements AutoCloseable, WorkflowServices {
     } catch (Exception e) {
       logger.error("Legacy schedule migration failed; workflows still run", e);
     }
+    try {
+      fillMissingOwners();
+    } catch (Exception e) {
+      logger.error("Could not fill in missing workflow owners", e);
+    }
     ticker.scheduleAtFixedRate(this::tick, 30, 60, TimeUnit.SECONDS);
   }
 
@@ -518,6 +523,23 @@ public class WorkflowRunner implements AutoCloseable, WorkflowServices {
   }
 
   // ---------------------------------------------------------------- migration & lifecycle
+
+  /**
+   * Workflows migrated before ownerless legacy schedules were mapped to anonymous have a null owner.
+   * They run as anonymous but fail every membership check, so record anonymous explicitly.
+   */
+  void fillMissingOwners() {
+    Iterator<Map.Entry<String, Workflow>> it = stores.workflows().getAll();
+    while (it.hasNext()) {
+      Map.Entry<String, Workflow> e = it.next();
+      Workflow wf = e.getValue();
+      if (wf != null && (wf.owner == null || wf.owner.isEmpty())) {
+        wf.owner = DrillUserPrincipal.ANONYMOUS_USER;
+        stores.workflows().put(e.getKey(), wf);
+        logger.info("Workflow {} had no owner; set to {}", wf.id, wf.owner);
+      }
+    }
+  }
 
   private void migrateLegacy() {
     WorkflowConfig cfg = stores.loadConfig();

@@ -219,7 +219,7 @@ Saved query ownership. A workflow's saved query must be owned by the workflow ow
 State changes:
 
 * Create and draft dry run return 409 when an admin who is not a member of the project tries them ("Add yourself to the project before creating a workflow"). Such a workflow would be disabled as `owner_lost_access` on its first tick.
-* Enabling returns 409 for `owner_lost_access` ("Take ownership first"), for an expired workflow (renew first), and for a workflow with no project (assign one first).
+* Enabling returns 409 for `owner_lost_access` (the message tells the user an admin can click Take ownership), for an expired workflow (renew first), and for a workflow with no project (assign one first).
 * Run now returns 409 if the workflow is already running (a stale flag does not count), if the owner has left the project, or if the workflow has expired.
 * `take-ownership` returns 409 if the admin is not a member of the workflow's project ("Add yourself to the project before taking ownership").
 * `assign-project` returns 409 if the workflow's saved query is not in the target project ("Add the workflow's saved query to that project first"), and 404 if the project does not exist.
@@ -297,7 +297,8 @@ On first start, `WorkflowRunner.migrateLegacy` converts every entry in `drill.sq
 
 | Legacy field | Becomes |
 |---|---|
-| `savedQueryId`, `owner`, `description`, `frequency`, `timeOfDay`, `dayOfWeek`, `dayOfMonth`, `timeoutSeconds`, `retentionCount`, `expiresAt`, `renewedAt`, `createdAt`, `lastRunAt` | Same-named workflow fields. A weekly schedule without a day gets Monday, legacy `dayOfWeek` 7 (Sunday in `java.time`) becomes 0, a monthly one gets day 1, and the day of month is clamped to 1 to 28. |
+| `savedQueryId`, `description`, `frequency`, `timeOfDay`, `dayOfWeek`, `dayOfMonth`, `timeoutSeconds`, `retentionCount`, `expiresAt`, `renewedAt`, `createdAt`, `lastRunAt` | Same-named workflow fields. A weekly schedule without a day gets Monday, legacy `dayOfWeek` 7 (Sunday in `java.time`) becomes 0, a monthly one gets day 1, and the day of month is clamped to 1 to 28. |
+| `owner` | Copied. A schedule with no owner (auth disabled) becomes `anonymous`, the user the old scheduler ran it as. On every start the runner also sets `anonymous` on any workflow saved with no owner by an earlier migration, because a null owner fails every membership check. |
 | `nextRunAt` | Not copied. Recomputed from the schedule at migration time, so a slot missed while Drill was down for the upgrade does not run (and send mail) on the first tick. |
 | name | The saved query's name, else the description, else `Workflow <id>` |
 | project | The project containing the saved query. No project means an orphan. |

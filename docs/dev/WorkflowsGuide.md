@@ -415,6 +415,7 @@ Old run history is still shown.
 | Condition on `deltaPercent` never fires | It is empty on the first run and when the previous count was 0. Add a second rule on `rowCount`. |
 | Condition on `rows[*].x` never fires | The column name doesn't match (it is case sensitive), or the matching rows are not in the first 100. Sort the query so the important rows come first, or filter in SQL. |
 | Run skipped: "previous run still in progress" | The previous run was still going. Shorten the query or schedule less often. |
+| "The workflow runs as X, who is not a member of this project" | The owner left the project, or was never in it. An admin opens the workflow and clicks **Take ownership** in the banner, or the project owner shares the project with X. |
 | Workflow isn't running | Check it is **Enabled** and not Expired or Owner lost access, and check **Next run**. |
 | "Run history is visible to project members" | You're viewing a public project you are not a member of. |
 | Health tab asks for setup | An admin hasn't set up run history yet. |
