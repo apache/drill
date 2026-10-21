@@ -80,6 +80,7 @@ jobs:
             1) echo 'pattern=TestA*,Testa*,TestB*,Testb*,TestC*,Testc*,TestD*,Testd*,TestE*,Teste*,TestF*,Testf*' >> "$GITHUB_OUTPUT" ;;
             2) echo 'pattern=TestG*,Testg*,TestH*,Testh*,TestI*,Testi*,TestJ*,Testj*,TestK*,Testk*,TestL*,Testl*,TestM*,Testm*,TestN*,Testn*,TestO*,Testo*,TestP*,Testp*' >> "$GITHUB_OUTPUT" ;;
             3) echo 'pattern=TestQ*,Testq*,TestR*,Testr*,TestS*,Tests*,TestT*,Testt*,TestU*,Testu*,TestV*,Testv*,TestW*,Testw*,TestX*,Testx*,TestY*,Testy*,TestZ*,Testz*,*Test,*Tests,*TestCase,Test0*,Test1*,Test2*,Test3*,Test4*,Test5*,Test6*,Test7*,Test8*,Test9*,Test_*' >> "$GITHUB_OUTPUT" ;;
+            *) echo "::error::Unknown shard '${{ matrix.shard }}'; expected 1, 2 or 3"; exit 1 ;;
           esac
 
       # -DforkCount=2: several of the slowest classes are wall-clock bound rather than
