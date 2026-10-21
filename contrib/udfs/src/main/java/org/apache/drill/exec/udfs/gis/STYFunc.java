@@ -31,7 +31,8 @@ import javax.inject.Inject;
  * Return the Y coordinate of the point, or NaN if not available
  */
 @FunctionTemplate(name = "st_y", scope = FunctionTemplate.FunctionScope.SIMPLE,
-  nulls = FunctionTemplate.NullHandling.NULL_IF_NULL)
+  nulls = FunctionTemplate.NullHandling.NULL_IF_NULL,
+  desc = "Returns the Y, or latitude, coordinate of a point, or NaN when unavailable.")
 public class STYFunc implements DrillSimpleFunc {
   @Param
   VarBinaryHolder geomParam;

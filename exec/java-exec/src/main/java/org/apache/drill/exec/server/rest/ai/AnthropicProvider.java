@@ -1,0 +1,449 @@
+/*
+ * Licensed to the Apache Software Foundation (ASF) under one
+ * or more contributor license agreements.  See the NOTICE file
+ * distributed with this work for additional information
+ * regarding copyright ownership.  The ASF licenses this file
+ * to you under the Apache License, Version 2.0 (the
+ * "License"); you may not use this file except in compliance
+ * with the License.  You may obtain a copy of the License at
+ *
+ * http://www.apache.org/licenses/LICENSE-2.0
+ *
+ * Unless required by applicable law or agreed to in writing, software
+ * distributed under the License is distributed on an "AS IS" BASIS,
+ * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+ * See the License for the specific language governing permissions and
+ * limitations under the License.
+ */
+package org.apache.drill.exec.server.rest.ai;
+
+import com.fasterxml.jackson.databind.JsonNode;
+import com.fasterxml.jackson.databind.ObjectMapper;
+import com.fasterxml.jackson.databind.node.ArrayNode;
+import com.fasterxml.jackson.databind.node.ObjectNode;
+import okhttp3.MediaType;
+import okhttp3.OkHttpClient;
+import okhttp3.Request;
+import okhttp3.RequestBody;
+import okhttp3.Response;
+import okhttp3.ResponseBody;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
+
+import java.io.BufferedReader;
+import java.io.InputStreamReader;
+import java.io.OutputStream;
+import java.nio.charset.StandardCharsets;
+import java.util.HashMap;
+import java.util.List;
+import java.util.Map;
+
+/**
+ * LLM provider for the Anthropic Claude API.
+ * Calls /v1/messages with stream:true, translates Anthropic SSE events
+ * (message_start, content_block_delta, etc.) to the normalized format.
+ */
+public class AnthropicProvider implements LlmProvider {
+
+  private static final Logger logger = LoggerFactory.getLogger(AnthropicProvider.class);
+  private static final ObjectMapper MAPPER = new ObjectMapper();
+  private static final MediaType JSON_TYPE = MediaType.parse("application/json");
+  private static final String DEFAULT_ENDPOINT = "https://api.anthropic.com";
+  private static final String ANTHROPIC_VERSION = "2023-06-01";
+
+  @Override
+  public String getId() {
+    return "anthropic";
+  }
+
+  @Override
+  public String getDisplayName() {
+    return "Anthropic Claude";
+  }
+
+  @Override
+  public LlmCallResult streamChatCompletion(LlmConfig config, List<ChatMessage> messages,
+      List<ToolDefinition> tools, OutputStream out, UsageObserver usageObserver)
+      throws Exception {
+    UsageObserver observer = usageObserver != null ? usageObserver : UsageObserver.NOOP;
+
+    // Create HTTP client with enterprise configuration
+    OkHttpClient httpClient = HttpClientFactory.createClient(config);
+
+    String endpoint = LlmProvider.normalizeEndpoint(config.getApiEndpoint(), DEFAULT_ENDPOINT);
+    String url = endpoint + "/v1/messages";
+
+    ObjectNode requestBody = buildRequestBody(config, messages, tools);
+
+    Request request = new Request.Builder()
+        .url(url)
+        .post(RequestBody.create(requestBody.toString(), JSON_TYPE))
+        .addHeader("Content-Type", "application/json")
+        .addHeader("x-api-key", config.getApiKey() != null ? config.getApiKey() : "")
+        .addHeader("anthropic-version", ANTHROPIC_VERSION)
+        .build();
+
+    LlmCallResult result = new LlmCallResult();
+    try (Response response = httpClient.newCall(request).execute()) {
+      if (!response.isSuccessful()) {
+        String errorBody = "";
+        ResponseBody body = response.body();
+        if (body != null) {
+          errorBody = body.string();
+        }
+        String errorMsg = "Anthropic API error " + response.code() + ": " + errorBody;
+        logger.error(errorMsg);
+        writeSseEvent(out, "error", "{\"message\":" + MAPPER.writeValueAsString(errorMsg) + "}");
+        return result;
+      }
+
+      ResponseBody body = response.body();
+      if (body == null) {
+        writeSseEvent(out, "error", "{\"message\":\"Empty response from Anthropic API\"}");
+        return result;
+      }
+
+      try (BufferedReader reader = new BufferedReader(
+          new InputStreamReader(body.byteStream(), StandardCharsets.UTF_8))) {
+        processAnthropicStream(reader, out, result, observer);
+      }
+    }
+    return result;
+  }
+
+  @Override
+  public ValidationResult validateConfig(LlmConfig config) {
+    if (config.getApiKey() == null || config.getApiKey().isEmpty()) {
+      return ValidationResult.error("API key is required for Anthropic");
+    }
+    if (config.getModel() == null || config.getModel().isEmpty()) {
+      return ValidationResult.error("Model name is required");
+    }
+
+    // Send a minimal, non-streaming request so we surface real failures (bad key,
+    // unknown model, unreachable endpoint) instead of reporting success blindly.
+    String endpoint = LlmProvider.normalizeEndpoint(config.getApiEndpoint(), DEFAULT_ENDPOINT);
+    String url = endpoint + "/v1/messages";
+
+    ObjectNode probeBody = MAPPER.createObjectNode();
+    probeBody.put("model", config.getModel());
+    probeBody.put("max_tokens", 1);
+    ArrayNode probeMessages = probeBody.putArray("messages");
+    ObjectNode probeMsg = probeMessages.addObject();
+    probeMsg.put("role", "user");
+    probeMsg.put("content", "ping");
+
+    Request request = new Request.Builder()
+        .url(url)
+        .post(RequestBody.create(probeBody.toString(), JSON_TYPE))
+        .addHeader("Content-Type", "application/json")
+        .addHeader("x-api-key", config.getApiKey())
+        .addHeader("anthropic-version", ANTHROPIC_VERSION)
+        .build();
+
+    try (Response response = HttpClientFactory.createClient(config).newCall(request).execute()) {
+      if (response.isSuccessful()) {
+        return ValidationResult.ok("Connection successful");
+      }
+      String body = response.body() != null ? response.body().string() : "";
+      String details = LlmProvider.describeHttpError(url, response.code(), body);
+      logger.warn("Anthropic config test failed:\n{}", details);
+      return ValidationResult.error("Anthropic API error " + response.code() + ": "
+          + extractErrorMessage(body), details);
+    } catch (Exception e) {
+      logger.warn("Anthropic config test could not reach {}", url, e);
+      return ValidationResult.error("Could not reach Anthropic endpoint: " + e.getMessage(),
+          LlmProvider.describeException(url, e));
+    }
+  }
+
+  /** Pulls a human-readable message out of an Anthropic error body, falling back to the raw text. */
+  private String extractErrorMessage(String body) {
+    if (body == null || body.isEmpty()) {
+      return "(empty response)";
+    }
+    try {
+      JsonNode error = MAPPER.readTree(body).get("error");
+      if (error != null && error.hasNonNull("message")) {
+        return error.get("message").asText();
+      }
+    } catch (Exception e) {
+      // Not JSON — return the raw body below.
+    }
+    return body;
+  }
+
+  private ObjectNode buildRequestBody(LlmConfig config, List<ChatMessage> messages,
+      List<ToolDefinition> tools) {
+    ObjectNode body = MAPPER.createObjectNode();
+    body.put("model", config.getModel());
+    body.put("max_tokens", config.getMaxTokens());
+    body.put("temperature", config.getTemperature());
+    body.put("stream", true);
+
+    // Extract system message
+    String systemContent = null;
+    ArrayNode messagesArray = body.putArray("messages");
+
+    for (ChatMessage msg : messages) {
+      if ("system".equals(msg.getRole())) {
+        systemContent = msg.getContent();
+        continue;
+      }
+
+      ObjectNode msgNode = messagesArray.addObject();
+
+      if ("tool".equals(msg.getRole())) {
+        // Anthropic has no "tool" role: a tool result is a user message
+        // carrying a tool_result content block.
+        msgNode.put("role", "user");
+        ArrayNode contentArray = msgNode.putArray("content");
+        ObjectNode block = contentArray.addObject();
+        block.put("type", "tool_result");
+        block.put("tool_use_id", msg.getToolCallId());
+        block.put("content", msg.getContent() != null ? msg.getContent() : "");
+      } else if ("assistant".equals(msg.getRole()) && msg.getToolCalls() != null
+          && !msg.getToolCalls().isEmpty()) {
+        // Assistant message with tool calls
+        msgNode.put("role", "assistant");
+        ArrayNode contentArray = msgNode.putArray("content");
+
+        if (msg.getContent() != null && !msg.getContent().isEmpty()) {
+          ObjectNode textBlock = contentArray.addObject();
+          textBlock.put("type", "text");
+          textBlock.put("text", msg.getContent());
+        }
+
+        for (ToolCall tc : msg.getToolCalls()) {
+          ObjectNode toolUseBlock = contentArray.addObject();
+          toolUseBlock.put("type", "tool_use");
+          toolUseBlock.put("id", tc.getId());
+          toolUseBlock.put("name", tc.getName());
+          // A tool called with no arguments streams no input_json_delta, so arguments
+          // arrives blank; readTree("") returns a non-object node rather than throwing,
+          // and it serializes to null, which the API rejects. Anything that is not a
+          // JSON object becomes {} — the API accepts no other shape for input.
+          JsonNode input = null;
+          try {
+            input = MAPPER.readTree(tc.getArguments());
+          } catch (Exception e) {
+            logger.debug("Unparseable arguments for tool call {}; sending empty input",
+                tc.getId(), e);
+          }
+          if (input != null && input.isObject()) {
+            toolUseBlock.set("input", input);
+          } else {
+            toolUseBlock.putObject("input");
+          }
+        }
+      } else {
+        msgNode.put("role", msg.getRole());
+        msgNode.put("content", msg.getContent() != null ? msg.getContent() : "");
+      }
+    }
+
+    if (systemContent != null) {
+      body.put("system", systemContent);
+    }
+
+    // Tools
+    if (tools != null && !tools.isEmpty()) {
+      ArrayNode toolsArray = body.putArray("tools");
+      for (ToolDefinition tool : tools) {
+        ObjectNode toolNode = toolsArray.addObject();
+        toolNode.put("name", tool.getName());
+        toolNode.put("description", tool.getDescription());
+        toolNode.set("input_schema", MAPPER.valueToTree(tool.getParameters()));
+      }
+    }
+
+    // Additional request parameters (for enterprise APIs)
+    if (config.getAdditionalParameters() != null) {
+      for (Map.Entry<String, Object> entry : config.getAdditionalParameters().entrySet()) {
+        body.set(entry.getKey(), MAPPER.valueToTree(entry.getValue()));
+      }
+    }
+
+    return body;
+  }
+
+  private void processAnthropicStream(BufferedReader reader, OutputStream out, LlmCallResult result,
+      UsageObserver observer) throws Exception {
+    // Track content blocks by index
+    Map<Integer, String> blockTypes = new HashMap<>();
+    Map<Integer, String> toolUseIds = new HashMap<>();
+    Map<Integer, String> toolUseNames = new HashMap<>();
+    boolean hasToolUse = false;
+
+    String line;
+    while ((line = reader.readLine()) != null) {
+      line = line.trim();
+
+      if (line.isEmpty()) {
+        continue;
+      }
+
+      if (!line.startsWith("data: ")) {
+        continue;
+      }
+
+      String data = line.substring(6).trim();
+
+      try {
+        JsonNode event = MAPPER.readTree(data);
+        String type = event.has("type") ? event.get("type").asText() : "";
+
+        switch (type) {
+          case "message_start":
+            // Anthropic emits input token count in message_start.usage.input_tokens
+            JsonNode startMessage = event.get("message");
+            if (startMessage != null) {
+              JsonNode startUsage = startMessage.get("usage");
+              if (startUsage != null && startUsage.has("input_tokens")) {
+                result.setPromptTokens(startUsage.get("input_tokens").asInt());
+                observer.onUsage(result.getPromptTokens(), result.getResponseTokens());
+              }
+            }
+            break;
+
+          case "content_block_start":
+            handleContentBlockStart(event, blockTypes, toolUseIds, toolUseNames, out);
+            if (event.has("content_block")) {
+              JsonNode block = event.get("content_block");
+              if ("tool_use".equals(block.path("type").asText())) {
+                hasToolUse = true;
+              }
+            }
+            break;
+
+          case "content_block_delta":
+            handleContentBlockDelta(event, blockTypes, toolUseIds, out, result);
+            break;
+
+          case "content_block_stop":
+            handleContentBlockStop(event, blockTypes, toolUseIds, out);
+            break;
+
+          case "message_delta":
+            // Anthropic emits the running output_tokens in message_delta.usage.output_tokens.
+            JsonNode deltaUsage = event.get("usage");
+            if (deltaUsage != null && deltaUsage.has("output_tokens")) {
+              result.setResponseTokens(deltaUsage.get("output_tokens").asInt());
+              observer.onUsage(result.getPromptTokens(), result.getResponseTokens());
+            }
+            JsonNode messageDelta = event.get("delta");
+            if (messageDelta != null && messageDelta.has("stop_reason")) {
+              String stopReason = messageDelta.get("stop_reason").asText();
+              if ("tool_use".equals(stopReason) || hasToolUse) {
+                writeSseEvent(out, "done", "{\"finish_reason\":\"tool_calls\"}");
+              } else {
+                writeSseEvent(out, "done", "{\"finish_reason\":\"stop\"}");
+              }
+              return;
+            }
+            break;
+
+          case "message_stop":
+            if (hasToolUse) {
+              writeSseEvent(out, "done", "{\"finish_reason\":\"tool_calls\"}");
+            } else {
+              writeSseEvent(out, "done", "{\"finish_reason\":\"stop\"}");
+            }
+            return;
+
+          case "error":
+            JsonNode errorNode = event.get("error");
+            String errorMsg = errorNode != null ? errorNode.toString() : "Unknown error";
+            writeSseEvent(out, "error", "{\"message\":" + MAPPER.writeValueAsString(errorMsg) + "}");
+            return;
+
+          default:
+            break;
+        }
+      } catch (Exception e) {
+        logger.warn("Error parsing Anthropic SSE event: {}", data, e);
+      }
+    }
+  }
+
+  private void handleContentBlockStart(JsonNode event,
+      Map<Integer, String> blockTypes,
+      Map<Integer, String> toolUseIds,
+      Map<Integer, String> toolUseNames,
+      OutputStream out) throws Exception {
+
+    int index = event.path("index").asInt(0);
+    JsonNode block = event.get("content_block");
+    if (block == null) {
+      return;
+    }
+
+    String blockType = block.path("type").asText();
+    blockTypes.put(index, blockType);
+
+    if ("tool_use".equals(blockType)) {
+      String id = block.path("id").asText();
+      String name = block.path("name").asText();
+      toolUseIds.put(index, id);
+      toolUseNames.put(index, name);
+
+      writeSseEvent(out, "delta",
+          "{\"type\":\"tool_call_start\",\"id\":" + MAPPER.writeValueAsString(id) +
+          ",\"name\":" + MAPPER.writeValueAsString(name) + "}");
+    }
+  }
+
+  private void handleContentBlockDelta(JsonNode event,
+      Map<Integer, String> blockTypes,
+      Map<Integer, String> toolUseIds,
+      OutputStream out,
+      LlmCallResult result) throws Exception {
+
+    int index = event.path("index").asInt(0);
+    JsonNode delta = event.get("delta");
+    if (delta == null) {
+      return;
+    }
+
+    String deltaType = delta.path("type").asText();
+    String blockType = blockTypes.getOrDefault(index, "text");
+
+    if ("text_delta".equals(deltaType)) {
+      String text = delta.path("text").asText();
+      if (!text.isEmpty()) {
+        result.appendResponseText(text);
+        writeSseEvent(out, "delta",
+            "{\"type\":\"content\",\"content\":" + MAPPER.writeValueAsString(text) + "}");
+      }
+    } else if ("input_json_delta".equals(deltaType)) {
+      String partial = delta.path("partial_json").asText();
+      String id = toolUseIds.getOrDefault(index, "");
+      if (!partial.isEmpty()) {
+        writeSseEvent(out, "delta",
+            "{\"type\":\"tool_call_delta\",\"id\":" + MAPPER.writeValueAsString(id) +
+            ",\"arguments\":" + MAPPER.writeValueAsString(partial) + "}");
+      }
+    }
+  }
+
+  private void handleContentBlockStop(JsonNode event,
+      Map<Integer, String> blockTypes,
+      Map<Integer, String> toolUseIds,
+      OutputStream out) throws Exception {
+
+    int index = event.path("index").asInt(0);
+    String blockType = blockTypes.getOrDefault(index, "text");
+
+    if ("tool_use".equals(blockType)) {
+      String id = toolUseIds.getOrDefault(index, "");
+      writeSseEvent(out, "delta",
+          "{\"type\":\"tool_call_end\",\"id\":" + MAPPER.writeValueAsString(id) + "}");
+    }
+  }
+
+  private static void writeSseEvent(OutputStream out, String event, String data) throws Exception {
+    String sse = "event: " + event + "\ndata: " + data + "\n\n";
+    out.write(sse.getBytes(StandardCharsets.UTF_8));
+    out.flush();
+  }
+}

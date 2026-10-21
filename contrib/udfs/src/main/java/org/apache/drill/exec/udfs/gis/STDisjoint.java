@@ -31,7 +31,8 @@ import javax.inject.Inject;
  * Returns TRUE if two Geometries do not "spatially intersect" - if they do not share any space
  */
 @FunctionTemplate(name = "st_disjoint", scope = FunctionTemplate.FunctionScope.SIMPLE,
-  nulls = FunctionTemplate.NullHandling.NULL_IF_NULL)
+  nulls = FunctionTemplate.NullHandling.NULL_IF_NULL,
+  desc = "Returns true when two geometries share no space at all.")
 public class STDisjoint implements DrillSimpleFunc {
   @Param
   VarBinaryHolder geom1Param;

@@ -29,7 +29,9 @@ import org.apache.drill.exec.expr.holders.VarBinaryHolder;
 import javax.inject.Inject;
 
 @FunctionTemplate(name = "st_geomfromtext", scope = FunctionTemplate.FunctionScope.SIMPLE,
-  nulls = FunctionTemplate.NullHandling.NULL_IF_NULL)
+  nulls = FunctionTemplate.NullHandling.NULL_IF_NULL,
+  desc = "Builds a geometry from its Well-Known Text, or WKT, representation. An optional second "
+    + "argument sets the SRID.")
 public class STGeomFromTextSrid implements DrillSimpleFunc {
   @Param
   NullableVarCharHolder input;

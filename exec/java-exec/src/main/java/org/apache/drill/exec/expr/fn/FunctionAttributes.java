@@ -119,6 +119,17 @@ public class FunctionAttributes {
     return workspaceVars;
   }
 
+  /**
+   * Human-readable description of what the function does, from the
+   * <code>desc</code> attribute of its {@code @FunctionTemplate}. Empty when the
+   * function does not declare one.
+   *
+   * @return the description, never null
+   */
+  public String getDesc() {
+    return template.desc();
+  }
+
   public FunctionCostCategory getCostCategory() {
     return template.costCategory();
   }

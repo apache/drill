@@ -29,6 +29,7 @@ import org.junit.BeforeClass;
 import org.junit.experimental.categories.Category;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
+import org.testcontainers.DockerClientFactory;
 import org.testcontainers.containers.Container;
 import org.testcontainers.containers.GenericContainer;
 import org.testcontainers.containers.MongoDBContainer;
@@ -38,6 +39,8 @@ import java.io.IOException;
 import java.util.List;
 import java.util.stream.Collectors;
 import java.util.stream.Stream;
+
+import static org.junit.Assume.assumeTrue;
 
 @Category(MetastoreTest.class)
 public class MongoBaseTest extends AbstractBasicTablesRequestsTest {
@@ -55,6 +58,10 @@ public class MongoBaseTest extends AbstractBasicTablesRequestsTest {
 
   @BeforeClass
   public static void init() throws IOException, InterruptedException {
+    assumeTrue(
+      "Docker is not available, skipping container tests",
+      DockerClientFactory.instance().isDockerAvailable()
+    );
     String connectionString;
     if (isShardMode) {
       connectionString = initCluster();

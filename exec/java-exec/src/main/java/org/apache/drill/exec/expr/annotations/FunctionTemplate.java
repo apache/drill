@@ -72,6 +72,18 @@ public @interface FunctionTemplate {
   NullHandling nulls() default NullHandling.INTERNAL;
   boolean isBinaryCommutative() default false;
   boolean isRandom()  default false;
+  /**
+   * Human-readable description of what the function does. Surfaced through the metadata
+   * REST API and used by the SQL Lab AI assistant to choose functions correctly, so it is
+   * worth writing for anything whose behaviour is not obvious from its name.
+   *
+   * <p><b>Must not contain parentheses or apostrophes.</b> {@code FunctionInitializer}
+   * strips annotations with a regex whose match ends at the first close paren before
+   * handing the source to Janino, so a parenthesis here truncates the strip and leaves
+   * stray tokens that fail the whole file with "Failure reading Function class" at query
+   * time. An apostrophe trips Janino's scanner as a character literal. Neither shows up at
+   * build time. {@code TestUdfDescriptions} enforces this.
+   */
   String desc() default "";
   FunctionCostCategory costCategory() default FunctionCostCategory.SIMPLE;
 

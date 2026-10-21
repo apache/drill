@@ -20,6 +20,7 @@ package org.apache.drill.exec.server;
 import org.apache.curator.framework.api.ACLProvider;
 import org.apache.curator.utils.ZKPaths;
 import org.apache.drill.common.AutoCloseables;
+import org.apache.drill.exec.server.rest.workflow.WorkflowRunner;
 import org.apache.drill.common.StackTrace;
 import org.apache.drill.common.concurrent.ExtendedLatch;
 import org.apache.drill.common.config.DrillConfig;
@@ -233,6 +234,16 @@ public class Drillbit implements AutoCloseable {
     javaPropertiesToSystemOptions();
     manager.getContext().getRemoteFunctionRegistry().init(context.getConfig(), storeProvider, coord);
     webServer.start();
+
+    // Start the SQL Lab workflow runner.
+    // Runs on a background daemon thread, checking every 60 seconds for due workflows.
+    try {
+      WorkflowRunner.getOrCreate(manager, storeProvider).start();
+      logger.info("WorkflowRunner started");
+    } catch (Exception e) {
+      logger.warn("Failed to start WorkflowRunner (workflows will not run): {}", e.getMessage());
+    }
+
     //Discovering HTTP port (in case of port hunting)
     int httpPort = -1;
     if (webServer.isRunning()) {
@@ -317,6 +328,7 @@ public class Drillbit implements AutoCloseable {
 
     try {
       AutoCloseables.close(
+          WorkflowRunner.getInstance(),
           webServer,
           engine,
           storeProvider,
