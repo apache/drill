@@ -29,8 +29,8 @@ public final class PacketConstants {
 
   public static final int PACKET_PROTOCOL_OFFSET = 12;
 
-  public static final byte ARP_PROTOCOL = 0;
   public static final byte ICMP_PROTOCOL = 1;
+  public static final byte ICMPV6_PROTOCOL = 58;
   public static final byte TCP_PROTOCOL = 6;
   public static final byte UDP_PROTOCOL = 17;
 
@@ -52,6 +52,7 @@ public final class PacketConstants {
   public static final int ETHER_TYPE_OFFSET = 12;
 
   public static final int IPv4_TYPE = 0x800;
+  public static final int ARP_TYPE = 0x806;
   public static final int IPv6_TYPE = 0x86dd;
   public static final int PPPoV6_TYPE = 0x8864;
 
