@@ -309,6 +309,11 @@ public class UserSession implements AutoCloseable {
     return temporaryTables.get(tableName.toLowerCase());
   }
 
+  /** Temporary tables can shadow names in plans shared across sessions. */
+  public boolean hasTemporaryTables() {
+    return !temporaryTables.isEmpty();
+  }
+
   public String getOriginalTableNameFromTemporaryTable(String tableName) {
     for (String originalTableName : temporaryTables.keySet()) {
       if (temporaryTables.get(originalTableName).equals(tableName)) {

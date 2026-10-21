@@ -759,6 +759,7 @@ public class Foreman implements Runnable {
       drillbitContext.getWorkBus().removeFragmentStatusListener(queryId);
       drillbitContext.getClusterCoordinator().removeDrillbitStatusListener(queryManager.getDrillbitStatusListener());
 
+      final Runnable pendingPlanCacheInsert = queryContext.takePendingPlanCacheInsert();
       suppressingClose(queryContext);
 
       /*
@@ -798,6 +799,10 @@ public class Foreman implements Runnable {
       ProfileOption profileOption = getProfileOption(queryContext);
       if (profileOption == ProfileOption.SYNC) {
         queryManager.writeFinalProfile(uex);
+      }
+
+      if (resultState == QueryState.COMPLETED && pendingPlanCacheInsert != null) {
+        pendingPlanCacheInsert.run();
       }
 
       /*

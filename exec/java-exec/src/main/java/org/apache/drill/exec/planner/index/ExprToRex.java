@@ -51,8 +51,17 @@ public class ExprToRex extends AbstractExprVisitor<RexNode, Void, RuntimeExcepti
   }
 
   public static RelDataTypeField findField(String fieldName, RelDataType rowType) {
+    // A projected wildcard can be named "*" in a plugin row type. It is a
+    // literal field name here, not an expression to parse.
+    for (RelDataTypeField f : rowType.getFieldList()) {
+      if (fieldName.equalsIgnoreCase(f.getName())) {
+        return f;
+      }
+    }
+    if ("*".equals(fieldName)) {
+      return null;
+    }
     final String rootPart = SchemaPath.parseFromString(fieldName).getRootSegmentPath();
-
     for (RelDataTypeField f : rowType.getFieldList()) {
       if (rootPart.equalsIgnoreCase(f.getName())) {
         return f;

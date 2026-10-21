@@ -34,6 +34,7 @@ import org.apache.drill.exec.planner.PlannerPhase;
 import org.apache.drill.exec.planner.common.DrillStatsTable.TableStatistics;
 import org.apache.drill.exec.server.DrillbitContext;
 import org.apache.drill.exec.server.options.OptionManager;
+import org.apache.drill.exec.store.PlanCacheTable;
 import com.google.common.collect.ImmutableSet;
 import org.apache.hadoop.conf.Configuration;
 import org.apache.hadoop.fs.FileSystem;
@@ -47,6 +48,22 @@ public interface FormatPlugin {
   boolean supportsRead();
 
   boolean supportsWrite();
+
+  /**
+   * Whether every scan of this selection can be safely rebuilt for a cached plan.
+   * Check eligibility without reading table versions or building cache metadata.
+   */
+  default boolean supportPlanCache(FileSelection selection) {
+    return false;
+  }
+
+  /**
+   * Returns a stable table identifier and a physical-plan compatibility version,
+   * or null when the selection cannot be cached.
+   */
+  default PlanCacheTable planCacheTable(FileSelection selection) throws IOException {
+    return null;
+  }
 
   /**
    * Indicates whether this FormatPlugin supports auto-partitioning for CTAS statements

@@ -75,7 +75,7 @@ public class PluginPrel extends AbstractRelNode implements LeafPrel {
 
   @Override
   public RelWriter explainTerms(RelWriter pw) {
-    return super.explainTerms(pw).item("groupScan", groupScan);
+    return super.explainTerms(pw).item("groupScan", groupScan.getDigest());
   }
 
   @Override
