@@ -28,7 +28,7 @@ Create, edit, test and monitor one workflow. `/new` accepts `?query=<savedQueryI
 
 ## Layout
 
-Header: title, **Enabled** switch (saved workflows), **Dry run**, **Run now** (saved workflows), **Save**. Save is disabled while the live validation reports errors. A banner shows the status when it is `expired` or `owner_lost_access`. For `expired` it has a **Renew** button; for `owner_lost_access` it explains why and, for admins, has a **Take ownership** button. Both leave the workflow paused.
+Header: title, **Enabled** switch (saved workflows), **Dry run**, **Run now** (saved workflows), **Save**. Save is disabled while the live validation reports errors. An expired workflow gets a banner with a **Renew** button. A workflow whose owner is not a member of the project (status `owner_lost_access`, or an owner missing from the project's owner and `sharedWith`, checked client-side so the fix shows before a run fails) gets a banner that says who it runs as and how to fix it; for admins it has a **Take ownership** button. Both actions leave the workflow paused.
 
 Tabs:
 
@@ -65,5 +65,5 @@ String config fields marked `x-template` use `TemplateInput`, which offers the s
 ## Run now and Enabled
 
 * **Run now** runs the saved workflow immediately and refreshes the Runs and Health tabs. It fails with a message when the workflow is already running, expired, or its owner has left the project.
-* **Enabled** calls the `enabled` endpoint. The server refuses with a message for `owner_lost_access` ("Take ownership first"), expiry, or a missing project.
+* **Enabled** calls the `enabled` endpoint. The server refuses with a message for `owner_lost_access`, expiry, or a missing project.
 * Editing is limited to the workflow owner and admins; other users get a 403 toast on save.

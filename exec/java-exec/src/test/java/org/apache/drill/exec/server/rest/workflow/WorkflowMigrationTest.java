@@ -60,6 +60,13 @@ public class WorkflowMigrationTest {
   }
 
   @Test
+  public void ownerlessScheduleRunsAsAnonymous() {
+    WorkflowMigration.LegacySchedule o = legacy();
+    o.owner = null;
+    assertEquals("anonymous", WorkflowMigration.convert(o, "p-1", "x").owner);
+  }
+
+  @Test
   public void legacySundayBecomesZero() {
     WorkflowMigration.LegacySchedule o = legacy();
     o.dayOfWeek = 7;

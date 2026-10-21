@@ -184,7 +184,8 @@ public class WorkflowResources {
     requireBody(req);
     Workflow wf = manageable(id);
     if (req.enabled && "owner_lost_access".equals(wf.status)) {
-      throw error(Response.Status.CONFLICT, "Take ownership first");
+      throw error(Response.Status.CONFLICT, "The workflow owner is not a member of this project. "
+          + "An admin can open the workflow and click Take ownership");
     }
     if (req.enabled && WorkflowSchedule.isExpired(wf, Instant.now(), stores().loadConfig())) {
       throw error(Response.Status.CONFLICT, "Workflow has expired; renew it first");
@@ -278,7 +279,8 @@ public class WorkflowResources {
       throw error(Response.Status.CONFLICT, "Workflow is already running");
     }
     if (wf.projectId != null && !WorkflowPermissions.isMember(stores().project(wf.projectId), wf.owner)) {
-      throw error(Response.Status.CONFLICT, "The workflow owner is no longer a member of the project; take ownership first");
+      throw error(Response.Status.CONFLICT, "The workflow runs as " + wf.owner + ", who is not a member of this project. An admin can open the workflow "
+          + "and click Take ownership, or add " + wf.owner + " to the project");
     }
     if (WorkflowSchedule.isExpired(wf, Instant.now(), stores().loadConfig())) {
       throw error(Response.Status.CONFLICT, "Workflow has expired; renew it first");

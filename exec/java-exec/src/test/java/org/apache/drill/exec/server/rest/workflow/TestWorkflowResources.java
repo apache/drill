@@ -228,9 +228,16 @@ public class TestWorkflowResources extends ClusterTest {
     wf.status = "owner_lost_access";
     stores.workflows().put(id, wf);
 
-    assertTrue(call("POST", "/" + id + "/run", null, 409).get("error").asText().contains("take ownership"));
-    assertEquals("Take ownership first", call("POST", "/" + id + "/enabled", Map.of("enabled", true), 409)
-        .get("error").asText());
+    assertTrue(call("POST", "/" + id + "/run", null, 409).get("error").asText().contains("click Take ownership"));
+    assertTrue(call("POST", "/" + id + "/enabled", Map.of("enabled", true), 409)
+        .get("error").asText().contains("click Take ownership"));
+
+    // A workflow migrated with no owner is repaired to anonymous on start.
+    wf = stores.workflows().get(id);
+    wf.owner = null;
+    stores.workflows().put(id, wf);
+    WorkflowRunner.getInstance().fillMissingOwners();
+    assertEquals("anonymous", stores.workflows().get(id).owner);
     assertEquals(0, call("GET", "/" + id + "/runs", null, 200).size());
     call("DELETE", "/" + id, null, 204);
   }

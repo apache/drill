@@ -66,7 +66,7 @@ function WorkflowEditor() {
   const queryClient = useQueryClient();
   const { user } = useCurrentUser();
   const isAdmin = user ? !user.authEnabled || user.isAdmin : false;
-  const { projectId, savedQueryIdSet } = useProjectContext();
+  const { projectId, project, savedQueryIdSet } = useProjectContext();
   const [wf, setWf] = useState<Workflow | null>(wid ? null : newWorkflow(projectId!, search.get('query') ?? ''));
   const [errors, setErrors] = useState<ValidationError[]>([]);
   const [dryRun, setDryRun] = useState<DryRunResult | null>(null);
@@ -96,6 +96,10 @@ function WorkflowEditor() {
   if (!wf) {
     return <Spin />;
   }
+
+  // The runner checks membership too; checking here shows the fix before a run fails.
+  const ownerOutside = !!wf.id && (wf.status === 'owner_lost_access'
+    || (!!project && !!wf.owner && wf.owner !== project.owner && !(project.sharedWith ?? []).includes(wf.owner)));
 
   const set = (patch: Partial<Workflow>) => setWf({ ...wf, ...patch });
   const setSchedule = (patch: Partial<Workflow['schedule']>) => set({ schedule: { ...wf.schedule, ...patch } });
@@ -253,17 +257,21 @@ function WorkflowEditor() {
           <Button type="primary" loading={busy === 'save'} disabled={errors.length > 0} onClick={save}>Save</Button>
         </Space>
       </Space>
-      {wf.status && wf.status !== 'active' && wf.status !== 'paused' && (
-        <Alert type="warning" showIcon style={{ marginBottom: 12 }} message={`Status: ${wf.status.replace(/_/g, ' ')}`}
-          description={wf.status === 'owner_lost_access'
-            ? `${wf.owner} is no longer a member of this project, so the workflow cannot run as them. An admin can take `
-              + 'ownership; the workflow then runs as the admin and needs a saved query the admin owns.'
-            : undefined}
-          action={wf.status === 'expired'
-            ? <Button size="small" onClick={() => recover(renewWorkflow, 'Renewed. Turn on Enabled to resume.')}>Renew</Button>
-            : wf.status === 'owner_lost_access' && isAdmin
-              ? <Button size="small" onClick={() => recover(takeOwnership, 'You own this workflow now. Point it at a saved query you own, then turn on Enabled.')}>Take ownership</Button>
-              : undefined} />
+      {wf.status === 'expired' && (
+        <Alert type="warning" showIcon style={{ marginBottom: 12 }} message="This workflow has expired"
+          description="It no longer runs. Renew it, then turn on Enabled."
+          action={<Button size="small" onClick={() => recover(renewWorkflow, 'Renewed. Turn on Enabled to resume.')}>Renew</Button>} />
+      )}
+      {ownerOutside && (
+        <Alert type="warning" showIcon style={{ marginBottom: 12 }}
+          message={`This workflow runs as ${wf.owner}, who is not a member of this project`}
+          description={isAdmin
+            ? 'It cannot run until you take ownership (it then runs as you, and needs a saved query you own) '
+              + `or the project owner shares the project with ${wf.owner}.`
+            : `It cannot run until an admin takes ownership or the project owner shares the project with ${wf.owner}.`}
+          action={isAdmin
+            ? <Button size="small" onClick={() => recover(takeOwnership, 'You own this workflow now. Point it at a saved query you own, then turn on Enabled.')}>Take ownership</Button>
+            : undefined} />
       )}
       {unplacedErrors(errors).length > 0 && (
         <Alert type="error" showIcon style={{ marginBottom: 12 }} message="Fix these before saving"

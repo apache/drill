@@ -22,6 +22,7 @@ import com.fasterxml.jackson.databind.JsonNode;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import com.fasterxml.jackson.databind.node.ArrayNode;
 import com.fasterxml.jackson.databind.node.ObjectNode;
+import org.apache.drill.exec.server.rest.auth.DrillUserPrincipal;
 
 import java.time.Instant;
 import java.time.ZoneId;
@@ -69,7 +70,8 @@ public final class WorkflowMigration {
     wf.projectId = projectId;
     wf.name = savedQueryName != null ? savedQueryName : (o.description != null ? o.description : "Workflow " + o.id);
     wf.description = o.description;
-    wf.owner = o.owner;
+    // The old scheduler ran ownerless schedules as anonymous; record that so membership checks agree.
+    wf.owner = o.owner == null || o.owner.isEmpty() ? DrillUserPrincipal.ANONYMOUS_USER : o.owner;
     wf.savedQueryId = o.savedQueryId;
     wf.schedule.frequency = o.frequency;
     wf.schedule.timeOfDay = o.timeOfDay != null ? o.timeOfDay : "08:00";
