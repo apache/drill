@@ -28,7 +28,7 @@ Create, edit, test and monitor one workflow. `/new` accepts `?query=<savedQueryI
 
 ## Layout
 
-Header: title, **Enabled** switch (saved workflows), **Dry run**, **Run now** (saved workflows), **Save**. Save is disabled while the live validation reports errors. An expired workflow gets a banner with a **Renew** button. A workflow whose owner is not a member of the project (status `owner_lost_access`, or an owner missing from the project's owner and `sharedWith`, checked client-side so the fix shows before a run fails) gets a banner that says who it runs as and how to fix it; for admins it has a **Take ownership** button. Both actions leave the workflow paused.
+Header: title, **Enabled** switch (saved workflows), **Dry run**, **Run now** (saved workflows), **Save**. Save is disabled while the live validation reports errors. An expired workflow gets a banner with a **Renew** button. Expiry is computed client-side with `isExpired` (`utils/conditionTree.ts`, mirroring `WorkflowSchedule.isExpired`) because the server only sets status `expired` on enabled workflows; a paused workflow past `expiresAt` still reports `paused` while run now and enable refuse it. A workflow whose owner is not a member of the project (status `owner_lost_access`, or an owner missing from the project's owner and `sharedWith`, checked client-side so the fix shows before a run fails) gets a banner that says who it runs as and how to fix it; for admins it has a **Take ownership** button. Both actions leave the workflow paused.
 
 Tabs:
 

@@ -65,6 +65,8 @@ import java.util.UUID;
 public class WorkflowResources {
 
   private static final Logger logger = LoggerFactory.getLogger(WorkflowResources.class);
+  private static final String EXPIRED_MESSAGE =
+      "This workflow has expired. Click Renew in the banner at the top of the workflow, then try again";
 
   @Inject
   DrillUserPrincipal principal;
@@ -188,7 +190,7 @@ public class WorkflowResources {
           + "An admin can open the workflow and click Take ownership");
     }
     if (req.enabled && WorkflowSchedule.isExpired(wf, Instant.now(), stores().loadConfig())) {
-      throw error(Response.Status.CONFLICT, "Workflow has expired; renew it first");
+      throw error(Response.Status.CONFLICT, EXPIRED_MESSAGE);
     }
     if (req.enabled && wf.projectId == null) {
       throw error(Response.Status.CONFLICT, "Assign the workflow to a project first");
@@ -279,11 +281,11 @@ public class WorkflowResources {
       throw error(Response.Status.CONFLICT, "Workflow is already running");
     }
     if (wf.projectId != null && !WorkflowPermissions.isMember(stores().project(wf.projectId), wf.owner)) {
-      throw error(Response.Status.CONFLICT, "The workflow runs as " + wf.owner + ", who is not a member of this project. An admin can open the workflow "
-          + "and click Take ownership, or add " + wf.owner + " to the project");
+      throw error(Response.Status.CONFLICT, "The workflow runs as " + wf.owner + ", who is not a member of this project. "
+          + "An admin can open the workflow and click Take ownership, or add " + wf.owner + " to the project");
     }
     if (WorkflowSchedule.isExpired(wf, Instant.now(), stores().loadConfig())) {
-      throw error(Response.Status.CONFLICT, "Workflow has expired; renew it first");
+      throw error(Response.Status.CONFLICT, EXPIRED_MESSAGE);
     }
     return runner().runNow(wf);
   }
