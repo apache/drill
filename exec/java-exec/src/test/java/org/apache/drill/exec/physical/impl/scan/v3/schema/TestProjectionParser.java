@@ -320,6 +320,29 @@ public class TestProjectionParser extends BaseTest {
   }
 
   @Test
+  public void testArrayInMap() {
+    // Array dimensions count from the column, not from the root of the path
+    ProjectionParseResult result = ScanProjectionParser.parse(
+        RowSetTestUtils.projectList("m.a[1]", "m.b[0].x"));
+    TupleMetadata projSet = result.dynamicSchema;
+    ProjectedColumn m = (ProjectedColumn) projSet.metadata("m");
+    assertTrue(m.isMap());
+    assertFalse(m.isArray());
+
+    ProjectedColumn a = (ProjectedColumn) m.tupleSchema().metadata("a");
+    assertTrue(a.isArray());
+    assertEquals(1, a.arrayDims());
+    assertTrue(a.hasIndex(1));
+
+    ProjectedColumn b = (ProjectedColumn) m.tupleSchema().metadata("b");
+    assertTrue(b.isArray());
+    assertEquals(1, b.arrayDims());
+    assertTrue(b.hasIndex(0));
+    assertTrue(b.isMap());
+    assertNotNull(b.tupleSchema().metadata("x"));
+  }
+
+  @Test
   public void testMultiDimArray() {
     ProjectionParseResult result = ScanProjectionParser.parse(
         RowSetTestUtils.projectList("a[0][1][2]", "a[2][3]"));
