@@ -138,7 +138,7 @@ const MAX_TAB_TITLE = 40;
  * Emoji and their modifiers. Extended_Pictographic is the property to match on:
  * plain \p{Emoji} also matches ASCII digits and #, which belong in a tab title.
  */
-const EMOJI = /[\p{Extended_Pictographic}\p{Regional_Indicator}\u{FE0F}\u{200D}\u{1F3FB}-\u{1F3FF}]/gu;
+const EMOJI = /\p{Extended_Pictographic}|\p{Regional_Indicator}|\u{FE0F}|\u{200D}|[\u{1F3FB}-\u{1F3FF}]/gu;
 
 /**
  * Clean a tab title supplied by the model.
