@@ -31,7 +31,7 @@ List workflows (scheduled queries with action pipelines) with their schedule, st
 
 * Four statistic cards: Workflows, Active, Failing (two or more consecutive failures), Expiring soon (within `warningDaysBeforeExpiry`).
 * Table columns: Name (links to the editor), Project and Owner (admin view only), Schedule (`describeSchedule`, for example "Daily 08:00"), State, Last run, Success (30 d), Next run, Actions (one tag per action type). Failing workflows sort first, then expiring ones, then by name.
-* State shows `on` or the status (`paused`, `expired`, `owner lost access`), a failure count tag, and an expiry tag with a **Renew** link.
+* State shows `on` or the status (`paused`, `expired`, `owner lost access`), a failure count tag, and an expiry tag with a **Renew** link: orange "expires <date>" inside the warning window, red "expired <date>" once past it (`isExpired`), even while the status still says paused.
 
 ## Admin extras (`/workflows` only)
 

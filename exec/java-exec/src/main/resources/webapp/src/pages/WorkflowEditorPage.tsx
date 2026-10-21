@@ -24,14 +24,14 @@ import {
 import { PlayCircleOutlined, PlusOutlined, ExperimentOutlined } from '@ant-design/icons';
 import type { ActionTypeInfo, DryRunResult, ValidationError, Workflow, WorkflowAction } from '../types/workflow';
 import {
-  createWorkflow, dryRunWorkflow, getActionTypes, getWorkflow, renewWorkflow, runWorkflowNow, setWorkflowEnabled,
+  createWorkflow, dryRunWorkflow, getActionTypes, getWorkflow, getWorkflowConfig, renewWorkflow, runWorkflowNow, setWorkflowEnabled,
   takeOwnership, updateWorkflow, validateWorkflow, validationErrors,
 } from '../api/workflows';
 import { useCurrentUser } from '../hooks/useCurrentUser';
 import { getErrorMessage } from '../api/client';
 import { getSavedQueries } from '../api/savedQueries';
 import { useProjectContext } from '../contexts/ProjectContext';
-import { availableRefs, frequencyPatch, newWorkflow, unplacedErrors } from '../utils/conditionTree';
+import { availableRefs, frequencyPatch, isExpired, newWorkflow, unplacedErrors } from '../utils/conditionTree';
 import ActionCard from '../components/workflow/ActionCard';
 import OutcomeList from '../components/workflow/OutcomeList';
 import RunsTab from '../components/workflow/RunsTab';
@@ -74,6 +74,7 @@ function WorkflowEditor() {
   const [busy, setBusy] = useState<'save' | 'dry' | 'run' | null>(null);
 
   const { data: types = [] } = useQuery({ queryKey: ['workflow-action-types'], queryFn: getActionTypes });
+  const { data: config } = useQuery({ queryKey: ['workflow-config'], queryFn: getWorkflowConfig });
   const { data: queries = [] } = useQuery({ queryKey: ['savedQueries'], queryFn: getSavedQueries });
   const projectQueries = useMemo(() => queries.filter((q) => savedQueryIdSet.has(q.id)), [queries, savedQueryIdSet]);
 
@@ -257,7 +258,7 @@ function WorkflowEditor() {
           <Button type="primary" loading={busy === 'save'} disabled={errors.length > 0} onClick={save}>Save</Button>
         </Space>
       </Space>
-      {wf.status === 'expired' && (
+      {wf.id && isExpired(wf, config) && (
         <Alert type="warning" showIcon style={{ marginBottom: 12 }} message="This workflow has expired"
           description="It no longer runs. Renew it, then turn on Enabled."
           action={<Button size="small" onClick={() => recover(renewWorkflow, 'Renewed. Turn on Enabled to resume.')}>Renew</Button>} />

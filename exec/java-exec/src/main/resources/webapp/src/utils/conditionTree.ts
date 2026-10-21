@@ -22,6 +22,15 @@ import type {
 export const BASE_FIELDS = ['status', 'rowCount', 'rowCountDelta', 'deltaPercent', 'durationMs', 'intervalMs', 'error'];
 export const OPS = ['==', '!=', '>', '>=', '<', '<=', 'contains', 'startsWith'];
 
+/**
+ * Mirrors WorkflowSchedule.isExpired. The server only sets status `expired` on enabled workflows, so a paused
+ * workflow past its date still says `paused` while run now and enable refuse it.
+ */
+export function isExpired(w: Workflow, cfg: { expirationEnabled: boolean } | undefined, now = Date.now()): boolean {
+  return w.status === 'expired'
+    || (!!cfg?.expirationEnabled && !!w.schedule.expiresAt && Date.parse(w.schedule.expiresAt) < now);
+}
+
 export function isLeaf(n: ConditionNode): n is ConditionLeaf {
   return 'field' in n;
 }

@@ -23,6 +23,7 @@ import {
 } from 'antd';
 import { PlusOutlined, SettingOutlined } from '@ant-design/icons';
 import dayjs from 'dayjs';
+import { isExpired } from '../utils/conditionTree';
 import type { Workflow, WorkflowConfig, WorkflowSchedule } from '../types/workflow';
 import {
   assignProject, getObservabilityStatus, getObservabilitySummary, getRunningWorkflows, getWorkflowConfig,
@@ -151,7 +152,8 @@ export default function WorkflowsPage({ projectId }: { projectId?: string }) {
             <Space size={4} wrap>
               <Tag color={w.schedule.enabled ? 'green' : 'default'}>{w.schedule.enabled ? 'on' : (w.status ?? 'paused').replace(/_/g, ' ')}</Tag>
               {stats.failing(w) && <Tag color="red">{w.consecutiveFailures} failures</Tag>}
-              {stats.expiring(w) && <Tag color="orange">expires {dayjs(w.schedule.expiresAt).format('MMM D')}
+              {stats.expiring(w) && <Tag color={isExpired(w, config) ? 'red' : 'orange'}>
+                {isExpired(w, config) ? 'expired' : 'expires'} {dayjs(w.schedule.expiresAt).format('MMM D')}
                 <Button type="link" size="small" onClick={() => renew.mutate(w.id!)}>Renew</Button></Tag>}
             </Space>
           ) },

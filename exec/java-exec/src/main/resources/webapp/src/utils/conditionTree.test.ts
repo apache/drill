@@ -18,7 +18,7 @@
 import { describe, it, expect } from 'vitest';
 import {
   treeToExpr, toBuilderModel, fromBuilderModel, coerceValue, availableRefs, summarizeCondition,
-  frequencyPatch, newWorkflow, unplacedErrors,
+  frequencyPatch, newWorkflow, unplacedErrors, isExpired,
 } from './conditionTree';
 import type { ActionTypeInfo, WorkflowAction } from '../types/workflow';
 
@@ -83,5 +83,19 @@ describe('conditionTree', () => {
       { path: 'schedule.frequency', message: 'Unknown' },
     ];
     expect(unplacedErrors(errors).map((e) => e.path)).toEqual(['actions', 'schedule.frequency']);
+  });
+
+  it('treats a paused workflow past its expiry date as expired', () => {
+    const w = newWorkflow('p', 'q');
+    w.status = 'paused';
+    w.schedule.expiresAt = '2026-01-01T00:00:00Z';
+    const now = Date.parse('2026-06-01T00:00:00Z');
+    expect(isExpired(w, { expirationEnabled: true }, now)).toBe(true);
+    expect(isExpired(w, { expirationEnabled: false }, now)).toBe(false);
+    expect(isExpired(w, undefined, now)).toBe(false);
+    w.schedule.expiresAt = '2027-01-01T00:00:00Z';
+    expect(isExpired(w, { expirationEnabled: true }, now)).toBe(false);
+    w.status = 'expired';
+    expect(isExpired(w, undefined, now)).toBe(true);
   });
 });
