@@ -52,7 +52,9 @@ import org.slf4j.LoggerFactory;
 import java.io.IOException;
 import java.security.GeneralSecurityException;
 import java.util.List;
+import java.util.Map;
 import java.util.Set;
+import java.util.concurrent.ConcurrentHashMap;
 
 public class GoogleSheetsStoragePlugin extends AbstractStoragePlugin {
   private final static Logger logger = LoggerFactory.getLogger(GoogleSheetsStoragePlugin.class);
@@ -60,11 +62,19 @@ public class GoogleSheetsStoragePlugin extends AbstractStoragePlugin {
   private final GoogleSheetsStoragePluginConfig config;
   private final GoogleSheetsSchemaFactory schemaFactory;
   private final OAuthTokenProvider tokenProvider;
-  private DataStore<StoredCredential> dataStore;
-  private Sheets service;
-  private Drive driveService;
-  private TokenRegistry tokenRegistry;
-  private String username;
+  /**
+   * Google credential stores and services, cached per identity.
+   *
+   * <p>These were previously single fields on the plugin. A plugin instance is
+   * shared by every query, so the first caller's authenticated service was handed
+   * to every later caller regardless of which user asked for it, which under
+   * {@code USER_TRANSLATION} meant one user's queries reaching Google as another
+   * user. They are keyed by {@link #cacheKey(String)} so each identity gets, and
+   * keeps, only its own.
+   */
+  private final Map<String, DataStore<StoredCredential>> dataStores = new ConcurrentHashMap<>();
+  private final Map<String, Sheets> sheetsServices = new ConcurrentHashMap<>();
+  private final Map<String, Drive> driveServices = new ConcurrentHashMap<>();
 
 
   public GoogleSheetsStoragePlugin(GoogleSheetsStoragePluginConfig configuration, DrillbitContext context, String name) {
@@ -95,22 +105,57 @@ public class GoogleSheetsStoragePlugin extends AbstractStoragePlugin {
     // the plugin is loaded, we read the tokens from the persistent store into a GS dataStore.
     // This happens when the plugin is registered.
 
-    if (config.getAuthMode() == AuthMode.USER_TRANSLATION) {
-      this.username = schemaConfig.getUserName();
-      tokenRegistry = tokenProvider.getOauthTokenRegistry(this.username);
-    } else {
-      this.username = SHARED_USERNAME;
-      tokenRegistry = tokenProvider.getOauthTokenRegistry(null);
-    }
-    tokenRegistry.createTokenTable(getName());
-    this.dataStore = new DrillDataStoreFactory(tokenProvider, getName()).createDataStore(this.username);
+    getTokenRegistry(schemaConfig == null ? null : schemaConfig.getUserName());
   }
 
-  public DataStore<StoredCredential> getDataStore(String username) {
-    if (this.dataStore == null) {
-      this.dataStore = new DrillDataStoreFactory(tokenProvider, getName()).createDataStore(username);
-    }
-    return dataStore;
+  /**
+   * The token registry holding {@code queryUser}'s tokens, with this plugin's
+   * token table created in it if absent. Resolved per call; see
+   * {@link #dataStores} for why nothing here is cached on the plugin.
+   */
+  public TokenRegistry getTokenRegistry(String queryUser) {
+    TokenRegistry tokenRegistry = tokenProvider.getOauthTokenRegistry(registryIdentity(queryUser));
+    tokenRegistry.createTokenTable(getName());
+    return tokenRegistry;
+  }
+
+  /**
+   * The identity whose Drill token registry holds this plugin's tokens: the query
+   * user under user translation, or null for the single shared registry. Note that
+   * {@link #SHARED_USERNAME} is only a Google-side placeholder and must not be used
+   * as a registry identity, or a shared plugin's tokens would be looked up in a
+   * per-user registry that the REST credential endpoints never write to.
+   */
+  private String registryIdentity(String queryUser) {
+    return config.getAuthMode() == AuthMode.USER_TRANSLATION ? queryUser : null;
+  }
+
+  /**
+   * The Google-side data store id, which must be a non-null string and is not a
+   * Drill identity. Under user translation it is the query user; otherwise a
+   * fixed placeholder.
+   */
+  private String googleStoreId(String queryUser) {
+    return config.getAuthMode() == AuthMode.USER_TRANSLATION ? queryUser : SHARED_USERNAME;
+  }
+
+  /**
+   * Cache key for the per-identity maps. Prefixed rather than using the user name
+   * directly, so that a user literally named {@link #SHARED_USERNAME} — which is
+   * what every web user is called when authentication is disabled — cannot share
+   * a cache entry with a shared-credential plugin.
+   */
+  private String cacheKey(String queryUser) {
+    return config.getAuthMode() == AuthMode.USER_TRANSLATION ? "user:" + queryUser : "shared";
+  }
+
+  private DataStore<StoredCredential> buildDataStore(String queryUser) {
+    return new DrillDataStoreFactory(tokenProvider, getName(), registryIdentity(queryUser))
+      .createDataStore(googleStoreId(queryUser));
+  }
+
+  public DataStore<StoredCredential> getDataStore(String queryUser) {
+    return dataStores.computeIfAbsent(cacheKey(queryUser), k -> buildDataStore(queryUser));
   }
 
 
@@ -120,8 +165,17 @@ public class GoogleSheetsStoragePlugin extends AbstractStoragePlugin {
     schemaFactory.registerSchemas(schemaConfig, parent);
   }
 
+  /**
+   * This plugin's token table for the shared identity. Prefer
+   * {@link #getTokenTable(String)} wherever the query user is known.
+   */
   public PersistentTokenTable getTokenTable() {
-    return tokenRegistry.getTokenTable(getName());
+    return getTokenTable(null);
+  }
+
+  /** This plugin's token table holding {@code queryUser}'s tokens. */
+  public PersistentTokenTable getTokenTable(String queryUser) {
+    return getTokenRegistry(queryUser).getTokenTable(getName());
   }
 
   @Override
@@ -153,7 +207,7 @@ public class GoogleSheetsStoragePlugin extends AbstractStoragePlugin {
   public AbstractGroupScan getPhysicalScan(String userName, JSONOptions selection, List<SchemaPath> columns, SessionOptionManager options,
                                            MetadataProviderManager metadataProviderManager) throws IOException {
     GoogleSheetsScanSpec scanSpec = selection.getListWith(context.getLpPersistence().getMapper(), new TypeReference<GoogleSheetsScanSpec>() {});
-    return new GoogleSheetsGroupScan(this.username, scanSpec, this, metadataProviderManager);
+    return new GoogleSheetsGroupScan(userName, scanSpec, this, metadataProviderManager);
   }
 
   @Override
@@ -182,8 +236,7 @@ public class GoogleSheetsStoragePlugin extends AbstractStoragePlugin {
    */
   @VisibleForTesting
   public void initializeTokenTableForTesting() {
-    OAuthTokenProvider tokenProvider = context.getOauthTokenProvider();
-    tokenRegistry = tokenProvider.getOauthTokenRegistry(null);
+    getTokenRegistry(null);
   }
 
   @Override
@@ -201,26 +254,17 @@ public class GoogleSheetsStoragePlugin extends AbstractStoragePlugin {
    * @return An authenticated {@link Sheets} Google Sheets service.
    */
   public Sheets getSheetsService(String queryUser) {
-    if (service != null && dataStore != null) {
-      return service;
-    } else {
-      // Check if datastore is null and initialize if so.
-      if (dataStore == null) {
-        this.dataStore = getDataStore(queryUser);
-      }
+    return sheetsServices.computeIfAbsent(cacheKey(queryUser), k -> buildSheetsService(queryUser));
+  }
 
-      try {
-        if (config.getAuthMode() == AuthMode.USER_TRANSLATION) {
-          service = GoogleSheetsUtils.getSheetsService(config, dataStore, queryUser);
-        } else {
-          service = GoogleSheetsUtils.getSheetsService(config, dataStore, SHARED_USERNAME);
-        }
-        return service;
-      } catch (IOException | GeneralSecurityException e) {
-        throw UserException.connectionError(e)
-          .message("Error connecting to Googlesheets Service: " + e.getMessage())
-          .build(logger);
-      }
+  private Sheets buildSheetsService(String queryUser) {
+    try {
+      return GoogleSheetsUtils.getSheetsService(
+        config, getDataStore(queryUser), googleStoreId(queryUser));
+    } catch (IOException | GeneralSecurityException e) {
+      throw UserException.connectionError(e)
+        .message("Error connecting to Googlesheets Service: " + e.getMessage())
+        .build(logger);
     }
   }
 
@@ -231,26 +275,17 @@ public class GoogleSheetsStoragePlugin extends AbstractStoragePlugin {
    * @return A validated and authenticated {@link Drive} instance.
    */
   public Drive getDriveService(String queryUser) {
-    if (driveService != null && dataStore != null) {
-      return driveService;
-    } else {
-      // Check if datastore is null and initialize if so.
-      if (dataStore == null) {
-        this.dataStore = getDataStore(queryUser);
-      }
+    return driveServices.computeIfAbsent(cacheKey(queryUser), k -> buildDriveService(queryUser));
+  }
 
-      try {
-        if (config.getAuthMode() == AuthMode.USER_TRANSLATION) {
-          driveService = GoogleSheetsUtils.getDriveService(config, dataStore, queryUser);
-        } else {
-          driveService = GoogleSheetsUtils.getDriveService(config, dataStore, SHARED_USERNAME);
-        }
-        return driveService;
-      } catch (IOException | GeneralSecurityException e) {
-        throw UserException.connectionError(e)
-          .message("Error connecting to Google Drive Service: " + e.getMessage())
-          .build(logger);
-      }
+  private Drive buildDriveService(String queryUser) {
+    try {
+      return GoogleSheetsUtils.getDriveService(
+        config, getDataStore(queryUser), googleStoreId(queryUser));
+    } catch (IOException | GeneralSecurityException e) {
+      throw UserException.connectionError(e)
+        .message("Error connecting to Google Drive Service: " + e.getMessage())
+        .build(logger);
     }
   }
 }
