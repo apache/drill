@@ -50,6 +50,7 @@ import org.apache.drill.common.logical.StoragePluginConfig;
 import org.apache.drill.common.logical.StoragePluginConfig.AuthMode;
 import org.apache.drill.exec.oauth.TokenRegistry;
 import org.apache.drill.exec.server.rest.DrillRestServer.UserAuthEnabled;
+import org.apache.drill.exec.server.rest.auth.DrillUserPrincipal;
 import org.apache.drill.exec.store.StoragePluginRegistry;
 import org.apache.drill.exec.store.StoragePluginRegistry.PluginEncodingException;
 import org.apache.drill.exec.store.StoragePluginRegistry.PluginException;
@@ -81,6 +82,14 @@ public class StorageResources {
 
   @Inject
   SecurityContext sc;
+
+  /**
+   * The caller. Injected rather than read from the {@code SecurityContext} so it
+   * also resolves with authentication disabled, where Drill binds the anonymous
+   * principal but the security context has none.
+   */
+  @Inject
+  DrillUserPrincipal principal;
 
   @Inject
   HttpServletRequest request;
@@ -201,7 +210,7 @@ public class StorageResources {
   public Response updateRefreshToken(@PathParam("name") String name, OAuthTokenContainer tokens) {
     // This endpoint is deprecated.  Use the same path in credentials resources instead.
     logger.warn("Deprecated endpoint call: {}", "/storage/" + name + "/update_refresh_token.");
-    return OAuthRequests.updateRefreshToken(name, tokens, storage, authEnabled, sc);
+    return OAuthRequests.updateRefreshToken(name, tokens, storage, principal);
   }
 
   @POST
@@ -213,7 +222,7 @@ public class StorageResources {
     // This endpoint is deprecated.  Use the same path in credentials resources instead.
     logger.warn("Deprecated endpoint call: {}", "/storage/" + name + "/update_access_token.");
 
-    return OAuthRequests.updateAccessToken(name, tokens, storage, authEnabled, sc);
+    return OAuthRequests.updateAccessToken(name, tokens, storage, principal);
   }
 
   @POST
@@ -225,7 +234,7 @@ public class StorageResources {
                                     OAuthTokenContainer tokenContainer) {
     // This endpoint is deprecated.  Use the same path in credentials resources instead.
     logger.warn("Deprecated endpoint call: {}", "/storage/" + name + "/update_oauth_tokens.");
-    return OAuthRequests.updateOAuthTokens(name, tokenContainer, storage, authEnabled, sc);
+    return OAuthRequests.updateOAuthTokens(name, tokenContainer, storage, principal);
   }
 
   @GET
@@ -235,7 +244,7 @@ public class StorageResources {
   public Response updateAuthToken(@PathParam("name") String name, @QueryParam("code") String code) {
     // This endpoint is deprecated.  Use the same path in credentials resources instead.
     logger.warn("Deprecated endpoint call: {}", "/storage/" + name + "/update_oauth2_authtoken.");
-    return OAuthRequests.updateAuthToken(name, code, request, storage, authEnabled, sc);
+    return OAuthRequests.updateAuthToken(name, code, request, storage, principal);
   }
 
   /**
@@ -422,9 +431,15 @@ public class StorageResources {
    * @param config {@link StoragePluginConfig} The current plugin configuration
    * @return If USER_TRANSLATION is enabled, returns the query user.  If not, returns null.
    */
+  /**
+   * The owner of the token table belonging to this plugin: the caller for a user
+   * translation plugin, or null for the single shared table. The name must match
+   * the one queries run under, which with authentication disabled is the
+   * anonymous user rather than no user at all.
+   */
   private String getQueryUser(StoragePluginConfig config) {
-    if (config.getAuthMode() == AuthMode.USER_TRANSLATION && authEnabled.get()) {
-      return sc.getUserPrincipal().getName();
+    if (config.getAuthMode() == AuthMode.USER_TRANSLATION && principal != null) {
+      return principal.getName();
     } else {
       return null;
     }

@@ -41,7 +41,12 @@ public class DrillDataStore<V extends Serializable> extends AbstractMemoryDataSt
   DrillDataStore(OAuthTokenProvider tokenProvider, String pluginName, String userID, DrillDataStoreFactory dataStoreFactory) {
     super(dataStoreFactory, userID);
     this.drillDataStoreFactory = dataStoreFactory;
-    TokenRegistry tokenRegistry = tokenProvider.getOauthTokenRegistry(userID);
+    // The registry identity comes from the factory, not from userID: userID is the
+    // Google-side data store id, which for a shared plugin is a placeholder name
+    // rather than a Drill user. Using it here would look up a per-user registry
+    // for a plugin whose tokens live in the shared one.
+    TokenRegistry tokenRegistry =
+      tokenProvider.getOauthTokenRegistry(dataStoreFactory.getRegistryIdentity());
     this.tokenTable = tokenRegistry.getTokenTable(pluginName);
     if (hasValidTokens(tokenTable)) {
       keyValueMap.put(tokenTable.ACCESS_TOKEN_KEY, tokenTable.getAccessToken().getBytes(StandardCharsets.UTF_8));
