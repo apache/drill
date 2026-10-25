@@ -21,6 +21,8 @@ import org.apache.commons.lang3.StringUtils;
 import org.apache.drill.common.AutoCloseables;
 import org.apache.drill.exec.server.DrillbitContext;
 
+import java.net.URLEncoder;
+import java.nio.charset.StandardCharsets;
 import java.util.Map;
 import java.util.concurrent.ConcurrentHashMap;
 
@@ -78,8 +80,20 @@ public class OAuthTokenProvider implements AutoCloseable {
    */
   private static String registryPath(String username) {
     return StringUtils.isNotEmpty(username)
-      ? STORAGE_REGISTRY_PATH + "/" + username
+      ? STORAGE_REGISTRY_PATH + "/" + encodePathSegment(username)
       : STORAGE_REGISTRY_PATH;
+  }
+
+  /**
+   * Percent-encodes a user name so that it forms a single path segment. A user
+   * name is not restricted to what a store path accepts: a full Kerberos
+   * principal ({@code user/host@REALM}) carries a separator, and a name of
+   * {@code ..} would walk up the tree, so either could place one identity's
+   * tokens in a path belonging to another. {@code .} is encoded as well, which
+   * {@link URLEncoder} leaves untouched.
+   */
+  private static String encodePathSegment(String username) {
+    return URLEncoder.encode(username, StandardCharsets.UTF_8).replace(".", "%2E");
   }
 
   @Override

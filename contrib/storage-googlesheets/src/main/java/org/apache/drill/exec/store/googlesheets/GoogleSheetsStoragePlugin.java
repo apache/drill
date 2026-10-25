@@ -44,6 +44,7 @@ import org.apache.drill.exec.store.SchemaConfig;
 import org.apache.drill.exec.store.base.filter.FilterPushDownUtils;
 import org.apache.drill.exec.store.googlesheets.schema.GoogleSheetsSchemaFactory;
 import org.apache.drill.exec.store.googlesheets.utils.GoogleSheetsUtils;
+import org.apache.commons.lang3.StringUtils;
 import com.google.common.annotations.VisibleForTesting;
 import com.google.common.collect.ImmutableSet;
 import org.slf4j.Logger;
@@ -55,6 +56,7 @@ import java.util.List;
 import java.util.Map;
 import java.util.Set;
 import java.util.concurrent.ConcurrentHashMap;
+import java.util.function.Supplier;
 
 public class GoogleSheetsStoragePlugin extends AbstractStoragePlugin {
   private final static Logger logger = LoggerFactory.getLogger(GoogleSheetsStoragePlugin.class);
@@ -75,6 +77,12 @@ public class GoogleSheetsStoragePlugin extends AbstractStoragePlugin {
   private final Map<String, DataStore<StoredCredential>> dataStores = new ConcurrentHashMap<>();
   private final Map<String, Sheets> sheetsServices = new ConcurrentHashMap<>();
   private final Map<String, Drive> driveServices = new ConcurrentHashMap<>();
+
+  /**
+   * The access token each identity's cached entries were built from; see
+   * {@link #cached(Map, String, Supplier)}.
+   */
+  private final Map<String, String> cachedAccessTokens = new ConcurrentHashMap<>();
 
 
   public GoogleSheetsStoragePlugin(GoogleSheetsStoragePluginConfig configuration, DrillbitContext context, String name) {
@@ -155,7 +163,59 @@ public class GoogleSheetsStoragePlugin extends AbstractStoragePlugin {
   }
 
   public DataStore<StoredCredential> getDataStore(String queryUser) {
-    return dataStores.computeIfAbsent(cacheKey(queryUser), k -> buildDataStore(queryUser));
+    return cached(dataStores, queryUser, () -> buildDataStore(queryUser));
+  }
+
+  /**
+   * This identity's cached value, built on first use, but only kept for as long
+   * as the tokens it was built from are the tokens in the token table.
+   *
+   * <p>Google's {@code Credential} copies the access and refresh tokens once, and
+   * {@link DrillDataStore} reads the token table only in its constructor. So an
+   * entry built before the user authorized would serve an empty credential until
+   * the drillbit restarted, and under user translation that is the normal flow
+   * for a new user: query, get an auth error, authorize, query again. Nothing is
+   * cached while the identity has no access token, and an entry is dropped once
+   * the stored token differs from the one it was built from, so authorizing or
+   * re-authorizing takes effect on the next query.
+   *
+   * <p>A token refresh rewrites the stored token as well, which costs one extra
+   * rebuild; racing callers may likewise build one entry more than they use.
+   * Both are cheap next to serving the wrong identity's credential.
+   */
+  private <T> T cached(Map<String, T> cache, String queryUser, Supplier<T> builder) {
+    String key = cacheKey(queryUser);
+    String accessToken = getTokenTable(queryUser).getAccessToken();
+
+    if (StringUtils.isEmpty(accessToken)) {
+      invalidate(key);
+      return builder.get();
+    }
+
+    if (!accessToken.equals(cachedAccessTokens.get(key))) {
+      invalidate(key);
+      cachedAccessTokens.put(key, accessToken);
+    }
+
+    T cachedValue = cache.get(key);
+    if (cachedValue != null) {
+      return cachedValue;
+    }
+
+    // Built outside computeIfAbsent: building a service asks for this identity's
+    // data store, which comes back through here, and a mapping function must not
+    // touch the map it is updating.
+    T value = builder.get();
+    cache.put(key, value);
+    return value;
+  }
+
+  /** Forgets every service cached for one identity. */
+  private void invalidate(String key) {
+    dataStores.remove(key);
+    sheetsServices.remove(key);
+    driveServices.remove(key);
+    cachedAccessTokens.remove(key);
   }
 
 
@@ -254,7 +314,7 @@ public class GoogleSheetsStoragePlugin extends AbstractStoragePlugin {
    * @return An authenticated {@link Sheets} Google Sheets service.
    */
   public Sheets getSheetsService(String queryUser) {
-    return sheetsServices.computeIfAbsent(cacheKey(queryUser), k -> buildSheetsService(queryUser));
+    return cached(sheetsServices, queryUser, () -> buildSheetsService(queryUser));
   }
 
   private Sheets buildSheetsService(String queryUser) {
@@ -275,7 +335,7 @@ public class GoogleSheetsStoragePlugin extends AbstractStoragePlugin {
    * @return A validated and authenticated {@link Drive} instance.
    */
   public Drive getDriveService(String queryUser) {
-    return driveServices.computeIfAbsent(cacheKey(queryUser), k -> buildDriveService(queryUser));
+    return cached(driveServices, queryUser, () -> buildDriveService(queryUser));
   }
 
   private Drive buildDriveService(String queryUser) {

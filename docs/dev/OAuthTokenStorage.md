@@ -41,6 +41,12 @@ oauth_tokens/<username>      <- one registry per user translation user
 
 Each registry is a separate persistent store, keyed inside by plugin name.
 
+The user name is percent-encoded before it becomes a path segment, because a user
+name is not restricted to what a store path accepts: a full Kerberos principal
+(`user/host@REALM`) carries a separator, and a name of `..` would walk up the
+tree, so either could otherwise land one identity's tokens in a path belonging to
+another. `.` is encoded as well, which `URLEncoder` leaves alone.
+
 **A registry must be resolved per call and never cached across identities.**
 Returning a registry belonging to another user would let that user's queries run
 with someone else's tokens at the data source, which is exactly what user
@@ -69,6 +75,16 @@ Those are now keyed per identity. Its cache key is prefixed (`user:<name>` or
 `shared`) rather than being the bare user name, so that a user actually called
 `anonymous` — which is every web user when authentication is disabled — cannot
 share an entry with a shared-credential plugin.
+
+Those entries are also tagged with the access token they were built from, and
+nothing is cached while an identity has no access token at all. Google's
+`Credential` copies the tokens once and `DrillDataStore` reads the token table
+only in its constructor, so an entry built before the user authorized would
+otherwise serve an empty credential until the drillbit restarted — and under user
+translation that is the normal flow for a new user: query, get an auth error,
+authorize, query again. A stored token that no longer matches the tag drops the
+entry, so authorizing, or re-authorizing after a revoke, takes effect on the next
+query. A token refresh rewrites the stored token too, which costs one rebuild.
 
 ### Why not the aliases layout
 
@@ -158,6 +174,19 @@ tokens to the shared `oauth_tokens` registry. Those tokens are now read from
 `oauth_tokens/anonymous`, so the old ones are ignored and the user authorizes
 once more. No data is lost; the stale entries can be removed by hand.
 
+### User translation needs authentication
+
+`USER_TRANSLATION` with Drill's user authentication switched off is not a
+supported combination, and the per-identity registries make that plainer rather
+than changing it. Translating users means handing each one their own credentials,
+which requires user names that are unique and trusted. With auth off neither
+holds: web UI and REST callers are all `anonymous`, a JDBC/ODBC/sqlline client
+sends whatever name it likes (usually the OS user), and every caller is an admin.
+Tokens authorized through the web UI therefore sit in `oauth_tokens/anonymous`,
+which is not where a JDBC client's query looks.
+
+Use `SHARED_USER` on an auth-off cluster, or turn user authentication on.
+
 ### The shared identity must be spelled the same way everywhere
 
 `null` means "the shared registry". GoogleSheets also has a Google-side data
@@ -171,6 +200,18 @@ interchangeable.
 
 This was invisible while one cached registry served every lookup, and only
 surfaced once registries were resolved per identity.
+
+## Known limitation: per-identity caches are unbounded
+
+`OAuthTokenProvider` holds one `PersistentTokenRegistry` per identity, and
+`GoogleSheetsStoragePlugin` one data store and one of each Google service per
+identity. Both are populated on first use and never evicted, so they grow to one
+entry per distinct user for the life of the drillbit. The entries are small —
+a registry wraps a persistent store handle, a Google service an HTTP transport —
+and a cluster with a handful of user translation users will not notice. A
+deployment with many thousands of distinct users wants a bounded or expiring
+cache here; nothing in the current design depends on an entry living forever,
+since both are rebuilt on demand.
 
 ## Known limitation: orphaned token tables
 

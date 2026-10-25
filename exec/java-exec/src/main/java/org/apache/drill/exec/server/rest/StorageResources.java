@@ -426,12 +426,6 @@ public class StorageResources {
   }
 
   /**
-   * This function checks to see if a given storage plugin is using USER_TRANSLATION mode.
-   * If so, it will return the query user name.  If not it will return null.
-   * @param config {@link StoragePluginConfig} The current plugin configuration
-   * @return If USER_TRANSLATION is enabled, returns the query user.  If not, returns null.
-   */
-  /**
    * The owner of the token table belonging to this plugin: the caller for a user
    * translation plugin, or null for the single shared table. The name must match
    * the one queries run under, which with authentication disabled is the

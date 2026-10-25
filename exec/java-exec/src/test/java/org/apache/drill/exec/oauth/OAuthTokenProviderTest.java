@@ -48,6 +48,7 @@ public class OAuthTokenProviderTest extends ClusterTest {
    */
   private static final String LEAK_PLUGIN = "leak_test_plugin";
   private static final String OVERWRITE_PLUGIN = "overwrite_test_plugin";
+  private static final String PATH_PLUGIN = "path_test_plugin";
 
   @BeforeClass
   public static void setUp() throws Exception {
@@ -138,6 +139,39 @@ public class OAuthTokenProviderTest extends ClusterTest {
     assertNotSame(
       "the anonymous user's registry is a per-user registry, not the shared one",
       shared, anonymous);
+  }
+
+  /**
+   * A user name becomes part of the store path, so a name carrying a path
+   * separator or a parent reference must not be able to reach another identity's
+   * path. A name ending in {@code /..} is the dangerous one: unencoded it walks
+   * back up to the shared registry's own path.
+   */
+  @Test
+  public void testUserNamesCannotEscapeTheirOwnPath() {
+    OAuthTokenProvider provider = provider();
+
+    TokenRegistry traversal = provider.getOauthTokenRegistry("ivan/..");
+    traversal.createTokenTable(PATH_PLUGIN);
+    traversal.getTokenTable(PATH_PLUGIN).setAccessToken("traversal-access-token");
+
+    TokenRegistry shared = provider.getOauthTokenRegistry(null);
+    shared.createTokenTable(PATH_PLUGIN);
+    assertNull("a user name must not be able to walk up into the shared registry",
+      shared.getTokenTable(PATH_PLUGIN).getAccessToken());
+
+    // A full Kerberos principal contains a separator and must still work, and
+    // must not share a path with the user name it starts with.
+    TokenRegistry principal = provider.getOauthTokenRegistry("heidi/host@EXAMPLE.COM");
+    principal.createTokenTable(PATH_PLUGIN);
+    principal.getTokenTable(PATH_PLUGIN).setAccessToken("heidi-access-token");
+
+    TokenRegistry heidi = provider.getOauthTokenRegistry("heidi");
+    heidi.createTokenTable(PATH_PLUGIN);
+    assertNull("a principal's tokens must not be readable as the bare user name",
+      heidi.getTokenTable(PATH_PLUGIN).getAccessToken());
+    assertEquals("heidi-access-token",
+      principal.getTokenTable(PATH_PLUGIN).getAccessToken());
   }
 
   /**

@@ -183,7 +183,7 @@ public class CredentialResources {
   public Response createOrUpdateCredentials(@FormParam("plugin") String pluginName,
                                        @FormParam("username") String username,
                                        @FormParam("password") String password) {
-        String queryUser = queryUser();
+    String queryUser = queryUser();
     if (queryUser == null) {
       // Credentials are always stored against a user, so refuse rather than
       // write an entry under a null key that nobody could ever read back.
@@ -236,7 +236,7 @@ public class CredentialResources {
   @Produces(MediaType.APPLICATION_JSON)
   @Operation(externalDocs = @ExternalDocumentation(description = "Apache Drill REST API documentation:", url = "https://drill.apache.org/docs/rest-api-introduction/"))
   public Response createOrUpdatePlugin(@PathParam("pluginName") String pluginName, UsernamePasswordContainer credentials) {
-        String queryUser = queryUser();
+    String queryUser = queryUser();
     if (queryUser == null) {
       // Credentials are always stored against a user, so refuse rather than
       // write an entry under a null key that nobody could ever read back.
