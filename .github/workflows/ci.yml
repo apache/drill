@@ -27,7 +27,7 @@ on: [push, pull_request]
 
 jobs:
   build:
-    name: Main Build
+    name: Main Build (java ${{ matrix.java }}, shard ${{ matrix.shard }})
     runs-on: ubuntu-latest
     if: github.repository == 'apache/drill'
     timeout-minutes: 150
@@ -36,6 +36,12 @@ jobs:
         # Java versions to run unit tests (Jetty 12 requires Java 17+)
         java: [ '17', '21', '25' ]
         profile: ['default-hadoop']
+        # exec/java-exec holds ~31 minutes of the suite in 577 classes, which dominates
+        # the build. Splitting it three ways by class name brings the longest shard to
+        # about 11 minutes. Boundaries were chosen from measured per-class times; the
+        # patterns are exhaustive, so a newly added test always lands in exactly one
+        # shard rather than being silently skipped.
+        shard: [ '1', '2', '3' ]
       fail-fast: false
     steps:
       - name: Checkout
@@ -50,24 +56,53 @@ jobs:
         # Linux Action Runners come with 7GB of RAM which isn't quite enoough
         # to run the test suite. Two workarounds are used below: a swap file is
         # added to the Runner and memory hungry tests are run separately.
+        # dd rather than fallocate: swapon rejects fallocated files on some runner
+        # filesystems ("Invalid argument"). A missing swap file only costs headroom,
+        # so warn instead of failing the job.
         run: |
           sudo sh -c "
-            fallocate -l 2G /tmp/swapfile
-            chmod 0600 /tmp/swapfile
-            mkswap /tmp/swapfile
-            swapon /tmp/swapfile
-          "
+            dd if=/dev/zero of=/drill-swapfile bs=1M count=2048 status=none &&
+            chmod 0600 /drill-swapfile &&
+            mkswap /drill-swapfile &&
+            swapon /drill-swapfile
+          " || echo "::warning::Could not add swap space; continuing without it"
+      # Which slice of the suite this job runs. The patterns are spelled out one prefix
+      # at a time because surefire does NOT support character-class globs:
+      # -Dtest='Test[A-F]*' silently matches nothing and the build passes green having
+      # run no tests. Only '*' wildcards and comma separated lists work, so each letter
+      # gets its own entry, in both cases (TestforBaseTestInheritance has a lowercase f).
+      #
+      # Shard 3 repeats surefire's other default includes (*Test, *Tests, *TestCase) to
+      # pick up classes not named Test*. Verified exhaustive against every test
+      # class in the repo. TestFrameworkTest matches shards 1 and 3 and runs twice —
+      # harmless, and far safer than a gap that skips tests without saying so.
+      - name: Select test shard
+        id: shard
+        run: |
+          case "${{ matrix.shard }}" in
+            1) echo 'pattern=TestA*,Testa*,TestB*,Testb*,TestC*,Testc*,TestD*,Testd*,TestE*,Teste*,TestF*,Testf*' >> "$GITHUB_OUTPUT" ;;
+            2) echo 'pattern=TestG*,Testg*,TestH*,Testh*,TestI*,Testi*,TestJ*,Testj*,TestK*,Testk*,TestL*,Testl*,TestM*,Testm*,TestN*,Testn*,TestO*,Testo*,TestP*,Testp*' >> "$GITHUB_OUTPUT" ;;
+            3) echo 'pattern=TestQ*,Testq*,TestR*,Testr*,TestS*,Tests*,TestT*,Testt*,TestU*,Testu*,TestV*,Testv*,TestW*,Testw*,TestX*,Testx*,TestY*,Testy*,TestZ*,Testz*,*Test,*Tests,*TestCase,Test0*,Test1*,Test2*,Test3*,Test4*,Test5*,Test6*,Test7*,Test8*,Test9*,Test_*' >> "$GITHUB_OUTPUT" ;;
+            *) echo "::error::Unknown shard '${{ matrix.shard }}'; expected 1, 2 or 3"; exit 1 ;;
+          esac
+
+      # -DforkCount=2: several of the slowest classes are wall-clock bound rather than
+      # CPU bound — TestTimedCallable spends 105 seconds asleep, and the RPC, SSL and
+      # graceful-shutdown tests wait on timeouts — so a second fork overlaps that idle
+      # time at little extra cost. Raise further only with memory headroom: the vector
+      # tests fail with OutOfMemoryException under pressure.
       - name: Build and test
         run: |
           mvn -P${{ matrix.profile }} install --batch-mode --no-transfer-progress \
+          -DforkCount=2 \
+          -Dsurefire.failIfNoSpecifiedTests=false \
+          -Dtest='${{ steps.shard.outputs.pattern }}' \
           -Dhttp.keepAlive=false -Dmaven.wagon.http.pool=false -Dmaven.wagon.httpconnectionManager.ttlSeconds=120
       - name: Remove swap space
         run : |
-          sudo sh -c "
-            free -h
-            swapoff /tmp/swapfile
-            rm /tmp/swapfile
-          "
+          free -h
+          sudo swapoff /drill-swapfile 2>/dev/null || true
+          sudo rm -f /drill-swapfile
   checkstyle_protobuf:
     name: Run checkstyle and generate protobufs
     runs-on: ubuntu-22.04
