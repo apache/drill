@@ -17,6 +17,7 @@
  */
 package org.apache.drill.exec.store.parquet.columnreaders;
 
+import org.apache.drill.exec.record.metadata.TupleMetadata;
 import org.apache.drill.exec.store.CommonParquetRecordReader;
 import com.google.common.base.Stopwatch;
 import com.google.common.collect.ImmutableList;
@@ -72,6 +73,11 @@ public class ParquetRecordReader extends CommonParquetRecordReader {
 
   private final boolean useBulkReader;
 
+  /**
+   * See {@link ParquetSchema#tableSchema}
+   */
+  private final TupleMetadata tableSchema;
+
   public ParquetRecordReader(FragmentContext fragmentContext,
       Path path,
       int rowGroupIndex,
@@ -80,8 +86,8 @@ public class ParquetRecordReader extends CommonParquetRecordReader {
       CompressionCodecFactory codecFactory,
       ParquetMetadata footer,
       List<SchemaPath> columns,
-      ParquetReaderUtility.DateCorruptionStatus dateCorruptionStatus) {
-    this(fragmentContext, numRecordsToRead, path, rowGroupIndex, fs, codecFactory, footer, columns, dateCorruptionStatus);
+      ParquetReaderUtility.DateCorruptionStatus dateCorruptionStatus, TupleMetadata tableSchema) {
+    this(fragmentContext, numRecordsToRead, path, rowGroupIndex, fs, codecFactory, footer, columns, dateCorruptionStatus, tableSchema);
   }
 
   public ParquetRecordReader(FragmentContext fragmentContext,
@@ -91,9 +97,9 @@ public class ParquetRecordReader extends CommonParquetRecordReader {
       CompressionCodecFactory codecFactory,
       ParquetMetadata footer,
       List<SchemaPath> columns,
-      ParquetReaderUtility.DateCorruptionStatus dateCorruptionStatus) {
+      ParquetReaderUtility.DateCorruptionStatus dateCorruptionStatus, TupleMetadata tableSchema) {
     this(fragmentContext, footer.getBlocks().get(rowGroupIndex).getRowCount(), path, rowGroupIndex, fs, codecFactory,
-        footer, columns, dateCorruptionStatus);
+        footer, columns, dateCorruptionStatus, tableSchema);
   }
 
   public ParquetRecordReader(
@@ -105,13 +111,14 @@ public class ParquetRecordReader extends CommonParquetRecordReader {
       CompressionCodecFactory codecFactory,
       ParquetMetadata footer,
       List<SchemaPath> columns,
-      ParquetReaderUtility.DateCorruptionStatus dateCorruptionStatus) {
+      ParquetReaderUtility.DateCorruptionStatus dateCorruptionStatus, TupleMetadata tableSchema) {
     super(footer, fragmentContext);
     this.hadoopPath = path;
     this.fileSystem = fs;
     this.codecFactory = codecFactory;
     this.rowGroupIndex = rowGroupIndex;
     this.dateCorruptionStatus = dateCorruptionStatus;
+    this.tableSchema = tableSchema;
     this.numRecordsToRead = initNumRecordsToRead(numRecordsToRead, rowGroupIndex, footer);
     this.useAsyncColReader = fragmentContext.getOptions().getOption(ExecConstants.PARQUET_COLUMNREADER_ASYNC).bool_val;
     this.useAsyncPageReader = fragmentContext.getOptions().getOption(ExecConstants.PARQUET_PAGEREADER_ASYNC).bool_val;
@@ -185,7 +192,7 @@ public class ParquetRecordReader extends CommonParquetRecordReader {
   @Override
   public void setup(OperatorContext operatorContext, OutputMutator output) throws ExecutionSetupException {
     this.operatorContext = operatorContext;
-    ParquetSchema schema = new ParquetSchema(fragmentContext.getOptions(), rowGroupIndex, footer, isStarQuery() ? null : getColumns());
+    ParquetSchema schema = new ParquetSchema(fragmentContext.getOptions(), rowGroupIndex, footer, isStarQuery() ? null : getColumns(), tableSchema);
     batchSizerMgr = new RecordBatchSizerManager(fragmentContext.getOptions(), schema, numRecordsToRead, new RecordBatchStatsContext(fragmentContext, operatorContext));
 
     logger.debug("Reading {} records from row group({}) in file {}.", numRecordsToRead, rowGroupIndex,
