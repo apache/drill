@@ -318,6 +318,17 @@
       <artifactId>drill-logical</artifactId>
       <version>${project.version}</version>
     </dependency>
+    <!--
+      Access authorization SPI (AccessAuthorizer / AccessAuthorizerFactory /
+      UserIdentity / AccessType). Standalone JDK-only module so external
+      authorization plugins (drill-ranger-plugin) can implement the SPI
+      without depending on the Drill engine.
+    -->
+    <dependency>
+      <groupId>org.apache.drill</groupId>
+      <artifactId>drill-security-spi</artifactId>
+      <version>${project.version}</version>
+    </dependency>
     <dependency>
       <groupId>org.apache.drill.exec</groupId>
       <artifactId>drill-rpc</artifactId>
