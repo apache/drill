@@ -50,7 +50,11 @@ import org.apache.hadoop.fs.Path;
 public class PhysicalPlanReader {
   private static final org.slf4j.Logger logger = org.slf4j.LoggerFactory.getLogger(PhysicalPlanReader.class);
 
+  /** Injectable context for scans that reconstruct value-dependent state on cache binding. */
+  public static final String PLAN_CACHE_REBIND = "planCacheRebind";
+
   private final ObjectReader physicalPlanReader;
+  private final ObjectReader planCacheReader;
   private final ObjectMapper mapper;
   private final ObjectReader operatorReader;
   private final ObjectReader logicalPlanReader;
@@ -74,15 +78,23 @@ public class PhysicalPlanReader {
     Set<Class<? extends PhysicalOperator>> subTypes = PhysicalOperatorUtil.getSubTypes(scanResult);
     subTypes.forEach(lpMapper::registerSubtypes);
     lpMapper.registerSubtypes(DynamicPojoRecordReader.class);
-    InjectableValues injectables = new InjectableValues.Std()
-        .addValue(StoragePluginRegistry.class, pluginRegistry)
-        .addValue(DrillConfig.class, config)
-        .addValue(DrillbitEndpoint.class, endpoint);
+    InjectableValues injectables = injectables(pluginRegistry, config, endpoint, false);
 
     this.mapper = lpMapper;
     this.physicalPlanReader = mapper.readerFor(PhysicalPlan.class).with(injectables);
+    this.planCacheReader = mapper.readerFor(PhysicalPlan.class)
+        .with(injectables(pluginRegistry, config, endpoint, true));
     this.operatorReader = mapper.readerFor(PhysicalOperator.class).with(injectables);
     this.logicalPlanReader = mapper.readerFor(LogicalPlan.class).with(injectables);
+  }
+
+  private static InjectableValues injectables(StoragePluginRegistry pluginRegistry, DrillConfig config,
+      DrillbitEndpoint endpoint, boolean planCacheRebind) {
+    return new InjectableValues.Std()
+        .addValue(StoragePluginRegistry.class, pluginRegistry)
+        .addValue(DrillConfig.class, config)
+        .addValue(DrillbitEndpoint.class, endpoint)
+        .addValue(PLAN_CACHE_REBIND, planCacheRebind);
   }
 
   public String writeJson(OptionList list) throws JsonProcessingException{
@@ -100,6 +112,12 @@ public class PhysicalPlanReader {
   public PhysicalPlan readPhysicalPlan(String json) throws IOException {
     logger.debug("Reading physical plan {}", json);
     return physicalPlanReader.readValue(json);
+  }
+
+  /** Reads a newly bound cache template and requires scans to rebuild their pushed predicates. */
+  public PhysicalPlan readPhysicalPlanForCache(String json) throws IOException {
+    logger.debug("Reading bound cached physical plan {}", json);
+    return planCacheReader.readValue(json);
   }
 
   public FragmentRoot readFragmentRoot(String json) throws IOException {

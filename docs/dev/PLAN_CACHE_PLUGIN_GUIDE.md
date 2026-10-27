@@ -33,10 +33,19 @@ PlanCacheTable planCacheTable(DrillTableSelection selection) throws IOException;
 
 The engine first calls `supportPlanCache(selection)` for every participating plugin and returns immediately if any selection is unsupported. Its default returns `false`. A plugin can cast `DrillTableSelection` to its own selection type to decide eligibility. Keep this check free of table-version reads. Only after all checks pass does the engine call `planCacheTable` and compute configuration and option fingerprints.
 
-The version must change whenever the cached plan's table definition becomes
+The plugin version must change whenever the cached plan's native table definition becomes
 incompatible. Do not use a data snapshot number if compatible data updates should
 keep hitting. A path alone is insufficient when replacement can change the
 schema or table identity.
+
+The core combines this native version with a fingerprint of the provided schema
+obtained from the resolved `DrillTable`'s `SchemaProvider`. Format plugins do not
+need to include `.drill.schema` in their own version. The combined version lives
+in the existing table-version context, so changes to either definition invalidate
+the entry without changing its key. A disabled or absent provided schema uses an
+explicit no-schema state; unreadable schemas bypass caching. Hashing uses parsed
+schema contents, including defaults and properties, rather than file timestamps
+or the schema-container format version.
 
 DFS formats use the same two-method contract in [FormatPlugin](../../exec/java-exec/src/main/java/org/apache/drill/exec/store/dfs/FormatPlugin.java), with `FileSelection` as the input:
 
@@ -53,7 +62,7 @@ Declaring plugin support covers every `GroupScan` produced for an eligible selec
 
 Keep the bound `LogicalExpression` in the scan's JSON. Converting a predicate to
 a native filter or file list and dropping the source expression loses the
-information needed to bind the next query. On deserialization:
+information needed to bind the next query. When reading a bound cache template:
 
 1. Resolve the plugin and reload current table metadata.
 2. Translate the newly bound expression into the plugin's native predicate.
@@ -61,8 +70,20 @@ information needed to bind the next query. On deserialization:
    and assignments. Preserve residual filtering for unsupported predicates.
 4. Reject reconstruction if the original pushdown guarantees cannot be met.
 
+`PhysicalPlanReader.readPhysicalPlanForCache` supplies the
+`PhysicalPlanReader.PLAN_CACHE_REBIND` injectable flag for this path. HBase uses
+it to require predicate reconstruction on cache hits. Ordinary physical-plan
+JSON and profile replay use the serialized native scan specification, without
+requiring the cache's reconstruction metadata. Both paths discover current HBase
+regions. A failed cache reconstruction invalidates the entry and replans the SQL;
+it must never fall back to a scan specification containing the previous bindings.
+
 Serialize stable inputs rather than live connections, execution resources or old
 endpoint assignments. Validate the round trip with Drill's `PhysicalPlanReader`.
+The cache performs a trial bind with the first execution's literal values before
+publishing an entry. Failed expression binding or scan reconstruction prevents
+publication; successful trial binding does not replace compatibility checks on
+later hits or prove reconstruction is safe for every possible new value.
 If a parameter changes projection, schema, limit or another derived field that
 cannot be rebuilt, keep that argument structural or leave the selection ineligible.
 
@@ -78,6 +99,7 @@ Keep the regular expression serialization for JSON so parameter slot numbers sur
 HBase descriptor equality means definition compatibility; a replacement with an
 identical descriptor can still be read safely because regions and filters are
 rebuilt. Iceberg uses a UUID to distinguish tables recreated at the same path.
+Iceberg tables without a table UUID are ineligible for caching.
 
 ## Required correctness checks
 

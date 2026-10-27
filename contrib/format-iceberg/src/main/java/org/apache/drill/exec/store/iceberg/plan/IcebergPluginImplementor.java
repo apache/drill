@@ -105,6 +105,11 @@ public class IcebergPluginImplementor extends AbstractPluginImplementor {
         GroupScan scan = findGroupScan(filter);
         if (scan instanceof IcebergGroupScan) {
           IcebergGroupScan groupScan = (IcebergGroupScan) scan;
+          // This rule replaces Drill's Filter. Without Iceberg residuals, file
+          // pruning alone cannot guarantee that every returned row matches.
+          if (Boolean.TRUE.equals(groupScan.getFormatPlugin().getConfig().getIgnoreResiduals())) {
+            return false;
+          }
           // ensures that expression compatible with table schema
           expression = Binder.bind(groupScan.getTableScan().schema().asStruct(), expression, true);
         } else {

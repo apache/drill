@@ -31,6 +31,13 @@ ALTER SESSION SET planner.enable_plan_cache = true;
 
 Use `ALTER SYSTEM` instead of `ALTER SESSION` to set the default for new queries.
 
+Enable plan caching only after every Drillbit in the cluster has been upgraded
+to a version that supports it. Keep it disabled throughout a rolling upgrade:
+parameterized plans carry `bound_dynamic_param(...)` expressions in execution
+fragments, and older Drillbits cannot parse this syntax. Upgrading only the
+coordinating Drillbit is insufficient because any participating execution
+Drillbit must understand these expressions.
+
 ## The basic idea
 
 These queries can share a plan when the scan plugin supports it:
@@ -65,12 +72,27 @@ so sessions with different settings retain separate entries. Table versions stay
 in the entry's context snapshot and trigger invalidation when compatibility changes.
 A mismatch or failure falls back to ordinary planning.
 
+Each table's compatibility version combines the plugin's native version with the
+effective provided schema, if any. The core hashes the complete parsed schema,
+including column definitions, defaults and properties, with object properties
+sorted consistently and column order preserved. Provided-schema changes,
+creation or deletion therefore invalidate an old entry even when the native
+schema version is unchanged. Native schema changes still invalidate entries
+when a provided schema is present. When schema-file support is disabled, the file
+does not contribute to compatibility; when enabled but no file exists, Iceberg
+uses its native schema. Schema read failures bypass caching.
+
 The cached representation is immutable physical-plan JSON. A hit creates a new
 plan object graph and binds the new values throughout its expressions. Each
 participating scan must also rebuild any state derived from those values.
 HBase rebuilds row-key bounds and remote filters, then discovers current regions.
 Iceberg reloads table metadata and plans tasks for the current snapshot and
 predicate. Reusing the first execution's filters or file list would be incorrect.
+
+Iceberg pushes filters only when its residual row filtering is enabled. With
+`ignoreResiduals=true`, conditions remain in Drill so file pruning cannot replace
+SQL row filtering. Comparisons that are pushed down explicitly reject null where
+needed; unsimplified NOT predicates remain in Drill to preserve SQL null semantics.
 
 ## What can be reused
 
@@ -84,10 +106,11 @@ TIMESTAMP and INTERVAL literals also stay in the key because their parameter
 binding is not supported. Other eligible literals in the same query can still
 be rebound. Queries with no slots can reuse their complete template.
 
-When SELECT expressions are preserved for grouping, ordering or window definitions,
-HAVING and QUALIFY expressions are also preserved to keep matching expressions
-consistent during validation and rewriting. Their literals remain part of the key;
-eligible WHERE literals can still be rebound.
+SELECT, HAVING and QUALIFY expressions are always preserved to keep matching
+expressions consistent during validation and rewriting, including inline windows
+without an outer ORDER BY. For example, the `1` in `SELECT x + 1` remains in the
+template key; changing it creates a different template. Eligible WHERE and JOIN
+condition literals can still be rebound.
 
 Writes, DDL, existing dynamic parameters, volatile/query-context functions and
 sessions containing temporary tables or mutable aliases bypass the cache.
@@ -129,8 +152,13 @@ and pruning costs to establish how much planning work a hit actually saves.
 
 An immutable physical-plan JSON snapshot is serialized immediately after planning,
 before parallelization or execution can mutate the operators. Publication happens
-only after the first query succeeds. A bounded background queue holds JSON strings
-and performs read-back validation; a full queue simply skips publication.
+only after the first query succeeds. A bounded background queue holds the immutable
+JSON and the original literal values. Before publication, it performs a trial bind
+through the same expression-binding and scan-reconstruction path used on cache hits.
+A failed trial bind skips publication without affecting the completed query. The
+trial plan is discarded; the original JSON template is cached. This replaces the
+JSON-only read-back check, so publication does not perform both checks. A full queue
+simply skips publication.
 
 This is intentionally a general plan for the parameterized template. Constant
 folding that depends on bindable parameter values cannot be applied without
@@ -181,7 +209,7 @@ those alone do not prove a hit.
 
 DEBUG logging from `DrillSqlWorker` reports cache hits, misses and invalidation due
 to context changes or binding failures. `PlanCache` logs publication and skipped
-publication caused by serialization errors or a busy writer. Foreman thread names
+publication caused by serialization errors, a failed trial bind or a busy writer. Foreman thread names
 include the query ID, allowing these messages to be correlated with query profiles.
 
 The following per-cache gauges are registered in `DrillMetrics` under
@@ -212,6 +240,12 @@ administrator groups can run it. With authentication disabled, the command is
 available to all users. It returns `ok` and a `summary` identifying the Drillbit
 whose cache was cleared. It does not broadcast to other Drillbits; to clear a
 cluster, connect to each Drillbit and issue the command there.
+
+`SYSTEM` specifies the administrator privilege scope; it does not make this
+command cluster-wide. Behind a load balancer, one invocation clears only the
+receiving Drillbit, and later queries routed to other Drillbits can still hit
+their caches. Use a direct connection to each Drillbit when clearing the whole
+cluster, and check the returned `summary` to identify the node that was cleared.
 
 Clearing also advances a cache generation. Plans prepared before the clear,
 including queued writes and publications pending query completion, cannot

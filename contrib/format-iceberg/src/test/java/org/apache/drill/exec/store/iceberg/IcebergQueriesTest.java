@@ -22,6 +22,7 @@ import org.apache.drill.common.logical.FormatPluginConfig;
 import org.apache.drill.common.logical.security.PlainCredentialsProvider;
 import org.apache.drill.exec.physical.rowSet.DirectRowSet;
 import org.apache.drill.exec.physical.rowSet.RowSetReader;
+import org.apache.drill.exec.planner.physical.PlannerSettings;
 import org.apache.drill.exec.store.StoragePluginRegistry;
 import org.apache.drill.exec.store.dfs.FileSystemConfig;
 import org.apache.drill.exec.store.iceberg.format.IcebergFormatPluginConfig;
@@ -29,6 +30,7 @@ import org.apache.drill.exec.util.JsonStringHashMap;
 import org.apache.drill.exec.util.Text;
 import org.apache.drill.test.ClusterFixture;
 import org.apache.drill.test.ClusterTest;
+import org.apache.drill.test.TestBuilder;
 import org.apache.hadoop.conf.Configuration;
 import org.apache.hadoop.fs.FileSystem;
 import org.apache.hadoop.fs.Path;
@@ -664,6 +666,61 @@ public class IcebergQueriesTest extends ClusterTest {
       .baselineColumns("int_field", "string_field")
       .baselineValues(1, "abc")
       .go();
+  }
+
+  @Test
+  public void testGreaterThanOrEqualPushdownWithoutPlanCache() throws Exception {
+    assertPushedIntRows("int_field >= 988", 988);
+  }
+
+  @Test
+  public void testAndPushdownWithoutPlanCache() throws Exception {
+    assertPushedIntRows("int_field >= 1 AND int_field < 988", 1);
+  }
+
+  @Test
+  public void testOrPushdownWithoutPlanCache() throws Exception {
+    assertPushedIntRows("int_field = 1 OR int_field = 988", 1, 988);
+    assertPushedIntRows("int_field = 1 OR string_field IS NULL", 1, null);
+  }
+
+  @Test
+  public void testDatePushdownWithoutPlanCache() throws Exception {
+    assertPushedIntRows("date_field >= DATE '1995-09-10'", 988);
+    assertPushedIntRows("date_field < DATE '1995-09-10'", 1);
+  }
+
+  @Test
+  public void testTimePushdownWithoutPlanCache() throws Exception {
+    assertPushedIntRows("time_field >= TIME '03:41:53'", 988);
+    assertPushedIntRows("time_field < TIME '03:41:53'", 1);
+  }
+
+  @Test
+  public void testTimestampPushdownWithoutPlanCache() throws Exception {
+    assertPushedIntRows("timestamp_field >= TIMESTAMP '1995-09-10 09:00:00'", 988);
+    assertPushedIntRows("timestamp_field < TIMESTAMP '1995-09-10 09:00:00'", 1);
+  }
+
+  @Test
+  public void testIgnoredResidualsRetainDrillRowFiltering() throws Exception {
+    client.alterSession(PlannerSettings.ENABLE_PLAN_CACHE_OPTION, false);
+    String sql = "SELECT int_field FROM TABLE(dfs.tmp.testAllTypes(type => 'iceberg', ignoreResiduals => true)) "
+        + "WHERE int_field >= 1 AND int_field < 988";
+    queryBuilder().sql(sql).planMatcher().include("Filter\\(").match();
+    // The retained file contains both the matching row and a null row.
+    testBuilder().sqlQuery(sql).unOrdered().baselineColumns("int_field").baselineValues(1).go();
+  }
+
+  private void assertPushedIntRows(String predicate, Integer... expected) throws Exception {
+    client.alterSession(PlannerSettings.ENABLE_PLAN_CACHE_OPTION, false);
+    String sql = "SELECT int_field FROM dfs.tmp.testAllTypes WHERE " + predicate;
+    queryBuilder().sql(sql).planMatcher().include("filter=").exclude("Filter\\(").match();
+    TestBuilder builder = testBuilder().sqlQuery(sql).unOrdered().baselineColumns("int_field");
+    for (Integer value : expected) {
+      builder.baselineValues(value);
+    }
+    builder.go();
   }
 
   @Test

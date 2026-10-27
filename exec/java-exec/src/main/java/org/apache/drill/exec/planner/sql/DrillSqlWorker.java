@@ -355,14 +355,14 @@ public class DrillSqlWorker {
             final String json;
             try {
               // Capture before parallelization/execution mutates the operators.
-              // Pending publication and the writer queue retain only immutable JSON.
+              // Retain the JSON snapshot and original literals, not mutable operators.
               json = cacheReader.writeJson(planned);
             } catch (IOException | RuntimeException e) {
               logger.debug("Plan could not be serialized for the plan cache; skipping publication", e);
               return;
             }
             context.setPendingPlanCacheInsert(() -> cache.writeAfterSuccess(key, json,
-                templateTextPlan, cacheReader, snapshot, cacheGeneration));
+                templateTextPlan, cacheReader, snapshot, cacheGeneration, candidate.literals));
           };
           // On a cache miss, plan the parameterized SQL to produce a reusable template.
           planningSql = candidate.sql;
@@ -372,8 +372,8 @@ public class DrillSqlWorker {
       }
     }
 
-    // Plan exactly once, outside cache fallback. Validation can mutate the SQL tree,
-    // so retrying a failed planning attempt could reuse partially rewritten nodes.
+    // This planning path handles both cache bypass and cache misses.
+    // Use the original SQL tree for bypassed queries, or the parameterized tree for misses.
     PhysicalPlan planned = handler.getPlan(planningSql);
     if (prepareCacheInsert != null) {
       prepareCacheInsert.accept(planned);

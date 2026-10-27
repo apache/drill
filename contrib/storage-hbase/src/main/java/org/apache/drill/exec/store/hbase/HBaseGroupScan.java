@@ -48,6 +48,7 @@ import org.apache.drill.exec.physical.base.GroupScan;
 import org.apache.drill.exec.physical.base.PhysicalOperator;
 import org.apache.drill.exec.physical.base.ScanStats;
 import org.apache.drill.exec.physical.base.ScanStats.GroupScanProperty;
+import org.apache.drill.exec.planner.PhysicalPlanReader;
 import org.apache.drill.exec.proto.CoordinationProtos.DrillbitEndpoint;
 import org.apache.drill.exec.store.StoragePluginRegistry;
 import org.apache.drill.exec.store.hbase.HBaseSubScan.HBaseSubScanSpec;
@@ -119,11 +120,14 @@ public class HBaseGroupScan extends AbstractGroupScan implements DrillHBaseConst
                         @JsonProperty("baseScanSpec") HBaseScanSpec baseScanSpec,
                         @JsonProperty("pushedFilter") String pushedFilter,
                         @JsonProperty("pushedFilterFullyConverted") boolean pushedFilterFullyConverted,
+                        @JacksonInject(PhysicalPlanReader.PLAN_CACHE_REBIND) boolean planCacheRebind,
                         @JacksonInject StoragePluginRegistry pluginRegistry) throws IOException, ExecutionSetupException {
     this(userName, pluginRegistry.resolve(storagePluginConfig, HBaseStoragePlugin.class),
         hbaseScanSpec, columns, maxRecords, baseScanSpec,
-        pushedFilter == null ? null : LogicalExpressionParser.parse(pushedFilter),
-        pushedFilterFullyConverted, true);
+        // Ordinary physical-plan JSON already contains a scan specification for
+        // its original values. Only a cache bind must rebuild from the predicate.
+        !planCacheRebind || pushedFilter == null ? null : LogicalExpressionParser.parse(pushedFilter),
+        pushedFilterFullyConverted, planCacheRebind);
   }
 
   public HBaseGroupScan(String userName, HBaseStoragePlugin storagePlugin, HBaseScanSpec scanSpec,

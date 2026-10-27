@@ -43,7 +43,6 @@ final class PlanCacheParameterizer extends SqlShuttle {
   private final List<SqlLiteral> literals = new ArrayList<>();
   private final List<String> types = new ArrayList<>();
   private final RelDataTypeFactory typeFactory;
-  private boolean preserveProjection;
 
   private PlanCacheParameterizer(RelDataTypeFactory typeFactory) {
     this.typeFactory = Objects.requireNonNull(typeFactory, "typeFactory");
@@ -102,36 +101,24 @@ final class PlanCacheParameterizer extends SqlShuttle {
         || call.getKind() == SqlKind.OVER) {
       if (call instanceof SqlOrderBy) {
         SqlOrderBy orderBy = (SqlOrderBy) call;
-        boolean previous = preserveProjection;
-        preserveProjection = true;
-        SqlNode query;
-        try {
-          query = orderBy.query.accept(this);
-        } finally {
-          preserveProjection = previous;
-        }
-        return new SqlOrderBy(call.getParserPosition(), query, orderBy.orderList,
+        return new SqlOrderBy(call.getParserPosition(), orderBy.query.accept(this), orderBy.orderList,
             orderBy.offset, orderBy.fetch);
       }
       return call;
     }
     if (call instanceof SqlSelect) {
       SqlSelect select = (SqlSelect) call;
-      // Preserve matching expressions across SELECT, GROUP BY, HAVING and
-      // QUALIFY. Parameterizing only some occurrences breaks validation or rewrites.
-      boolean structuralProjection = preserveProjection
-          || (select.getGroup() != null && !select.getGroup().isEmpty())
-          || (select.getOrderList() != null && !select.getOrderList().isEmpty())
-          || (select.getWindowList() != null && !select.getWindowList().isEmpty());
+      // Preserve projection and post-aggregation/window expressions unconditionally.
+      // Matching expressions can occur in several clauses, including inline OVER
+      // and QUALIFY without an outer ORDER BY. Only visit FROM and WHERE here.
       return new SqlSelect(select.getParserPosition(),
           (SqlNodeList) select.getOperandList().get(0),
-          structuralProjection ? select.getSelectList()
-              : (SqlNodeList) visitNullable(select.getSelectList()),
+          select.getSelectList(),
           visitNullable(select.getFrom()), visitNullable(select.getWhere()),
           select.getGroup(),
-          structuralProjection ? select.getHaving() : visitNullable(select.getHaving()),
+          select.getHaving(),
           select.getWindowList(),
-          structuralProjection ? select.getQualify() : visitNullable(select.getQualify()),
+          select.getQualify(),
           select.getOrderList(), select.getOffset(), select.getFetch(),
           select.getHints());
     }

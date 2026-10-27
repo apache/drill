@@ -94,10 +94,8 @@ public class DrillExprToIcebergTranslator extends AbstractExprVisitor<Expression
         return null;
       }
       case FunctionNames.NOT: {
-        Expression expression = call.arg(0).accept(this, null);
-        if (expression != null) {
-          return Expressions.not(expression);
-        }
+        // Complementing a two-valued Iceberg predicate does not preserve SQL
+        // UNKNOWN for null operands. Leave unsimplified NOT predicates in Drill.
         return null;
       }
       case FunctionNames.IS_NULL: {
@@ -121,7 +119,7 @@ public class DrillExprToIcebergTranslator extends AbstractExprVisitor<Expression
         Expression expression = call.arg(1).accept(this, null);
         if (nameRef instanceof SchemaPath && expression instanceof ConstantExpression) {
           String name = IcebergGroupScan.getPath((SchemaPath) nameRef);
-          return Expressions.lessThan(name, ((ConstantExpression<?>) expression).getValue());
+          return rejectNull(name, Expressions.lessThan(name, ((ConstantExpression<?>) expression).getValue()));
         }
         return null;
       }
@@ -130,7 +128,7 @@ public class DrillExprToIcebergTranslator extends AbstractExprVisitor<Expression
         Expression expression = call.arg(1).accept(this, null);
         if (nameRef instanceof SchemaPath && expression instanceof ConstantExpression) {
           String name = IcebergGroupScan.getPath((SchemaPath) nameRef);
-          return Expressions.lessThanOrEqual(name, ((ConstantExpression<?>) expression).getValue());
+          return rejectNull(name, Expressions.lessThanOrEqual(name, ((ConstantExpression<?>) expression).getValue()));
         }
         return null;
       }
@@ -166,12 +164,18 @@ public class DrillExprToIcebergTranslator extends AbstractExprVisitor<Expression
         Expression expression = call.args().get(1).accept(this, null);
         if (nameRef instanceof SchemaPath && expression instanceof ConstantExpression) {
           String name = IcebergGroupScan.getPath((SchemaPath) nameRef);
-          return Expressions.notEqual(name, ((ConstantExpression<?>) expression).getValue());
+          return rejectNull(name, Expressions.notEqual(name, ((ConstantExpression<?>) expression).getValue()));
         }
         return null;
       }
     }
     return null;
+  }
+
+  private static Expression rejectNull(String name, Expression predicate) {
+    // Iceberg 0.12.1 orders null before non-null values when evaluating residuals.
+    // SQL comparisons must reject null, including <, <= and !=.
+    return Expressions.and(Expressions.notNull(name), predicate);
   }
 
   @Override

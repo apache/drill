@@ -26,10 +26,13 @@ import java.util.Map;
 import java.util.UUID;
 
 import org.apache.drill.common.config.DrillProperties;
+import org.apache.drill.common.exceptions.UserRemoteException;
 import org.apache.drill.common.logical.FormatPluginConfig;
+import org.apache.drill.exec.ExecConstants;
 import org.apache.drill.exec.metrics.DrillMetrics;
 import org.apache.drill.exec.planner.physical.PlannerSettings;
 import org.apache.drill.exec.planner.sql.PlanCache;
+import org.apache.drill.exec.record.metadata.schema.SchemaProvider;
 import org.apache.drill.exec.store.dfs.FileSystemConfig;
 import org.apache.drill.exec.store.iceberg.format.IcebergFormatPluginConfig;
 import org.apache.drill.test.ClientFixture;
@@ -53,6 +56,8 @@ import org.junit.BeforeClass;
 import org.junit.Test;
 
 import static org.junit.Assert.assertEquals;
+import static org.junit.Assert.assertNotEquals;
+import static org.junit.Assert.assertThrows;
 
 public class IcebergPlanCacheTest extends ClusterTest {
   private static FileSystemConfig config;
@@ -74,6 +79,7 @@ public class IcebergPlanCacheTest extends ClusterTest {
   public void setupTable() throws Exception {
     cluster.drillbit().getContext().getStorage().put("dfs", config);
     client.alterSession(PlannerSettings.ENABLE_PLAN_CACHE_OPTION, false);
+    client.alterSession(ExecConstants.STORE_TABLE_USE_SCHEMA_FILE, false);
     cache().awaitWrites();
     cache().clear();
     name = "cache_" + UUID.randomUUID().toString().replace("-", "");
@@ -192,13 +198,138 @@ public class IcebergPlanCacheTest extends ClusterTest {
         .get("drill.plan_cache.entries").getValue());
   }
 
-  private void warmPoint() throws Exception {
-    rows(client, pointSql(1), 1L, "one");
-    client.alterSession(PlannerSettings.ENABLE_PLAN_CACHE_OPTION, true);
+  @Test
+  public void testSchemaFileIsIgnoredWhenOptionDisabled() throws Exception {
+    writeProvidedSchema("id VARCHAR");
+    warmPoint();
+    long hits = cache().getHitCount();
+    // Even a malformed file is irrelevant when provided schemas are disabled.
+    Files.write(schemaPath(), Arrays.asList("not valid schema JSON"), StandardCharsets.UTF_8);
+    rows(client, pointSql(3), 3L, "three");
+    assertEquals(hits + 1, cache().getHitCount());
+  }
+
+  @Test
+  public void testEnabledSchemaFileOptionWithoutFileUsesNativeSchema() throws Exception {
+    client.alterSession(ExecConstants.STORE_TABLE_USE_SCHEMA_FILE, true);
+    warmPoint();
+  }
+
+  @Test
+  public void testProvidedTypeChangeInvalidatesWithoutNativeSchemaChange() throws Exception {
+    writeProvidedSchema("id VARCHAR");
+    client.alterSession(ExecConstants.STORE_TABLE_USE_SCHEMA_FILE, true);
+    warmPoint("1", "2");
+    int nativeSchemaId = table.schema().schemaId();
+    long hits = cache().getHitCount();
+    long invalidations = invalidations();
+    writeProvidedSchema("id BIGINT");
+    assertEquals(nativeSchemaId, table.schema().schemaId());
     rows(client, pointSql(1), 1L, "one");
     cache().awaitWrites();
-    long hits = cache().getHitCount();
+    assertEquals(hits, cache().getHitCount());
+    assertEquals(invalidations + 1, invalidations());
     rows(client, pointSql(2), 2L, "two");
+    assertEquals(hits + 1, cache().getHitCount());
+  }
+
+  @Test
+  public void testProvidedDefaultChangeInvalidatesAndReadsNewDefault() throws Exception {
+    append(4, null);
+    writeProvidedSchema("label VARCHAR NOT NULL DEFAULT 'old'");
+    client.alterSession(ExecConstants.STORE_TABLE_USE_SCHEMA_FILE, true);
+    rows(client, pointSql(4), 4L, "old");
+    client.alterSession(PlannerSettings.ENABLE_PLAN_CACHE_OPTION, true);
+    rows(client, pointSql(4), 4L, "old");
+    cache().awaitWrites();
+    long hits = cache().getHitCount();
+    rows(client, pointSql(4), 4L, "old");
+    assertEquals(hits + 1, cache().getHitCount());
+    long invalidations = invalidations();
+    writeProvidedSchema("label VARCHAR NOT NULL DEFAULT 'new'");
+    rows(client, pointSql(4), 4L, "new");
+    cache().awaitWrites();
+    assertEquals(hits + 1, cache().getHitCount());
+    assertEquals(invalidations + 1, invalidations());
+    rows(client, pointSql(4), 4L, "new");
+    assertEquals(hits + 2, cache().getHitCount());
+  }
+
+  @Test
+  public void testProvidedSchemaAdditionAndRemovalInvalidate() throws Exception {
+    client.alterSession(ExecConstants.STORE_TABLE_USE_SCHEMA_FILE, true);
+    warmPoint();
+    long hits = cache().getHitCount();
+    long invalidations = invalidations();
+    writeProvidedSchema("id VARCHAR");
+    rows(client, pointSql(1), "1", "one");
+    cache().awaitWrites();
+    assertEquals(hits, cache().getHitCount());
+    assertEquals(invalidations + 1, invalidations());
+    rows(client, pointSql(2), "2", "two");
+    assertEquals(hits + 1, cache().getHitCount());
+    Files.delete(schemaPath());
+    rows(client, pointSql(1), 1L, "one");
+    cache().awaitWrites();
+    assertEquals(hits + 1, cache().getHitCount());
+    assertEquals(invalidations + 2, invalidations());
+    rows(client, pointSql(2), 2L, "two");
+    assertEquals(hits + 2, cache().getHitCount());
+  }
+
+  @Test
+  public void testNativeSchemaChangeStillInvalidatesWithProvidedSchema() throws Exception {
+    writeProvidedSchema("id VARCHAR");
+    client.alterSession(ExecConstants.STORE_TABLE_USE_SCHEMA_FILE, true);
+    warmPoint("1", "2");
+    int originalSchemaId = table.schema().schemaId();
+    table.updateSchema().addColumn("extra", Types.StringType.get()).commit();
+    assertNotEquals(originalSchemaId, table.schema().schemaId());
+    append(4, "four");
+    long hits = cache().getHitCount();
+    long invalidations = invalidations();
+    rows(client, pointSql(4), "4", "four");
+    cache().awaitWrites();
+    assertEquals(hits, cache().getHitCount());
+    assertEquals(invalidations + 1, invalidations());
+    rows(client, pointSql(2), "2", "two");
+    assertEquals(hits + 1, cache().getHitCount());
+  }
+
+  @Test
+  public void testInvalidProvidedSchemaCannotUseCachedPlan() throws Exception {
+    writeProvidedSchema("id VARCHAR");
+    client.alterSession(ExecConstants.STORE_TABLE_USE_SCHEMA_FILE, true);
+    warmPoint("1", "2");
+    byte[] original = Files.readAllBytes(schemaPath());
+    long hits = cache().getHitCount();
+    Files.write(schemaPath(), Arrays.asList("not valid schema JSON"), StandardCharsets.UTF_8);
+    assertThrows(UserRemoteException.class, () -> client.queryBuilder().sql(pointSql(3)).run());
+    assertEquals(hits, cache().getHitCount());
+    Files.write(schemaPath(), original);
+    rows(client, pointSql(3), "3", "three");
+    assertEquals(hits + 1, cache().getHitCount());
+  }
+
+  private void writeProvidedSchema(String definition) throws Exception {
+    client.queryBuilder().sql("CREATE OR REPLACE SCHEMA (" + definition + ") FOR TABLE dfs.tmp.`" + name + "`").run();
+  }
+
+  private java.nio.file.Path schemaPath() {
+    return dirTestWatcher.getDfsTestTmpDir().toPath().resolve(name).resolve(SchemaProvider.DEFAULT_SCHEMA_NAME);
+  }
+
+  private void warmPoint() throws Exception {
+    warmPoint(1L, 2L);
+  }
+
+  private void warmPoint(Object firstId, Object secondId) throws Exception {
+    rows(client, pointSql(1), firstId, "one");
+    client.alterSession(PlannerSettings.ENABLE_PLAN_CACHE_OPTION, true);
+    rows(client, pointSql(1), firstId, "one");
+    cache().awaitWrites();
+    long hits = cache().getHitCount();
+    rows(client, pointSql(2), secondId, "two");
     assertEquals(hits + 1, cache().getHitCount());
   }
 

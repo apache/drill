@@ -73,11 +73,14 @@ import org.apache.drill.common.types.TypeProtos.MajorType;
 import org.apache.drill.common.types.TypeProtos.MinorType;
 import org.apache.drill.exec.ExecConstants;
 import org.apache.drill.exec.metrics.DrillMetrics;
+import org.apache.drill.exec.metastore.MetadataProviderManager;
 import org.apache.drill.exec.ops.QueryContext;
 import org.apache.drill.exec.physical.PhysicalPlan;
 import org.apache.drill.exec.planner.PhysicalPlanReader;
 import org.apache.drill.exec.planner.logical.DrillTable;
 import org.apache.drill.exec.planner.logical.DrillTableSelection;
+import org.apache.drill.exec.record.metadata.TupleMetadata;
+import org.apache.drill.exec.record.metadata.schema.SchemaProvider;
 import org.apache.drill.exec.rpc.NamedThreadFactory;
 import org.apache.drill.exec.server.options.OptionValue;
 import org.apache.drill.exec.store.StoragePlugin;
@@ -212,13 +215,14 @@ public final class PlanCache implements AutoCloseable {
   }
 
   public void writeAfterSuccess(String key, String json, String textPlan,
-      PhysicalPlanReader reader, ContextSnapshot context, long expectedGeneration) {
+      PhysicalPlanReader reader, ContextSnapshot context, long expectedGeneration, List<SqlLiteral> literals) {
+    List<SqlLiteral> originalLiterals = Collections.unmodifiableList(new ArrayList<>(literals));
     try {
       writer.execute(() -> {
         try {
-          put(key, json, textPlan, reader, context, expectedGeneration);
+          put(key, json, textPlan, reader, context, expectedGeneration, originalLiterals);
         } catch (RuntimeException | IOException e) {
-          logger.debug("Plan cache entry could not be published", e);
+          logger.debug("Plan cache trial bind failed; skipping publication", e);
         }
       });
     } catch (RejectedExecutionException e) {
@@ -244,28 +248,38 @@ public final class PlanCache implements AutoCloseable {
     logger.info("Local plan cache cleared; generation={}", generation);
   }
 
+  /** Publishes a template that has no parameter slots. */
   public boolean put(String key, String json, String textPlan,
       PhysicalPlanReader reader, ContextSnapshot context) throws IOException {
-    return put(key, json, textPlan, reader, context, generation);
+    return put(key, json, textPlan, reader, context, Collections.emptyList());
+  }
+
+  public boolean put(String key, String json, String textPlan,
+      PhysicalPlanReader reader, ContextSnapshot context, List<SqlLiteral> literals) throws IOException {
+    return put(key, json, textPlan, reader, context, generation, literals);
   }
 
   private boolean put(String key, String json, String textPlan,
-      PhysicalPlanReader reader, ContextSnapshot context, long expectedGeneration) throws IOException {
+      PhysicalPlanReader reader, ContextSnapshot context, long expectedGeneration, List<SqlLiteral> literals)
+      throws IOException {
     // The engine checks generic context and expression compatibility. Each
     // opted-in plugin is responsible for rebuilding its scans' value-dependent state.
     if (context == null || expectedGeneration != generation) {
       return false;
     }
-    // Confirm that standard PhysicalPlan JSON can be read back before publishing.
-    reader.readPhysicalPlan(json);
-    // Readback may perform plugin I/O. Keep it outside the clear/publication lock,
-    // then check again so a concurrent clear cannot be undone by that readback.
+    Entry candidate = new Entry(json, textPlan, context);
+    // Exercise exactly the hit path with the first execution's values, including
+    // expression binding and plugin scan reconstruction. Keep the immutable JSON
+    // template; the trial's mutable plan is discarded and never executed.
+    candidate.bind(literals, reader);
+    // Trial binding may perform plugin I/O. Keep it outside the clear/publication lock,
+    // then check again so a concurrent clear cannot be undone by that trial bind.
     synchronized (this) {
       if (expectedGeneration != generation) {
         logger.debug("Skipping plan cache publication after a cache clear");
         return false;
       }
-      entries.put(key, new Entry(json, textPlan, context));
+      entries.put(key, candidate);
     }
     logger.debug("Plan cache entry published; entries={}", entries.size());
     return true;
@@ -311,7 +325,7 @@ public final class PlanCache implements AutoCloseable {
         throws IOException {
       JsonNode tree = JSON.readTree(json);
       walk(tree, literals);
-      return reader.readPhysicalPlan(JSON.writeValueAsString(tree));
+      return reader.readPhysicalPlanForCache(JSON.writeValueAsString(tree));
     }
   }
 
@@ -361,13 +375,15 @@ public final class PlanCache implements AutoCloseable {
       private final String storageName;
       private final StoragePlugin plugin;
       private final DrillTableSelection selection;
+      private final DrillTable table;
 
       private ResolvedTable(List<String> tableNames, String storageName,
-          StoragePlugin plugin, DrillTableSelection selection) {
+          StoragePlugin plugin, DrillTableSelection selection, DrillTable table) {
         this.tableNames = tableNames;
         this.storageName = storageName;
         this.plugin = plugin;
         this.selection = selection;
+        this.table = table;
       }
     }
 
@@ -395,8 +411,9 @@ public final class PlanCache implements AutoCloseable {
           }
           TableIdentifier identifier = new TableIdentifier(dependency.storageName,
               source.getIdentifier());
-          String previous = versions.putIfAbsent(identifier, source.getVersion());
-          if (previous != null && !previous.equals(source.getVersion())) {
+          String version = compatibilityVersion(source.getVersion(), dependency.table);
+          String previous = versions.putIfAbsent(identifier, version);
+          if (previous != null && !previous.equals(version)) {
             return null;
           }
           String fingerprint = configFingerprint(plugins, dependency.plugin.getConfig());
@@ -524,7 +541,35 @@ public final class PlanCache implements AutoCloseable {
       }
       return new ResolvedTable(
           Collections.unmodifiableList(new ArrayList<>(names)),
-          drillTable.getStorageEngineName(), storagePlugin, (DrillTableSelection) selection);
+          drillTable.getStorageEngineName(), storagePlugin, (DrillTableSelection) selection, drillTable);
+    }
+
+    /** Native and provided schemas are independent inputs to one compatibility version. */
+    private static String compatibilityVersion(String nativeVersion, DrillTable table) throws IOException {
+      MetadataProviderManager manager = table.getMetadataProviderManager();
+      SchemaProvider provider = manager == null ? null : manager.getSchemaProvider();
+      TupleMetadata provided = provider != null && provider.exists() ? provider.read().getSchema() : null;
+      ArrayNode components = JSON.createArrayNode().add(nativeVersion);
+      components.add(provided == null ? JSON.getNodeFactory().nullNode()
+          : canonicalJson(JSON.readTree(provided.jsonString())));
+      return Hashing.sha256().hashString(components.toString(), StandardCharsets.UTF_8).toString();
+    }
+
+    /** Sort object properties recursively while retaining schema column/array order. */
+    private static JsonNode canonicalJson(JsonNode node) {
+      if (node.isObject()) {
+        Map<String, JsonNode> fields = new TreeMap<>();
+        node.fields().forEachRemaining(field -> fields.put(field.getKey(), field.getValue()));
+        ObjectNode sorted = JSON.createObjectNode();
+        fields.forEach((name, value) -> sorted.set(name, canonicalJson(value)));
+        return sorted;
+      }
+      if (node.isArray()) {
+        ArrayNode sorted = JSON.createArrayNode();
+        node.forEach(value -> sorted.add(canonicalJson(value)));
+        return sorted;
+      }
+      return node;
     }
 
     private boolean matches(ContextSnapshot current) {

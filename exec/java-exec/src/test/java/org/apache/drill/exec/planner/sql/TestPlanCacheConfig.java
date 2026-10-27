@@ -18,6 +18,7 @@
 package org.apache.drill.exec.planner.sql;
 
 import java.time.Duration;
+import java.util.Collections;
 import java.util.concurrent.CountDownLatch;
 import java.util.concurrent.TimeUnit;
 
@@ -254,7 +255,7 @@ public class TestPlanCacheConfig extends BaseTest {
   public void testClearDiscardsActiveAndQueuedPublications() throws Exception {
     CountDownLatch reading = new CountDownLatch(1);
     CountDownLatch resume = new CountDownLatch(1);
-    when(reader.readPhysicalPlan("{}")).thenAnswer(invocation -> {
+    when(reader.readPhysicalPlanForCache("{}")).thenAnswer(invocation -> {
       reading.countDown();
       assertTrue(resume.await(10, TimeUnit.SECONDS));
       return plan;
@@ -262,9 +263,9 @@ public class TestPlanCacheConfig extends BaseTest {
     try (PlanCache cache = new PlanCache(1024, Duration.ZERO, Duration.ZERO, ticker)) {
       long generation = cache.getGeneration();
       try {
-        cache.writeAfterSuccess("active", "{}", null, reader, context, generation);
+        cache.writeAfterSuccess("active", "{}", null, reader, context, generation, Collections.emptyList());
         assertTrue(reading.await(10, TimeUnit.SECONDS));
-        cache.writeAfterSuccess("queued", "{}", null, reader, context, generation);
+        cache.writeAfterSuccess("queued", "{}", null, reader, context, generation, Collections.emptyList());
         cache.clear();
       } finally {
         resume.countDown();
@@ -277,7 +278,7 @@ public class TestPlanCacheConfig extends BaseTest {
       assertEquals(0L, metric("evictions"));
 
       // A newly planned query can publish with the new generation.
-      cache.writeAfterSuccess("new", "{}", null, reader, context, cache.getGeneration());
+      cache.writeAfterSuccess("new", "{}", null, reader, context, cache.getGeneration(), Collections.emptyList());
       cache.awaitWrites();
       assertNotNull(cache.get("new"));
     }

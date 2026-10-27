@@ -51,6 +51,8 @@ import static org.junit.Assert.assertEquals;
 import static org.junit.Assert.assertFalse;
 import static org.junit.Assert.assertNotEquals;
 import static org.junit.Assert.assertNotNull;
+import static org.junit.Assert.assertNull;
+import static org.junit.Assert.assertThrows;
 import static org.junit.Assert.assertTrue;
 
 @Category(SqlTest.class)
@@ -132,6 +134,65 @@ public class TestPlanCachePlanning extends ClusterTest {
     client.testBuilder().sqlQuery(sql, 1).unOrdered()
         .baselineColumns("k", "rn").baselineValues(2, 1L).go();
     assertEquals(hits + 1, cache().getHitCount());
+  }
+
+  @Test
+  public void testQualifyMatchesProjectionWithoutOuterOrderBy() throws Exception {
+    String sql = "SELECT x + 1 AS k, ROW_NUMBER() OVER (ORDER BY x + 1) AS rn "
+        + "FROM (VALUES (1, 1), (1, 2), (2, 3)) AS t(x, v) "
+        + "WHERE v > %d QUALIFY x + 1 = 2 "
+        + "AND ROW_NUMBER() OVER (ORDER BY x + 1) = 1";
+    client.testBuilder().sqlQuery(sql, 0).unOrdered()
+        .baselineColumns("k", "rn").baselineValues(2, 1L).go();
+    client.alterSession(PlannerSettings.ENABLE_PLAN_CACHE_OPTION, true);
+    long hits = cache().getHitCount();
+    client.testBuilder().sqlQuery(sql, 0).unOrdered()
+        .baselineColumns("k", "rn").baselineValues(2, 1L).go();
+    cache().awaitWrites();
+    assertEquals(hits, cache().getHitCount());
+    client.testBuilder().sqlQuery(sql, 1).unOrdered()
+        .baselineColumns("k", "rn").baselineValues(2, 1L).go();
+    assertEquals(hits + 1, cache().getHitCount());
+  }
+
+  @Test
+  public void testInlineWindowWithoutQualifyOrOuterOrderBy() throws Exception {
+    String sql = "SELECT x + 1 AS k, ROW_NUMBER() OVER (ORDER BY x + 1) AS rn "
+        + "FROM (VALUES (1, 1), (1, 2), (2, 3)) AS t(x, v) WHERE v > %d";
+    client.testBuilder().sqlQuery(sql, 0).unOrdered().baselineColumns("k", "rn")
+        .baselineValues(2, 1L).baselineValues(2, 2L).baselineValues(3, 3L).go();
+    client.alterSession(PlannerSettings.ENABLE_PLAN_CACHE_OPTION, true);
+    long hits = cache().getHitCount();
+    client.testBuilder().sqlQuery(sql, 0).unOrdered().baselineColumns("k", "rn")
+        .baselineValues(2, 1L).baselineValues(2, 2L).baselineValues(3, 3L).go();
+    cache().awaitWrites();
+    assertEquals(hits, cache().getHitCount());
+    client.testBuilder().sqlQuery(sql, 1).unOrdered().baselineColumns("k", "rn")
+        .baselineValues(2, 1L).baselineValues(3, 2L).go();
+    assertEquals(hits + 1, cache().getHitCount());
+  }
+
+  @Test
+  public void testProjectionLiteralsAlwaysRemainInTemplate() throws Exception {
+    String sql = "SELECT x + %d AS projection_value FROM (VALUES (1), (2), (3)) AS t(x) WHERE x > %d";
+    client.testBuilder().sqlQuery(sql, 1, 0).unOrdered().baselineColumns("projection_value")
+        .baselineValues(2).baselineValues(3).baselineValues(4).go();
+    client.alterSession(PlannerSettings.ENABLE_PLAN_CACHE_OPTION, true);
+    long hits = cache().getHitCount();
+    client.testBuilder().sqlQuery(sql, 1, 0).unOrdered().baselineColumns("projection_value")
+        .baselineValues(2).baselineValues(3).baselineValues(4).go();
+    cache().awaitWrites();
+    client.testBuilder().sqlQuery(sql, 1, 1).unOrdered().baselineColumns("projection_value")
+        .baselineValues(3).baselineValues(4).go();
+    assertEquals(hits + 1, cache().getHitCount());
+    // A changed SELECT literal creates a new template even without grouping or ordering.
+    client.testBuilder().sqlQuery(sql, 2, 1).unOrdered().baselineColumns("projection_value")
+        .baselineValues(4).baselineValues(5).go();
+    cache().awaitWrites();
+    assertEquals(hits + 1, cache().getHitCount());
+    client.testBuilder().sqlQuery(sql, 2, 2).unOrdered().baselineColumns("projection_value")
+        .baselineValues(5).go();
+    assertEquals(hits + 2, cache().getHitCount());
   }
 
   private PlanCache cache() {
@@ -264,7 +325,7 @@ public class TestPlanCachePlanning extends ClusterTest {
   }
 
   @Test
-  public void testBindingFailureInvalidatesAndReplansBeforeExecution() throws Exception {
+  public void testTrialBindRejectsInvalidTemplateBeforePublication() throws Exception {
     UserSession session = UserSession.Builder.newBuilder()
         .withCredentials(UserCredentials.newBuilder().setUserName("binding-failure-test").build())
         .withOptionManager(cluster.drillbit().getContext().getOptionManager())
@@ -283,9 +344,13 @@ public class TestPlanCachePlanning extends ClusterTest {
           + snapshot.keyFingerprint() + '\n' + candidate.template;
       String json = reader.writeJson(planned);
       assertTrue(json.contains("bound_dynamic_param(0,"));
-      // Readable plan JSON with a nonexistent slot must fail binding before execution.
-      assertTrue(cache().put(key, json.replace("bound_dynamic_param(0,", "bound_dynamic_param(999,"),
-          null, reader, snapshot));
+      // JSON read-back succeeds, but trial binding must reject a nonexistent slot.
+      String invalid = json.replace("bound_dynamic_param(0,", "bound_dynamic_param(999,");
+      assertNotNull(reader.readPhysicalPlan(invalid));
+      assertThrows(IllegalArgumentException.class,
+          () -> cache().put(key, invalid, null, reader, snapshot, candidate.literals));
+      assertNull(cache().get(key));
+      assertEquals(Arrays.asList(1, 2), executeValues(planned));
     }
 
     long hits = cache().getHitCount();
@@ -293,7 +358,7 @@ public class TestPlanCachePlanning extends ClusterTest {
     try (QueryContext context = new QueryContext(session, cluster.drillbit().getContext(), QueryId.getDefaultInstance())) {
       PhysicalPlan replanned = DrillSqlWorker.getPlan(context, String.format(sql, 0), new Pointer<>());
       assertFalse(context.isPlanCacheHit());
-      assertEquals(invalidations + 1, metric("invalidations"));
+      assertEquals(invalidations, metric("invalidations"));
       assertEquals(Arrays.asList(1, 2), executeValues(replanned));
       Runnable publish = context.takePendingPlanCacheInsert();
       assertNotNull(publish);

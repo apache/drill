@@ -180,7 +180,7 @@ public class IcebergFormatPlugin implements FormatPlugin {
   public AbstractGroupScan getGroupScan(String userName, FileSelection selection,
     List<SchemaPath> columns, MetadataProviderManager metadataProviderManager) throws IOException {
     SchemaProvider schemaProvider = metadataProviderManager.getSchemaProvider();
-    TupleMetadata schema = schemaProvider != null
+    TupleMetadata schema = schemaProvider != null && schemaProvider.exists()
       ? schemaProvider.read().getSchema()
       : null;
     return IcebergGroupScan.builder()
