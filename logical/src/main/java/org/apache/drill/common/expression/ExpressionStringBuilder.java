@@ -45,7 +45,45 @@ import com.google.common.collect.ImmutableList;
 
 public class ExpressionStringBuilder extends AbstractExprVisitor<Void, StringBuilder, RuntimeException>{
 
+  /** Parser syntax for a literal carrying a parameter slot; not an executable function. */
+  public static final String BOUND_DYNAMIC_PARAM = "bound_dynamic_param";
+
   static final ExpressionStringBuilder INSTANCE = new ExpressionStringBuilder();
+
+  /**
+   * Starts bound_dynamic_param(index, type, value) for a parameterized literal.
+   * The visitor writes the value and endBoundLiteral closes the wrapper.
+   * This format preserves the slot, type and current value for plan rebinding
+   * and deserialization, and is also used when displaying the expression.
+   * Ordinary literals have no slot and retain their usual representation.
+   */
+  private void startBoundLiteral(LiteralExpression expression, StringBuilder sb) {
+    if (expression.isDynamicParam()) {
+      int index = expression.getDynamicParamIndex();
+      MajorType type = expression.getMajorType();
+      sb.append(BOUND_DYNAMIC_PARAM).append('(').append(index).append(", ")
+          .append(type.getMinorType().name());
+      // Preserve length, precision and scale so rebinding restores the same type.
+      switch (type.getMinorType()) {
+      case VARCHAR:
+        sb.append('(').append(type.getPrecision()).append(')');
+        break;
+      case VARDECIMAL:
+        sb.append('(').append(type.getPrecision()).append(", ")
+            .append(type.getScale()).append(')');
+        break;
+      default:
+        break;
+      }
+      sb.append(", ");
+    }
+  }
+
+  private static void endBoundLiteral(LiteralExpression expression, StringBuilder sb) {
+    if (expression.isDynamicParam()) {
+      sb.append(')');
+    }
+  }
 
   public static String toString(LogicalExpression expr) {
     StringBuilder sb = new StringBuilder();
@@ -147,7 +185,11 @@ public class ExpressionStringBuilder extends AbstractExprVisitor<Void, StringBui
 
   @Override
   public Void visitLongConstant(LongExpression lExpr, StringBuilder sb) throws RuntimeException {
+    startBoundLiteral(lExpr, sb);
+    // Bound parameters carry BIGINT in their wrapper; ordinary literals keep
+    // the existing representation used by explain output and scan digests.
     sb.append(lExpr.getLong());
+    endBoundLiteral(lExpr, sb);
     return null;
   }
 
@@ -219,27 +261,35 @@ public class ExpressionStringBuilder extends AbstractExprVisitor<Void, StringBui
 
   @Override
   public Void visitVarDecimalConstant(VarDecimalExpression decExpr, StringBuilder sb) throws RuntimeException {
+    startBoundLiteral(decExpr, sb);
     sb.append(decExpr.getBigDecimal().toString());
+    endBoundLiteral(decExpr, sb);
     return null;
   }
 
   @Override
   public Void visitDoubleConstant(DoubleExpression dExpr, StringBuilder sb) throws RuntimeException {
+    startBoundLiteral(dExpr, sb);
     sb.append(dExpr.getDouble());
+    endBoundLiteral(dExpr, sb);
     return null;
   }
 
   @Override
   public Void visitBooleanConstant(BooleanExpression e, StringBuilder sb) throws RuntimeException {
+    startBoundLiteral(e, sb);
     sb.append(e.getBoolean());
+    endBoundLiteral(e, sb);
     return null;
   }
 
   @Override
   public Void visitQuotedStringConstant(QuotedString e, StringBuilder sb) throws RuntimeException {
+    startBoundLiteral(e, sb);
     sb.append("'");
     sb.append(escapeSingleQuote(e.value));
     sb.append("'");
+    endBoundLiteral(e, sb);
     return null;
   }
 
@@ -324,13 +374,17 @@ public class ExpressionStringBuilder extends AbstractExprVisitor<Void, StringBui
 
   @Override
   public Void visitFloatConstant(FloatExpression fExpr, StringBuilder sb) throws RuntimeException {
+    startBoundLiteral(fExpr, sb);
     sb.append(fExpr.getFloat());
+    endBoundLiteral(fExpr, sb);
     return null;
   }
 
   @Override
   public Void visitIntConstant(IntExpression intExpr, StringBuilder sb) throws RuntimeException {
+    startBoundLiteral(intExpr, sb);
     sb.append(intExpr.getInt());
+    endBoundLiteral(intExpr, sb);
     return null;
   }
 

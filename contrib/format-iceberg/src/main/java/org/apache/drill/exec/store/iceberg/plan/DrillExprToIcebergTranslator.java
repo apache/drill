@@ -18,6 +18,8 @@
 package org.apache.drill.exec.store.iceberg.plan;
 
 import org.apache.drill.common.FunctionNames;
+import org.apache.drill.common.expression.BooleanOperator;
+import org.apache.drill.common.expression.CastExpression;
 import org.apache.drill.common.expression.FunctionCall;
 import org.apache.drill.common.expression.LogicalExpression;
 import org.apache.drill.common.expression.SchemaPath;
@@ -31,6 +33,46 @@ import org.apache.iceberg.expressions.Expressions;
 public class DrillExprToIcebergTranslator extends AbstractExprVisitor<Expression, Void, RuntimeException> {
 
   public static final ExprVisitor<Expression, Void, RuntimeException> INSTANCE = new DrillExprToIcebergTranslator();
+
+  @Override
+  public Expression visitBooleanOperator(BooleanOperator op, Void value) {
+    Expression result = null;
+    for (LogicalExpression argument : op.args()) {
+      Expression next = argument.accept(this, value);
+      if (next == null) {
+        return null;
+      }
+      result = result == null ? next : FunctionNames.AND.equals(op.getName())
+          ? Expressions.and(result, next) : Expressions.or(result, next);
+    }
+    return result;
+  }
+
+  @Override
+  public Expression visitCastExpression(CastExpression cast, Void value) {
+    Expression input = cast.getInput().accept(this, value);
+    if (!(input instanceof ConstantExpression)) {
+      return null;
+    }
+    Object literal = ((ConstantExpression<?>) input).getValue();
+    if (!(literal instanceof Integer) && !(literal instanceof Long)) {
+      return null;
+    }
+    long millis = ((Number) literal).longValue();
+    // Drill serializes temporal constants as casts of epoch milliseconds.
+    // Iceberg's DATE uses days; TIME and TIMESTAMP use microseconds.
+    switch (cast.getMajorType().getMinorType()) {
+      case BIGINT:
+        return new ConstantExpression<>(millis);
+      case DATE:
+        return new ConstantExpression<>(Math.toIntExact(Math.floorDiv(millis, 86_400_000L)));
+      case TIME:
+      case TIMESTAMP:
+        return new ConstantExpression<>(Math.multiplyExact(millis, 1_000L));
+      default:
+        return null;
+    }
+  }
 
   @Override
   public Expression visitFunctionCall(FunctionCall call, Void value) throws RuntimeException {
@@ -52,10 +94,8 @@ public class DrillExprToIcebergTranslator extends AbstractExprVisitor<Expression
         return null;
       }
       case FunctionNames.NOT: {
-        Expression expression = call.arg(0).accept(this, null);
-        if (expression != null) {
-          return Expressions.not(expression);
-        }
+        // Complementing a two-valued Iceberg predicate does not preserve SQL
+        // UNKNOWN for null operands. Leave unsimplified NOT predicates in Drill.
         return null;
       }
       case FunctionNames.IS_NULL: {
@@ -79,7 +119,7 @@ public class DrillExprToIcebergTranslator extends AbstractExprVisitor<Expression
         Expression expression = call.arg(1).accept(this, null);
         if (nameRef instanceof SchemaPath && expression instanceof ConstantExpression) {
           String name = IcebergGroupScan.getPath((SchemaPath) nameRef);
-          return Expressions.lessThan(name, ((ConstantExpression<?>) expression).getValue());
+          return rejectNull(name, Expressions.lessThan(name, ((ConstantExpression<?>) expression).getValue()));
         }
         return null;
       }
@@ -88,7 +128,7 @@ public class DrillExprToIcebergTranslator extends AbstractExprVisitor<Expression
         Expression expression = call.arg(1).accept(this, null);
         if (nameRef instanceof SchemaPath && expression instanceof ConstantExpression) {
           String name = IcebergGroupScan.getPath((SchemaPath) nameRef);
-          return Expressions.lessThanOrEqual(name, ((ConstantExpression<?>) expression).getValue());
+          return rejectNull(name, Expressions.lessThanOrEqual(name, ((ConstantExpression<?>) expression).getValue()));
         }
         return null;
       }
@@ -103,7 +143,7 @@ public class DrillExprToIcebergTranslator extends AbstractExprVisitor<Expression
       }
       case FunctionNames.GE: {
         LogicalExpression nameRef = call.args().get(0);
-        Expression expression = call.args().get(0).accept(this, null);
+        Expression expression = call.args().get(1).accept(this, null);
         if (nameRef instanceof SchemaPath && expression instanceof ConstantExpression) {
           String name = IcebergGroupScan.getPath((SchemaPath) nameRef);
           return Expressions.greaterThanOrEqual(name, ((ConstantExpression<?>) expression).getValue());
@@ -124,12 +164,18 @@ public class DrillExprToIcebergTranslator extends AbstractExprVisitor<Expression
         Expression expression = call.args().get(1).accept(this, null);
         if (nameRef instanceof SchemaPath && expression instanceof ConstantExpression) {
           String name = IcebergGroupScan.getPath((SchemaPath) nameRef);
-          return Expressions.notEqual(name, ((ConstantExpression<?>) expression).getValue());
+          return rejectNull(name, Expressions.notEqual(name, ((ConstantExpression<?>) expression).getValue()));
         }
         return null;
       }
     }
     return null;
+  }
+
+  private static Expression rejectNull(String name, Expression predicate) {
+    // Iceberg 0.12.1 orders null before non-null values when evaluating residuals.
+    // SQL comparisons must reject null, including <, <= and !=.
+    return Expressions.and(Expressions.notNull(name), predicate);
   }
 
   @Override
@@ -174,17 +220,17 @@ public class DrillExprToIcebergTranslator extends AbstractExprVisitor<Expression
 
   @Override
   public Expression visitDateConstant(ValueExpressions.DateExpression dateExpr, Void value) throws RuntimeException {
-    return new ConstantExpression<>(dateExpr.getDate());
+    return new ConstantExpression<>(Math.toIntExact(Math.floorDiv(dateExpr.getDate(), 86_400_000L)));
   }
 
   @Override
   public Expression visitTimeConstant(ValueExpressions.TimeExpression timeExpr, Void value) throws RuntimeException {
-    return new ConstantExpression<>(timeExpr.getTime());
+    return new ConstantExpression<>((long) timeExpr.getTime() * 1_000L);
   }
 
   @Override
   public Expression visitTimeStampConstant(ValueExpressions.TimeStampExpression timestampExpr, Void value) throws RuntimeException {
-    return new ConstantExpression<>(timestampExpr.getTimeStamp());
+    return new ConstantExpression<>(Math.multiplyExact(timestampExpr.getTimeStamp(), 1_000L));
   }
 
   @Override

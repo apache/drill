@@ -25,6 +25,8 @@ import org.apache.calcite.rel.core.Project;
 import org.apache.calcite.rex.RexLiteral;
 import org.apache.calcite.rex.RexNode;
 import org.apache.calcite.util.Util;
+import org.apache.drill.common.FunctionNames;
+import org.apache.drill.common.expression.FunctionCallFactory;
 import org.apache.drill.common.expression.LogicalExpression;
 import org.apache.drill.common.expression.SchemaPath;
 import org.apache.drill.exec.physical.base.GroupScan;
@@ -46,6 +48,7 @@ import org.apache.iceberg.expressions.Expression;
 
 import java.io.IOException;
 import java.math.BigDecimal;
+import java.util.Arrays;
 import java.util.List;
 import java.util.stream.Collectors;
 
@@ -67,6 +70,10 @@ public class IcebergPluginImplementor extends AbstractPluginImplementor {
       new DrillParseContext(PrelUtil.getPlannerSettings(filter.getCluster().getPlanner())),
       filter.getInput(),
       condition);
+    if (groupScan.getCondition() != null) {
+      expression = FunctionCallFactory.createBooleanOperator(FunctionNames.AND,
+          Arrays.asList(groupScan.getCondition(), expression));
+    }
     groupScan = groupScan.toBuilder().condition(expression).build();
   }
 
@@ -98,6 +105,11 @@ public class IcebergPluginImplementor extends AbstractPluginImplementor {
         GroupScan scan = findGroupScan(filter);
         if (scan instanceof IcebergGroupScan) {
           IcebergGroupScan groupScan = (IcebergGroupScan) scan;
+          // This rule replaces Drill's Filter. Without Iceberg residuals, file
+          // pruning alone cannot guarantee that every returned row matches.
+          if (Boolean.TRUE.equals(groupScan.getFormatPlugin().getConfig().getIgnoreResiduals())) {
+            return false;
+          }
           // ensures that expression compatible with table schema
           expression = Binder.bind(groupScan.getTableScan().schema().asStruct(), expression, true);
         } else {
