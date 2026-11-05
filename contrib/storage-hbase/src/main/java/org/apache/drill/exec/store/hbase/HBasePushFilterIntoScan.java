@@ -122,8 +122,7 @@ public abstract class HBasePushFilterIntoScan extends StoragePluginOptimizerRule
     }
 
     final HBaseGroupScan newGroupsScan = new HBaseGroupScan(groupScan.getUserName(), groupScan.getStoragePlugin(),
-        newScanSpec, groupScan.getColumns(), groupScan.getMaxRecords(), groupScan.getHBaseScanSpec(),
-        conditionExp, hbaseFilterBuilder.isAllExpressionsConverted(), false);
+        newScanSpec, groupScan.getColumns(), groupScan.getMaxRecords());
     newGroupsScan.setFilterPushedDown(true);
 
     final ScanPrel newScanPrel = new ScanPrel(scan.getCluster(), filter.getTraitSet(), newGroupsScan, scan.getRowType(), scan.getTable());

@@ -43,8 +43,8 @@ Drillbit must understand these expressions.
 These queries can share a plan when the scan plugin supports it:
 
 ```sql
-SELECT row_key FROM hbase.usertable WHERE row_key = 'user00000101';
-SELECT row_key FROM hbase.usertable WHERE row_key = 'user00000250';
+SELECT id, label FROM dfs.`/data/users.csvh` WHERE id = '101';
+SELECT id, label FROM dfs.`/data/users.csvh` WHERE id = '250';
 ```
 
 Drill replaces eligible data literals with typed slots when building the cache
@@ -79,25 +79,27 @@ sorted consistently and column order preserved. Provided-schema changes,
 creation or deletion therefore invalidate an old entry even when the native
 schema version is unchanged. Native schema changes still invalidate entries
 when a provided schema is present. When schema-file support is disabled, the file
-does not contribute to compatibility; when enabled but no file exists, Iceberg
-uses its native schema. Schema read failures bypass caching.
+does not contribute to compatibility. An absent provided schema uses an explicit
+no-schema state. Schema read failures bypass caching.
 
 The cached representation is immutable physical-plan JSON. A hit creates a new
 plan object graph and binds the new values throughout its expressions. Each
 participating scan must also rebuild any state derived from those values.
-HBase rebuilds row-key bounds and remote filters, then discovers current regions.
-Iceberg reloads table metadata and plans tasks for the current snapshot and
-predicate. Reusing the first execution's filters or file list would be incorrect.
-
-Iceberg pushes filters only when its residual row filtering is enabled. With
-`ignoreResiduals=true`, conditions remain in Drill so file pruning cannot replace
-SQL row filtering. Comparisons that are pushed down explicitly reject null where
-needed; unsimplified NOT predicates remain in Drill to preserve SQL null semantics.
+The initial integration uses delimited text (CSV/TSV) with an explicit single-file
+selection. Predicates remain in Drill's Filter operator, so binding changes only
+Drill expressions. The existing `EasyGroupScan` JSON reader rebuilds file blocks
+and endpoint assignments. The compatibility version includes file length and
+modification time: appends, replacements and header changes that alter either
+value invalidate the entry and replan. As with file metadata caches, writers must
+update modification times when changing content; edits that preserve both length
+and modification time are not detected.
 
 ## What can be reused
 
 Read queries can include joins, aggregates, subqueries, CTEs, ordering and limits.
-Every source plugin must explicitly support caching and guarantee safe reconstruction of its scans. This change opts in HBase and Iceberg; other plugins retain the default of no support.
+Every source plugin must explicitly support caching and guarantee safe
+reconstruction of its scans. This change opts in single-file delimited text
+scans; other formats and storage plugins retain the default of no support.
 
 Constants that determine SQL structure stay in the key: group/order expressions,
 window definitions, limit/offset, field selectors, and function configuration
@@ -114,32 +116,25 @@ condition literals can still be rebound.
 
 Writes, DDL, existing dynamic parameters, volatile/query-context functions and
 sessions containing temporary tables or mutable aliases bypass the cache.
-Unsupported scans, views without a compatible table identity, Iceberg metadata tables and explicit
-snapshot selections use normal planning.
+Unsupported scans, views without a compatible table identity, text directories
+and wildcard selections use normal planning. Even a directory containing one
+file bypasses caching, so cached selections cannot retain stale partition pruning.
 
 ## Storage plugin roadmap
 
-HBase was chosen first because short queries under high concurrency are expected
-to benefit most from plan caching: validation and optimization can account for a
-substantial share of their latency. Since Drill is also an analytical engine,
-Iceberg was included to evaluate the benefit for analytical workloads over a
-data lake format. These initial integrations cover both point/range reads and
-analytical scans.
+This PR establishes the engine path with a small text-format integration that
+requires no native predicate rebuilding. Additional integrations belong in
+follow-up changes:
 
-Support for other commonly used plugins is planned in follow-up changes, in the
-following order:
-
-1. **DFS formats without filter pushdown**, such as CSV/TSV, JSON and Avro.
-   Filtering remains in Drill's Filter operator. On bind, reconstruct the current
-   file selection and redo directory partition pruning for the new values, with
-   a table compatibility version that detects schema changes.
-2. **Parquet.** Rebuild partition, file and row-group pruning for the current
-   values and data files. Reuse the existing Parquet metadata cache where possible
-   to reduce the cost of reconstruction.
-3. **JDBC.** Rebuild pushed-down SQL for the current parameter values rather than
-   reuse SQL containing the first execution's literals. Evaluate shared plugin
-   hooks for rebuilding pushdown on bind, so JDBC and other plugins that construct
-   native queries can avoid duplicating the integration logic.
+1. **Text directories and other DFS formats without filter pushdown.** Rebuild
+   file selections and directory partition pruning for the current values;
+   detect schema and file-set changes.
+2. **Plugins with predicate pushdown, including HBase, Iceberg and Parquet.**
+   Preserve the source predicate and rebuild native filters, bounds, partitions,
+   files or row groups for the newly bound values. Define compatibility versions
+   independently from data snapshots where compatible updates should keep hitting.
+3. **JDBC.** Rebuild pushed-down SQL for the current parameter values. Evaluate
+   shared plugin hooks for native predicate reconstruction.
 
 Each integration must retain the inputs needed to reconstruct value-dependent
 scan state and provide reliable compatibility checks, following the

@@ -75,7 +75,7 @@ public class TestPlanCacheRebind extends BaseTest {
       decodedJson.set(call.getArgument(0));
       return null;
     });
-    when(reader.readPhysicalPlanForCache(anyString())).thenAnswer(call -> {
+    when(reader.readPhysicalPlan(anyString())).thenAnswer(call -> {
       decodedJson.set(call.getArgument(0));
       return null;
     });

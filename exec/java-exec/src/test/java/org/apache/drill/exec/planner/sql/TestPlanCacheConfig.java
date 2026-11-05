@@ -255,7 +255,7 @@ public class TestPlanCacheConfig extends BaseTest {
   public void testClearDiscardsActiveAndQueuedPublications() throws Exception {
     CountDownLatch reading = new CountDownLatch(1);
     CountDownLatch resume = new CountDownLatch(1);
-    when(reader.readPhysicalPlanForCache("{}")).thenAnswer(invocation -> {
+    when(reader.readPhysicalPlan("{}")).thenAnswer(invocation -> {
       reading.countDown();
       assertTrue(resume.await(10, TimeUnit.SECONDS));
       return plan;

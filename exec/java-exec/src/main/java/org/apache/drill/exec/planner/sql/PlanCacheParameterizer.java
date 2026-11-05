@@ -91,7 +91,7 @@ final class PlanCacheParameterizer extends SqlShuttle {
     }
     if (call.getKind() == SqlKind.ITEM && call.operand(1) instanceof SqlLiteral) {
       // A map/array key identifies a field in the input schema. Changing it can
-      // change the scan projection and the HBase column used by pushdown.
+      // change the scan projection.
       return call.getOperator().createCall(call.getParserPosition(),
           visitNullable(call.operand(0)), call.operand(1));
     }

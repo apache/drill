@@ -60,23 +60,17 @@ PlanCacheTable planCacheTable(FileSelection selection) throws IOException;
 
 Declaring plugin support covers every `GroupScan` produced for an eligible selection. Ensure that all planning, pushdown and cloning paths preserve the inputs needed for reconstruction. Unsupported selections must be rejected during snapshot construction.
 
-Keep the bound `LogicalExpression` in the scan's JSON. Converting a predicate to
-a native filter or file list and dropping the source expression loses the
-information needed to bind the next query. When reading a bound cache template:
+For the initial text integration, predicates stay in Drill's Filter operator.
+The cache binds those expressions and uses `PhysicalPlanReader.readPhysicalPlan`
+to construct a fresh plan. `EasyGroupScan` already rebuilds file blocks and
+assignments when read from JSON, so no cache-specific scan constructor is needed.
 
-1. Resolve the plugin and reload current table metadata.
-2. Translate the newly bound expression into the plugin's native predicate.
-3. Recompute value-dependent row bounds, filters, files/splits, region locations
-   and assignments. Preserve residual filtering for unsupported predicates.
-4. Reject reconstruction if the original pushdown guarantees cannot be met.
-
-`PhysicalPlanReader.readPhysicalPlanForCache` supplies the
-`PhysicalPlanReader.PLAN_CACHE_REBIND` injectable flag for this path. HBase uses
-it to require predicate reconstruction on cache hits. Ordinary physical-plan
-JSON and profile replay use the serialized native scan specification, without
-requiring the cache's reconstruction metadata. Both paths discover current HBase
-regions. A failed cache reconstruction invalidates the entry and replans the SQL;
-it must never fall back to a scan specification containing the previous bindings.
+A future plugin with predicate pushdown must preserve the source
+`LogicalExpression` and rebuild every value-dependent native filter, row bound,
+file list and assignment after binding. If reconstruction cannot preserve its
+pushdown guarantees, leave the selection ineligible. A failed reconstruction
+invalidates the entry and replans the SQL; it must never reuse native state
+containing the previous bindings.
 
 Serialize stable inputs rather than live connections, execution resources or old
 endpoint assignments. Validate the round trip with Drill's `PhysicalPlanReader`.
@@ -89,24 +83,31 @@ cannot be rebuilt, keep that argument structural or leave the selection ineligib
 
 Keep the regular expression serialization for JSON so parameter slot numbers survive the round trip.
 
-## Reference implementations
+## Reference implementation
 
-| Plugin | Compatibility version | Reconstruction |
-| --- | --- | --- |
-| [HBaseStoragePlugin](../../contrib/storage-hbase/src/main/java/org/apache/drill/exec/store/hbase/HBaseStoragePlugin.java) / [HBaseGroupScan](../../contrib/storage-hbase/src/main/java/org/apache/drill/exec/store/hbase/HBaseGroupScan.java) | Table descriptor fingerprint | Retains the selection before pushdown and the original predicate; rebuilds native row-key bounds/filters and discovers current regions. |
-| [IcebergFormatPlugin](../../contrib/format-iceberg/src/main/java/org/apache/drill/exec/store/iceberg/format/IcebergFormatPlugin.java) / [IcebergGroupScan](../../contrib/format-iceberg/src/main/java/org/apache/drill/exec/store/iceberg/IcebergGroupScan.java) | Table UUID and schema ID | Reloads the table and runs `planTasks()` for the current predicate and snapshot. Metadata tables and explicit snapshot selection return no support. |
+[TextFormatPlugin](../../exec/java-exec/src/main/java/org/apache/drill/exec/store/easy/text/TextFormatPlugin.java)
+opts in explicit single-file selections. Its table identifier is the qualified
+file path; its compatibility version is the current file length and modification
+time. It reads fresh status rather than the status retained in `FileSelection`.
+Any change to either version component conservatively forces a replan, including
+appends and header changes. Writers must update modification times on content
+changes; same-length edits preserving modification time are not detected.
+Directories and globs are excluded, including directories containing only one
+file, because their cached file lists could otherwise retain old partition pruning.
 
-HBase descriptor equality means definition compatibility; a replacement with an
-identical descriptor can still be read safely because regions and filters are
-rebuilt. Iceberg uses a UUID to distinguish tables recreated at the same path.
-Iceberg tables without a table UUID are ineligible for caching.
+[EasyGroupScan](../../exec/java-exec/src/main/java/org/apache/drill/exec/store/dfs/easy/EasyGroupScan.java)
+uses its existing JSON constructor to rebuild blocks and endpoint assignments.
+Predicates stay in Drill, with no native filter serialization or rebuilding.
+[Single-file integration tests](../../exec/java-exec/src/test/java/org/apache/drill/exec/planner/sql/TestTextPlanCache.java)
+exercise misses, cross-connection hits, changed bindings, invalidation and bypass.
 
 ## Required correctness checks
 
 Compare complete results with caching disabled, after the first planning pass,
 and after a hit with different literals. Exercise cross-connection reuse,
-pushdown and residual filtering, and an empty scan after rebinding. Verify that
-compatible data updates are visible on hits, while incompatible schema changes,
+filter rebinding and an empty result after rebinding. For plugins with native
+pushdown, also check native and residual filtering. Verify that data updates are
+visible after a hit or conservative invalidation, while incompatible schema changes,
 deletions, plugin configuration changes and failed metadata reads reject the old
 entry. Include joins or subqueries so every table dependency is checked, and
 confirm that queries involving an unsupported plugin or selection bypass caching.

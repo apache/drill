@@ -325,7 +325,7 @@ public final class PlanCache implements AutoCloseable {
         throws IOException {
       JsonNode tree = JSON.readTree(json);
       walk(tree, literals);
-      return reader.readPhysicalPlanForCache(JSON.writeValueAsString(tree));
+      return reader.readPhysicalPlan(JSON.writeValueAsString(tree));
     }
   }
 
