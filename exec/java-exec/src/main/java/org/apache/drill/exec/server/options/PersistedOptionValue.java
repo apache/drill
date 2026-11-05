@@ -56,7 +56,7 @@ import java.io.IOException;
 @JsonDeserialize(using = PersistedOptionValue.Deserializer.class)
 public class PersistedOptionValue {
   /**
-   * This is present for forward compatability with Drill 1.11 and earlier
+   * This is present for forward compatibility with Drill 1.11 and earlier
    */
   public static final String SYSTEM_TYPE = "SYSTEM";
   /**

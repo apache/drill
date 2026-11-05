@@ -267,7 +267,7 @@ public class StreamingAggBatch extends AbstractRecordBatch<StreamingAggregate> {
             aggregator.setup(oContext, incoming, this, maxOutputRowCount);
           } catch (SchemaChangeException e) {
             UserException.Builder exceptionBuilder = UserException.functionError(e)
-                .message("A Schema change exception occured in calling setup() in generated code.");
+                .message("A Schema change exception occurred in calling setup() in generated code.");
             throw exceptionBuilder.build(logger);
           }
         }

@@ -603,7 +603,7 @@ public class FragmentExecutor implements Runnable {
       if (event.type.equals(EventType.RECEIVER_FINISHED)) {
         // Finish request
         if (terminate.get()) {
-          // We have already recieved a cancellation or we have terminated the event processor. Do not process anymore finish requests.
+          // We have already received a cancellation or we have terminated the event processor. Do not process anymore finish requests.
           return;
         }
       } else {
