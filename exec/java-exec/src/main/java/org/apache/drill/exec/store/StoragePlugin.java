@@ -88,8 +88,10 @@ public interface StoragePlugin extends SchemaFactory, AutoCloseable {
    * cached operator structure is no longer compatible. Data-only changes may
    * keep the version only if the scan reads current data on deserialization.
    * Return null when that contract cannot be met.
+   *
+   * @param userName effective scan user, also used by {@code getPhysicalScan}
    */
-  default PlanCacheTable planCacheTable(DrillTableSelection selection) throws IOException {
+  default PlanCacheTable planCacheTable(String userName, DrillTableSelection selection) throws IOException {
     return null;
   }
 

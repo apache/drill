@@ -97,7 +97,7 @@ public class TestPlanCacheContext extends BaseTest {
   @Test
   public void testTableVersionChangeInvalidatesEntryWithoutChangingKey() throws Exception {
     PlanCache.ContextSnapshot original = snapshot("SELECT * FROM \"a\"");
-    when(pluginA.planCacheTable(selectionA)).thenReturn(new PlanCacheTable("a", "version-2"));
+    when(pluginA.planCacheTable("scan-user-a", selectionA)).thenReturn(new PlanCacheTable("a", "version-2"));
     PlanCache.ContextSnapshot changed = snapshot("SELECT * FROM \"a\"");
     assertEquals(original.keyFingerprint(), changed.keyFingerprint());
     try (PlanCache cache = new PlanCache(1024, Duration.ZERO, Duration.ZERO)) {
@@ -127,7 +127,7 @@ public class TestPlanCacheContext extends BaseTest {
   public void testNativeVersionStillMattersWithProvidedSchema() throws Exception {
     provide("id VARCHAR", null);
     PlanCache.ContextSnapshot original = snapshot("SELECT * FROM \"a\"");
-    when(pluginA.planCacheTable(selectionA)).thenReturn(new PlanCacheTable("a", "version-2"));
+    when(pluginA.planCacheTable("scan-user-a", selectionA)).thenReturn(new PlanCacheTable("a", "version-2"));
     assertIncompatible(original, snapshot("SELECT * FROM \"a\""));
   }
 
@@ -181,7 +181,14 @@ public class TestPlanCacheContext extends BaseTest {
         SqlParser.create("SELECT * FROM \"a\" JOIN \"b\" ON TRUE").parseQuery(), context));
     verify(provider, never()).exists();
     verify(provider, never()).read();
-    verify(pluginA, never()).planCacheTable(selectionA);
+    verify(pluginA, never()).planCacheTable("scan-user-a", selectionA);
+  }
+
+  @Test
+  public void testMetadataUsesEffectiveScanUser() throws Exception {
+    when(context.getQueryUserName()).thenReturn("query-user");
+    assertNotNull(snapshot("SELECT * FROM \"a\""));
+    verify(pluginA).planCacheTable("scan-user-a", selectionA);
   }
 
   private SchemaProvider provide(String definition, Map<String, String> properties) throws Exception {
@@ -207,11 +214,12 @@ public class TestPlanCacheContext extends BaseTest {
       DrillTableSelection selection) throws Exception {
     DrillTable table = mock(DrillTable.class);
     when(table.getSelection()).thenReturn(selection);
+    when(table.getUserName()).thenReturn("scan-user-" + name);
     when(table.getPlugin()).thenReturn(plugin);
     when(table.getStorageEngineName()).thenReturn("storage-" + name);
     when(schema.getTable(name)).thenReturn(table);
     when(plugin.supportPlanCache(selection)).thenReturn(true);
-    when(plugin.planCacheTable(selection)).thenReturn(new PlanCacheTable(name, "version-1"));
+    when(plugin.planCacheTable("scan-user-" + name, selection)).thenReturn(new PlanCacheTable(name, "version-1"));
     when(plugin.getConfig()).thenReturn(config);
     when(registry.encode(config)).thenReturn("configuration-" + name);
   }

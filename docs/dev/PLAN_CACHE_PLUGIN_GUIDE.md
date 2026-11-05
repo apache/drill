@@ -26,12 +26,17 @@ Implement these methods in [StoragePlugin](../../exec/java-exec/src/main/java/or
 
 ```java
 boolean supportPlanCache(DrillTableSelection selection);
-PlanCacheTable planCacheTable(DrillTableSelection selection) throws IOException;
+PlanCacheTable planCacheTable(String userName, DrillTableSelection selection) throws IOException;
 ```
 
 `planCacheTable` is called before each lookup to capture the current query's table dependencies. Return a stable, opaque physical table identifier and a compatibility version. Return `null` for missing tables or unsupported selections. Failed metadata reads also cause a fallback to normal planning. The engine compares this complete context snapshot, including effective options and storage-plugin configurations, with the cached entry's snapshot. A miss retains the same snapshot for publication after successful execution.
 
 The engine first calls `supportPlanCache(selection)` for every participating plugin and returns immediately if any selection is unsupported. Its default returns `false`. A plugin can cast `DrillTableSelection` to its own selection type to decide eligibility. Keep this check free of table-version reads. Only after all checks pass does the engine call `planCacheTable` and compute configuration and option fingerprints.
+
+The engine passes the resolved `DrillTable` scan user to `planCacheTable`.
+Use that identity for metadata I/O, as for scanning: it can differ from the
+query user when impersonation is disabled. DFS formats receive the same identity
+from `FileSystemPlugin`.
 
 The plugin version must change whenever the cached plan's native table definition becomes
 incompatible. Do not use a data snapshot number if compatible data updates should
@@ -51,7 +56,7 @@ DFS formats use the same two-method contract in [FormatPlugin](../../exec/java-e
 
 ```java
 boolean supportPlanCache(FileSelection selection);
-PlanCacheTable planCacheTable(FileSelection selection) throws IOException;
+PlanCacheTable planCacheTable(String userName, FileSelection selection) throws IOException;
 ```
 
 [FileSystemPlugin](../../exec/java-exec/src/main/java/org/apache/drill/exec/store/dfs/FileSystemPlugin.java) delegates eligibility and metadata reads to the selected format plugin. It prefixes the returned table identifier with the format name to distinguish formats within the storage plugin.

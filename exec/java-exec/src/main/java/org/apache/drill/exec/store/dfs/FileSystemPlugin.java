@@ -343,7 +343,7 @@ public class FileSystemPlugin extends AbstractStoragePlugin {
   }
 
   @Override
-  public PlanCacheTable planCacheTable(DrillTableSelection selection) throws IOException {
+  public PlanCacheTable planCacheTable(String userName, DrillTableSelection selection) throws IOException {
     if (!(selection instanceof FormatSelection)) {
       return null;
     }
@@ -353,7 +353,7 @@ public class FileSystemPlugin extends AbstractStoragePlugin {
     if (format == null || !format.supportPlanCache(files)) {
       return null;
     }
-    PlanCacheTable table = format.planCacheTable(files);
+    PlanCacheTable table = format.planCacheTable(userName, files);
     if (table == null) {
       return null;
     }

@@ -405,7 +405,8 @@ public final class PlanCache implements AutoCloseable {
       Map<String, String> configs = new LinkedHashMap<>();
       for (ResolvedTable dependency : dependencies) {
         try {
-          PlanCacheTable source = dependency.plugin.planCacheTable(dependency.selection);
+          PlanCacheTable source = dependency.plugin.planCacheTable(
+              dependency.table.getUserName(), dependency.selection);
           if (source == null) {
             return null;
           }

@@ -60,8 +60,10 @@ public interface FormatPlugin {
   /**
    * Returns a stable table identifier and a physical-plan compatibility version,
    * or null when the selection cannot be cached.
+   *
+   * @param userName effective scan user whose permissions govern metadata reads
    */
-  default PlanCacheTable planCacheTable(FileSelection selection) throws IOException {
+  default PlanCacheTable planCacheTable(String userName, FileSelection selection) throws IOException {
     return null;
   }
 
