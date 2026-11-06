@@ -1176,7 +1176,7 @@ public class TestScripts extends BaseTest {
     File siteDir = new File(context.testDrillHome, "conf");
     context.createMockConf(siteDir);
 
-    // Test when SQLLINE_JAVA_OPTS is overriden inside a condition for
+    // Test when SQLLINE_JAVA_OPTS is overridden inside a condition for
     // DRILLBIT_CONTEXT = 0, then there is no effect
     {
       // Create a condition variable to be placed in distrib-env.sh
