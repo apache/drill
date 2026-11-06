@@ -34,10 +34,14 @@ import java.io.IOException;
 import java.nio.charset.StandardCharsets;
 import java.nio.file.Files;
 import java.nio.file.Paths;
+import java.util.Arrays;
+import java.util.HashSet;
+import java.util.Set;
 import org.junit.BeforeClass;
 import org.junit.Test;
 
 import static org.junit.Assert.assertEquals;
+import static org.junit.Assert.assertTrue;
 
 public class TestSessionizePCAP extends ClusterTest {
 
@@ -52,53 +56,20 @@ public class TestSessionizePCAP extends ClusterTest {
 
   @Test
   public void testSessionizedStarQuery() throws Exception {
-    String sql = "SELECT * FROM cp.`/pcap/http.pcap`";
-    String dataFromRemote = readAFileIntoString(dirTestWatcher.getRootDir().getAbsolutePath() + "/pcap/dataFromRemote.txt");
-
-    QueryBuilder q = client.queryBuilder().sql(sql);
-    RowSet results = q.rowSet();
-
-    TupleMetadata expectedSchema = new SchemaBuilder()
-      .addNullable("src_ip", TypeProtos.MinorType.VARCHAR)
-      .addNullable("dst_ip", TypeProtos.MinorType.VARCHAR)
-      .addNullable("src_port", TypeProtos.MinorType.INT)
-      .addNullable("dst_port", TypeProtos.MinorType.INT)
-      .addNullable("src_mac_address", TypeProtos.MinorType.VARCHAR)
-      .addNullable("dst_mac_address", TypeProtos.MinorType.VARCHAR)
-      .addNullable("session_start_time", TypeProtos.MinorType.TIMESTAMP)
-      .addNullable("session_end_time", TypeProtos.MinorType.TIMESTAMP)
-      .addNullable("session_duration", TypeProtos.MinorType.INTERVAL)
-      .addNullable("total_packet_count", TypeProtos.MinorType.INT)
-      .addNullable("data_volume_from_origin", TypeProtos.MinorType.INT)
-      .addNullable("data_volume_from_remote", TypeProtos.MinorType.INT)
-      .addNullable("packet_count_from_origin", TypeProtos.MinorType.INT)
-      .addNullable("packet_count_from_remote", TypeProtos.MinorType.INT)
-      .addNullable("connection_time", TypeProtos.MinorType.INTERVAL)
-      .addNullable("tcp_session", TypeProtos.MinorType.BIGINT)
-      .addNullable("is_corrupt", TypeProtos.MinorType.BIT)
-      .addNullable("data_from_originator", TypeProtos.MinorType.VARCHAR)
-      .addNullable("data_from_remote", TypeProtos.MinorType.VARCHAR)
-      .buildSchema();
-
-    RowSet expected = new RowSetBuilder(client.allocator(), expectedSchema)
-      .addRow(
-        "145.254.160.237",
-        "65.208.228.223",
-        3372, 80,
-        "00:00:01:00:00:00",
-        "FE:FF:20:00:01:00",
-        1084443427311L,
-        1084443445216L,
-        Period.parse("PT17.905S"), 31,
-        437,18000,14, 17,
-        Period.parse("PT0.911S"),
-        -789689725566200012L, false,
-        "r-Agent: Mozilla/5.0 (Windows; U; Windows NT 5.1; en-US; rv:1.6) Gecko/20040113..Accept: text/xml,application/xml,application/xhtml+xml,text/html;q=0.9,text/plain;q=0.8,image/png,image/jpeg,image/gif;q=0.2,*/*;q=0.1..Accept-Language: en-us,en;q=0.5..Accept-Encoding: gzip,deflate..Accept-Charset: ISO-8859-1,utf-8;q=0.7,*;q=0.7..Keep-Alive: 300..Connection: keep-alive..Referer: http://www.ethereal.com/development.html....$K.@....6...6",
-        dataFromRemote
-        )
-      .build();
-
-    new RowSetComparison(expected).verifyAndClearAll(results);
+    // Values are pinned by testSessionizedSpecificQuery; this checks what select * returns
+    String sql = "SELECT * FROM cp.`/pcap/http.pcap` WHERE session_closed = true";
+    RowSet results = client.queryBuilder().sql(sql).rowSet();
+    Set<String> names = new HashSet<>();
+    results.schema().toMetadataList().forEach(c -> names.add(c.name()));
+    Set<String> expected = new HashSet<>(Arrays.asList("src_ip", "dst_ip", "src_port", "dst_port",
+        "src_mac_address", "dst_mac_address", "session_start_time", "session_end_time", "session_duration",
+        "total_packet_count", "data_volume_from_origin", "data_volume_from_remote", "packet_count_from_origin",
+        "packet_count_from_remote", "connection_time", "tcp_session", "is_corrupt", "session_closed",
+        "data_from_originator", "data_from_remote", "parsed_protocol", "parsed_data", "decode_error"));
+    assertEquals(expected, names);
+    assertTrue(results.schema().metadata("parsed_data").isMap());
+    assertEquals(1, results.rowCount());
+    results.clear();
   }
 
   @Test
@@ -106,7 +77,7 @@ public class TestSessionizePCAP extends ClusterTest {
     String sql = "SELECT src_ip, dst_ip, src_port, dst_port, src_mac_address, dst_mac_address," +
       "session_start_time, session_end_time, session_duration, total_packet_count, data_volume_from_origin, data_volume_from_remote," +
       "packet_count_from_origin, packet_count_from_remote, connection_time, tcp_session, is_corrupt, data_from_originator, data_from_remote " +
-      "FROM cp.`/pcap/http.pcap`";
+      "FROM cp.`/pcap/http.pcap` WHERE session_closed = true";
 
     String dataFromRemote = readAFileIntoString(dirTestWatcher.getRootDir().getAbsolutePath() + "/pcap/dataFromRemote.txt");
 
@@ -145,10 +116,10 @@ public class TestSessionizePCAP extends ClusterTest {
         1084443427311L,
         1084443445216L,
         Period.parse("PT17.905S"), 31,
-        437,18000,14, 17,
+        479, 18364, 14, 17,
         Period.parse("PT0.911S"),
         -789689725566200012L, false,
-        "r-Agent: Mozilla/5.0 (Windows; U; Windows NT 5.1; en-US; rv:1.6) Gecko/20040113..Accept: text/xml,application/xml,application/xhtml+xml,text/html;q=0.9,text/plain;q=0.8,image/png,image/jpeg,image/gif;q=0.2,*/*;q=0.1..Accept-Language: en-us,en;q=0.5..Accept-Encoding: gzip,deflate..Accept-Charset: ISO-8859-1,utf-8;q=0.7,*;q=0.7..Keep-Alive: 300..Connection: keep-alive..Referer: http://www.ethereal.com/development.html....$K.@....6...6",
+        "GET /download.html HTTP/1.1..Host: www.ethereal.com..User-Agent: Mozilla/5.0 (Windows; U; Windows NT 5.1; en-US; rv:1.6) Gecko/20040113..Accept: text/xml,application/xml,application/xhtml+xml,text/html;q=0.9,text/plain;q=0.8,image/png,image/jpeg,image/gif;q=0.2,*/*;q=0.1..Accept-Language: en-us,en;q=0.5..Accept-Encoding: gzip,deflate..Accept-Charset: ISO-8859-1,utf-8;q=0.7,*;q=0.7..Keep-Alive: 300..Connection: keep-alive..Referer: http://www.ethereal.com/development.html",
         dataFromRemote
       )
       .build();
@@ -161,7 +132,54 @@ public class TestSessionizePCAP extends ClusterTest {
     String sql = "SELECT COUNT(*) FROM cp.`/pcap/http.pcap`";
     String plan = queryBuilder().sql(sql).explainJson();
     long cnt = queryBuilder().physical(plan).singletonLong();
-    assertEquals("Counts should match", 1L, cnt);
+    // The closed HTTP session, and one to 216.239.59.99 still open when the capture ended
+    assertEquals("Counts should match", 2L, cnt);
+  }
+
+  @Test
+  public void testUnclosedSession() throws Exception {
+    // The capture starts after this connection's handshake and ends before its FIN
+    String sql = "SELECT src_ip, dst_ip, src_port, dst_port, total_packet_count, data_volume_from_origin, " +
+      "data_volume_from_remote, connection_time, substr(data_from_originator, 1, 27) AS request " +
+      "FROM cp.`/pcap/http.pcap` WHERE session_closed = false";
+    RowSet results = client.queryBuilder().sql(sql).rowSet();
+
+    TupleMetadata expectedSchema = new SchemaBuilder()
+      .addNullable("src_ip", TypeProtos.MinorType.VARCHAR)
+      .addNullable("dst_ip", TypeProtos.MinorType.VARCHAR)
+      .addNullable("src_port", TypeProtos.MinorType.INT)
+      .addNullable("dst_port", TypeProtos.MinorType.INT)
+      .addNullable("total_packet_count", TypeProtos.MinorType.INT)
+      .addNullable("data_volume_from_origin", TypeProtos.MinorType.INT)
+      .addNullable("data_volume_from_remote", TypeProtos.MinorType.INT)
+      .addNullable("connection_time", TypeProtos.MinorType.INTERVAL)
+      .addNullable("request", TypeProtos.MinorType.VARCHAR)
+      .buildSchema();
+
+    RowSet expected = new RowSetBuilder(client.allocator(), expectedSchema)
+      .addRow("145.254.160.237", "216.239.59.99", 3371, 80, 7, 721, 3020, null, "GET /pagead/ads?client=ca-p")
+      .build();
+
+    new RowSetComparison(expected).verifyAndClearAll(results);
+  }
+
+  @Test
+  public void testHttpSessions() throws Exception {
+    String sql = "SELECT parsed_protocol, t.parsed_data.http.exchanges[0].uri AS uri, " +
+      "t.parsed_data.http.exchanges[0].status_code AS status, t.parsed_data.http.exchanges[0].content_length AS length " +
+      "FROM cp.`/pcap/http.pcap` t ORDER BY session_closed DESC";
+    RowSet results = client.queryBuilder().sql(sql).rowSet();
+    TupleMetadata schema = new SchemaBuilder()
+      .addNullable("parsed_protocol", TypeProtos.MinorType.VARCHAR)
+      .addNullable("uri", TypeProtos.MinorType.VARCHAR)
+      .addNullable("status", TypeProtos.MinorType.INT)
+      .addNullable("length", TypeProtos.MinorType.BIGINT)
+      .buildSchema();
+    RowSet expected = new RowSetBuilder(client.allocator(), schema)
+      .addRow("http", "/download.html", 200, 18070L)
+      .addRow("http", "/pagead/ads?client=ca-pub-2309191948673629&random=1084443430285&lmt=1082467020&format=468x60_as&output=html&url=http%3A%2F%2Fwww.ethereal.com%2Fdownload.html&color_bg=FFFFFF&color_text=333333&color_link=000000&color_url=666633&color_border=666633", 200, 1272L)
+      .build();
+    new RowSetComparison(expected).verifyAndClearAll(results);
   }
 
   /**

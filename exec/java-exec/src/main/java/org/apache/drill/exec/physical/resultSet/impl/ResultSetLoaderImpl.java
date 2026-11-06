@@ -276,6 +276,9 @@ public class ResultSetLoaderImpl implements ResultSetLoader, LoaderInternals {
    */
   protected int accumulatedBatchSize;
 
+  /** True while a batch is being harvested; see {@link #harvestNormalBatch()}. */
+  private boolean harvesting;
+
   public ResultSetLoaderImpl(BufferAllocator allocator, ResultSetOptions options) {
     this.allocator = allocator;
     this.options = options;
@@ -726,8 +729,14 @@ public class ResultSetLoaderImpl implements ResultSetLoader, LoaderInternals {
   private int harvestNormalBatch() {
 
     // Wrap up the vectors: final fill-in, set value count, etc.
-
-    rootWriter.endBatch();
+    // Filling in unwritten values cannot overflow to another batch, so it
+    // may grow vectors past the batch size limit.
+    harvesting = true;
+    try {
+      rootWriter.endBatch();
+    } finally {
+      harvesting = false;
+    }
     harvestSchemaVersion = activeSchemaVersion;
     state = State.HARVESTED;
     return writerIndex.size();
@@ -793,7 +802,7 @@ public class ResultSetLoaderImpl implements ResultSetLoader, LoaderInternals {
   @Override
   public boolean canExpand(int delta) {
     accumulatedBatchSize += delta;
-    return state == State.IN_OVERFLOW ||
+    return state == State.IN_OVERFLOW || harvesting ||
            options.maxBatchSize <= 0 ||
            accumulatedBatchSize <= options.maxBatchSize;
   }

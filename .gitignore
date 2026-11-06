@@ -35,3 +35,7 @@ tools/venv/
 venv/
 .vscode/*
 exec/java-exec/src/main/resources/webapp/
+
+# Python bytecode from the test fixture generators
+__pycache__/
+*.pyc

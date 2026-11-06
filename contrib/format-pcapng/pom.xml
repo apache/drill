@@ -36,11 +36,6 @@
       <artifactId>drill-java-exec</artifactId>
       <version>${project.version}</version>
     </dependency>
-    <dependency>
-      <groupId>fr.bmartel</groupId>
-      <artifactId>pcapngdecoder</artifactId>
-      <version>1.2</version>
-    </dependency>
 
     <!-- Test dependencies -->
     <dependency>
