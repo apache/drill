@@ -28,8 +28,8 @@ import org.apache.drill.exec.oauth.OAuthTokenProvider;
 import org.apache.drill.exec.oauth.PersistentTokenTable;
 import org.apache.drill.exec.oauth.TokenRegistry;
 import org.apache.drill.exec.server.DrillbitContext;
-import org.apache.drill.exec.server.rest.DrillRestServer.UserAuthEnabled;
 import org.apache.drill.exec.server.rest.StorageResources.JsonResult;
+import org.apache.drill.exec.server.rest.auth.DrillUserPrincipal;
 import org.apache.drill.exec.store.AbstractStoragePlugin;
 import org.apache.drill.exec.store.StoragePluginRegistry;
 import org.apache.drill.exec.store.StoragePluginRegistry.PluginException;
@@ -41,7 +41,6 @@ import org.slf4j.LoggerFactory;
 import jakarta.servlet.http.HttpServletRequest;
 import jakarta.ws.rs.core.Response;
 import jakarta.ws.rs.core.Response.Status;
-import jakarta.ws.rs.core.SecurityContext;
 import java.io.BufferedReader;
 import java.io.IOException;
 import java.io.InputStream;
@@ -58,12 +57,11 @@ public class OAuthRequests {
   public static Response updateAccessToken(String name,
                                            OAuthTokenContainer tokens,
                                            StoragePluginRegistry storage,
-                                           UserAuthEnabled authEnabled,
-                                           SecurityContext sc) {
+                                           DrillUserPrincipal principal) {
     try {
       DrillbitContext context = ((AbstractStoragePlugin) storage.getPlugin(name)).getContext();
       OAuthTokenProvider tokenProvider = context.getOauthTokenProvider();
-      PersistentTokenTable tokenTable = tokenProvider.getOauthTokenRegistry(getQueryUser(storage.getPlugin(name).getConfig(), authEnabled, sc)).getTokenTable(name);
+      PersistentTokenTable tokenTable = tokenProvider.getOauthTokenRegistry(getQueryUser(storage.getPlugin(name).getConfig(), principal)).getTokenTable(name);
 
       // Set the access token
       tokenTable.setAccessToken(tokens.getAccessToken());
@@ -71,6 +69,8 @@ public class OAuthRequests {
       return Response.status(Status.OK)
         .entity("Access tokens have been updated.")
         .build();
+    } catch (TokenAccessDeniedException e) {
+      return forbidden(name, e);
     } catch (PluginException e) {
       logger.error("Error when adding tokens to {}", name);
       return Response.status(Status.INTERNAL_SERVER_ERROR)
@@ -80,13 +80,13 @@ public class OAuthRequests {
   }
 
   public static Response updateRefreshToken(String name, OAuthTokenContainer tokens,
-                                            StoragePluginRegistry storage, UserAuthEnabled authEnabled,
-                                            SecurityContext sc) {
+                                            StoragePluginRegistry storage,
+                                            DrillUserPrincipal principal) {
     try {
       DrillbitContext context = ((AbstractStoragePlugin) storage.getPlugin(name)).getContext();
       OAuthTokenProvider tokenProvider = context.getOauthTokenProvider();
       PersistentTokenTable tokenTable = tokenProvider.getOauthTokenRegistry(
-        getQueryUser(storage.getPlugin(name).getConfig(), authEnabled, sc)).getTokenTable(name);
+        getQueryUser(storage.getPlugin(name).getConfig(), principal)).getTokenTable(name);
 
       // Set the access token
       tokenTable.setRefreshToken(tokens.getRefreshToken());
@@ -94,6 +94,8 @@ public class OAuthRequests {
       return Response.status(Status.OK)
         .entity("Refresh token have been updated.")
         .build();
+    } catch (TokenAccessDeniedException e) {
+      return forbidden(name, e);
     } catch (PluginException e) {
       logger.error("Error when adding tokens to {}", name);
       return Response.status(Status.INTERNAL_SERVER_ERROR)
@@ -102,13 +104,14 @@ public class OAuthRequests {
     }
   }
 
-  public static Response updateOAuthTokens(String name, OAuthTokenContainer tokenContainer, StoragePluginRegistry storage,
-                                           UserAuthEnabled authEnabled, SecurityContext sc) {
+  public static Response updateOAuthTokens(String name, OAuthTokenContainer tokenContainer,
+                                           StoragePluginRegistry storage,
+                                           DrillUserPrincipal principal) {
     try {
       DrillbitContext context = ((AbstractStoragePlugin) storage.getPlugin(name)).getContext();
       OAuthTokenProvider tokenProvider = context.getOauthTokenProvider();
       PersistentTokenTable tokenTable = tokenProvider
-        .getOauthTokenRegistry(getQueryUser(storage.getPlugin(name).getConfig(), authEnabled, sc))
+        .getOauthTokenRegistry(getQueryUser(storage.getPlugin(name).getConfig(), principal))
         .getTokenTable(name);
 
       // Set the access and refresh token
@@ -119,6 +122,8 @@ public class OAuthRequests {
       return Response.status(Status.OK)
         .entity("Access tokens have been updated.")
         .build();
+    } catch (TokenAccessDeniedException e) {
+      return forbidden(name, e);
     } catch (PluginException e) {
       logger.error("Error when adding tokens to {}", name);
       return Response.status(Status.INTERNAL_SERVER_ERROR)
@@ -128,9 +133,14 @@ public class OAuthRequests {
   }
 
   public static Response updateAuthToken(String name, String code, HttpServletRequest request,
-                                         StoragePluginRegistry storage, UserAuthEnabled authEnabled,
-                                         SecurityContext sc) {
+                                         StoragePluginRegistry storage,
+                                         DrillUserPrincipal principal) {
     try {
+      // Establish who may store these tokens before exchanging the code. Doing
+      // this first means a refused caller cannot make Drill spend the client
+      // secret on an outbound request, nor consume a single-use auth code.
+      String queryUser = getQueryUser(storage.getPlugin(name).getConfig(), principal);
+
       CredentialsProvider credentialsProvider = storage.getPlugin(name).getConfig().getCredentialsProvider();
       String callbackURL = request.getRequestURL().toString();
 
@@ -146,7 +156,7 @@ public class OAuthRequests {
       TokenRegistry tokenRegistry = ((AbstractStoragePlugin) storage.getPlugin(name))
         .getContext()
         .getOauthTokenProvider()
-        .getOauthTokenRegistry(getQueryUser(storage.getPlugin(name).getConfig(), authEnabled, sc));
+        .getOauthTokenRegistry(queryUser);
 
       // Add a token registry table if none exists
       tokenRegistry.createTokenTable(name);
@@ -176,6 +186,8 @@ public class OAuthRequests {
       }
 
       return Response.status(Status.OK).entity(successPage).build();
+    } catch (TokenAccessDeniedException e) {
+      return forbidden(name, e);
     } catch (PluginException e) {
       logger.error("Error when adding auth token to {}", name);
       return Response.status(Status.INTERNAL_SERVER_ERROR)
@@ -189,18 +201,63 @@ public class OAuthRequests {
   }
 
   /**
-   * This function checks to see if a given storage plugin is using USER_TRANSLATION mode and if user
-   * authentication is enabled.  If so, it will return the active user name.  If not it will return null.
+   * Resolves which token table the caller may write to, and refuses the write if
+   * they may not.
+   *
+   * <p>A {@code USER_TRANSLATION} plugin gives each user their own token table,
+   * so the caller gets their own name and can only ever touch their own tokens.
+   * Every other auth mode shares one token table across the whole cluster, and
+   * those tokens are admin-owned configuration: overwriting them changes the
+   * identity that <em>all</em> users' queries run under at the data source. The
+   * credential endpoints that reach this code are open to any authenticated
+   * user, so the shared table has to be gated on the admin role here rather than
+   * left to the resource class.
+   *
+   * <p>{@link DrillUserPrincipal} is used rather than the {@code SecurityContext}
+   * because it is bound to the anonymous admin principal when authentication is
+   * disabled, where the security context carries no principal at all.
+   *
    * @param config {@link StoragePluginConfig} The current plugin configuration
-   * @return If USER_TRANSLATION is enabled, returns the active user.  If not, returns null.
+   * @param principal the caller, never null in practice
+   * @return the caller's user name for a user translation plugin, or null to
+   *         select the shared token table
+   * @throws TokenAccessDeniedException if the caller may not write these tokens
    */
-  private static String getQueryUser(StoragePluginConfig config,
-                                     UserAuthEnabled authEnabled,
-                                     SecurityContext sc) {
-    if (config.getAuthMode() == AuthMode.USER_TRANSLATION && authEnabled.get()) {
-      return sc.getUserPrincipal().getName();
-    } else {
-      return null;
+  private static String getQueryUser(StoragePluginConfig config, DrillUserPrincipal principal) {
+    if (principal == null) {
+      // Only reachable with authentication on but no authenticated principal;
+      // with it off the anonymous principal is always supplied.
+      throw new TokenAccessDeniedException("Could not determine the current user.");
     }
+
+    if (config.getAuthMode() == AuthMode.USER_TRANSLATION) {
+      // The name must be the one queries run under, or tokens would be written
+      // to a table the query path never reads. With authentication disabled that
+      // is the anonymous user, which is also what the query session is given.
+      return principal.getName();
+    }
+
+    if (!principal.isAdminUser()) {
+      throw new TokenAccessDeniedException(
+        "Only an administrator may change the shared OAuth tokens of a storage plugin.");
+    }
+    return null;
+  }
+
+  /**
+   * Thrown when the caller is not permitted to write the token table they asked
+   * for. Carries the message sent back to the client.
+   */
+  private static class TokenAccessDeniedException extends RuntimeException {
+    TokenAccessDeniedException(String message) {
+      super(message);
+    }
+  }
+
+  private static Response forbidden(String name, TokenAccessDeniedException e) {
+    logger.warn("Refused an OAuth token update for {}: {}", name, e.getMessage());
+    return Response.status(Status.FORBIDDEN)
+      .entity(message("%s", e.getMessage()))
+      .build();
   }
 }

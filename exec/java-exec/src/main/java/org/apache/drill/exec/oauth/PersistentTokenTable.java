@@ -96,7 +96,9 @@ public class PersistentTokenTable implements Tokens {
   @Override
   @JsonIgnore
   public void setExpiresIn(String expiresIn) {
-    if (!tokens.containsKey(EXPIRES_IN_KEY) || !expiresIn.equals(getAccessToken())) {
+    // Only write if the value actually changed. Compare against the stored
+    // expiry, not the access token.
+    if (!tokens.containsKey(EXPIRES_IN_KEY) || !expiresIn.equals(getExpiresIn())) {
       put(EXPIRES_IN_KEY, expiresIn, true);
     }
   }
@@ -113,9 +115,11 @@ public class PersistentTokenTable implements Tokens {
   @Override
   @JsonIgnore
   public void setRefreshToken(String token) {
-    // Only update the access token if it is not the same as the previous token
-    if (!tokens.containsKey(REFRESH_TOKEN_KEY) || !getAccessToken().equals(token)) {
-      put(REFRESH_TOKEN_KEY, token,true);
+    // Only update the refresh token if it is not the same as the previous token.
+    // Compare against the stored refresh token, not the access token: the latter
+    // also threw NPE whenever a refresh token was stored without an access token.
+    if (!tokens.containsKey(REFRESH_TOKEN_KEY) || !token.equals(getRefreshToken())) {
+      put(REFRESH_TOKEN_KEY, token, true);
     }
   }
 

@@ -235,8 +235,12 @@ public class TestUserTranslationInHttpPlugin extends ClusterTest {
       .setResponseCode(200)
       .setBody(TEST_JSON_RESPONSE_WITH_DATATYPES));
 
+    // The query must run as TEST_USER_2, the user whose tokens were stored above.
+    // Using the default cluster client here would run as the anonymous user and
+    // pick up whatever tokens that identity holds, which is what user translation
+    // exists to prevent.
     String sql = "SELECT * FROM oauth.sharedEndpoint";
-    RowSet results = queryBuilder().sql(sql).rowSet();
+    RowSet results = client.queryBuilder().sql(sql).rowSet();
 
     TupleMetadata expectedSchema = new SchemaBuilder()
       .add("col_1", MinorType.FLOAT8, DataMode.OPTIONAL)

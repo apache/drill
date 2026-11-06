@@ -88,7 +88,7 @@ public class FileSystemSchemaFactory extends AbstractSchemaFactory {
       if (oAuthConfig != null) {
         OAuthEnabledFileSystem underlyingFileSystem = (OAuthEnabledFileSystem) fs.getUnderlyingFs();
         underlyingFileSystem.setPluginConfig(plugin.getConfig());
-        underlyingFileSystem.setTokenTable(plugin.getTokenTable());
+        underlyingFileSystem.setTokenTable(plugin.getTokenTable(schemaConfig.getUserName()));
         underlyingFileSystem.setoAuthConfig(plugin.getConfig().oAuthConfig());
       }
 
