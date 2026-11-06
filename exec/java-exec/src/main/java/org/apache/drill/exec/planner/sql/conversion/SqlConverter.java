@@ -42,7 +42,6 @@ import org.apache.calcite.sql.parser.SqlParser;
 import org.apache.calcite.sql.util.ChainedSqlOperatorTable;
 import org.apache.calcite.sql.validate.SqlConformance;
 import org.apache.calcite.sql.validate.SqlValidator;
-import org.apache.calcite.sql.validate.SqlValidatorUtil;
 import org.apache.calcite.sql2rel.SqlToRelConverter;
 import org.apache.drill.common.config.DrillConfig;
 import org.apache.drill.common.exceptions.UserException;
@@ -152,7 +151,7 @@ public class SqlConverter {
     );
     this.opTab = new ChainedSqlOperatorTable(Arrays.asList(context.getDrillOperatorTable(), catalog));
     this.costFactory = (settings.useDefaultCosting()) ? null : new DrillCostBase.DrillCostFactory();
-    this.validator = SqlValidatorUtil.newValidator(opTab, catalog, typeFactory,
+    this.validator = new DrillSqlValidator(opTab, catalog, typeFactory,
         SqlValidator.Config.DEFAULT.withConformance(parserConfig.conformance())
           .withTypeCoercionEnabled(true)
           .withIdentifierExpansion(true));
@@ -176,7 +175,7 @@ public class SqlConverter {
     this.catalog = catalog;
     this.opTab = parent.opTab;
     this.planner = parent.planner;
-    this.validator = SqlValidatorUtil.newValidator(opTab, catalog, typeFactory,
+    this.validator = new DrillSqlValidator(opTab, catalog, typeFactory,
       SqlValidator.Config.DEFAULT.withConformance(parserConfig.conformance())
         .withTypeCoercionEnabled(true)
         .withIdentifierExpansion(true));
@@ -225,7 +224,7 @@ public class SqlConverter {
     initCluster(initPlanner());
     DrillViewExpander viewExpander = new DrillViewExpander(this);
     util.getViewExpansionContext().setViewExpander(viewExpander);
-    final SqlToRelConverter sqlToRelConverter = new SqlToRelConverter(
+    final SqlToRelConverter sqlToRelConverter = new DrillSqlToRelConverter(
         viewExpander, validator, catalog, cluster,
         DrillConvertletTable.INSTANCE, sqlToRelConverterConfig);
 

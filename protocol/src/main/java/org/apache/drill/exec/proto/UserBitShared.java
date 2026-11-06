@@ -15955,6 +15955,17 @@ public final class UserBitShared {
      */
     com.google.protobuf.ByteString
         getScannedPluginsBytes(int index);
+
+    /**
+     * <code>optional bool plan_cache_hit = 25;</code>
+     * @return Whether the planCacheHit field is set.
+     */
+    boolean hasPlanCacheHit();
+    /**
+     * <code>optional bool plan_cache_hit = 25;</code>
+     * @return The planCacheHit.
+     */
+    boolean getPlanCacheHit();
   }
   /**
    * Protobuf type {@code exec.shared.QueryProfile}
@@ -16808,6 +16819,25 @@ public final class UserBitShared {
       return scannedPlugins_.getByteString(index);
     }
 
+    public static final int PLAN_CACHE_HIT_FIELD_NUMBER = 25;
+    private boolean planCacheHit_;
+    /**
+     * <code>optional bool plan_cache_hit = 25;</code>
+     * @return Whether the planCacheHit field is set.
+     */
+    @java.lang.Override
+    public boolean hasPlanCacheHit() {
+      return ((bitField0_ & 0x00400000) != 0);
+    }
+    /**
+     * <code>optional bool plan_cache_hit = 25;</code>
+     * @return The planCacheHit.
+     */
+    @java.lang.Override
+    public boolean getPlanCacheHit() {
+      return planCacheHit_;
+    }
+
     private byte memoizedIsInitialized = -1;
     @java.lang.Override
     public final boolean isInitialized() {
@@ -16893,6 +16923,9 @@ public final class UserBitShared {
       }
       for (int i = 0; i < scannedPlugins_.size(); i++) {
         com.google.protobuf.GeneratedMessageV3.writeString(output, 24, scannedPlugins_.getRaw(i));
+      }
+      if (((bitField0_ & 0x00400000) != 0)) {
+        output.writeBool(25, planCacheHit_);
       }
       getUnknownFields().writeTo(output);
     }
@@ -16992,6 +17025,10 @@ public final class UserBitShared {
         }
         size += dataSize;
         size += 2 * getScannedPluginsList().size();
+      }
+      if (((bitField0_ & 0x00400000) != 0)) {
+        size += com.google.protobuf.CodedOutputStream
+          .computeBoolSize(25, planCacheHit_);
       }
       size += getUnknownFields().getSerializedSize();
       memoizedSize = size;
@@ -17121,6 +17158,11 @@ public final class UserBitShared {
       }
       if (!getScannedPluginsList()
           .equals(other.getScannedPluginsList())) return false;
+      if (hasPlanCacheHit() != other.hasPlanCacheHit()) return false;
+      if (hasPlanCacheHit()) {
+        if (getPlanCacheHit()
+            != other.getPlanCacheHit()) return false;
+      }
       if (!getUnknownFields().equals(other.getUnknownFields())) return false;
       return true;
     }
@@ -17232,6 +17274,11 @@ public final class UserBitShared {
       if (getScannedPluginsCount() > 0) {
         hash = (37 * hash) + SCANNED_PLUGINS_FIELD_NUMBER;
         hash = (53 * hash) + getScannedPluginsList().hashCode();
+      }
+      if (hasPlanCacheHit()) {
+        hash = (37 * hash) + PLAN_CACHE_HIT_FIELD_NUMBER;
+        hash = (53 * hash) + com.google.protobuf.Internal.hashBoolean(
+            getPlanCacheHit());
       }
       hash = (29 * hash) + getUnknownFields().hashCode();
       memoizedHashCode = hash;
@@ -17430,6 +17477,8 @@ public final class UserBitShared {
         bitField0_ = (bitField0_ & ~0x00400000);
         scannedPlugins_ = com.google.protobuf.LazyStringArrayList.EMPTY;
         bitField0_ = (bitField0_ & ~0x00800000);
+        planCacheHit_ = false;
+        bitField0_ = (bitField0_ & ~0x01000000);
         return this;
       }
 
@@ -17568,6 +17617,10 @@ public final class UserBitShared {
           bitField0_ = (bitField0_ & ~0x00800000);
         }
         result.scannedPlugins_ = scannedPlugins_;
+        if (((from_bitField0_ & 0x01000000) != 0)) {
+          result.planCacheHit_ = planCacheHit_;
+          to_bitField0_ |= 0x00400000;
+        }
         result.bitField0_ = to_bitField0_;
         onBuilt();
         return result;
@@ -17738,6 +17791,9 @@ public final class UserBitShared {
             scannedPlugins_.addAll(other.scannedPlugins_);
           }
           onChanged();
+        }
+        if (other.hasPlanCacheHit()) {
+          setPlanCacheHit(other.getPlanCacheHit());
         }
         this.mergeUnknownFields(other.getUnknownFields());
         onChanged();
@@ -17912,6 +17968,11 @@ public final class UserBitShared {
                 scannedPlugins_.add(bs);
                 break;
               } // case 194
+              case 200: {
+                planCacheHit_ = input.readBool();
+                bitField0_ |= 0x01000000;
+                break;
+              } // case 200
               default: {
                 if (!super.parseUnknownField(input, extensionRegistry, tag)) {
                   done = true; // was an endgroup tag
@@ -19752,6 +19813,45 @@ public final class UserBitShared {
   }
   ensureScannedPluginsIsMutable();
         scannedPlugins_.add(value);
+        onChanged();
+        return this;
+      }
+
+      private boolean planCacheHit_ ;
+      /**
+       * <code>optional bool plan_cache_hit = 25;</code>
+       * @return Whether the planCacheHit field is set.
+       */
+      @java.lang.Override
+      public boolean hasPlanCacheHit() {
+        return ((bitField0_ & 0x01000000) != 0);
+      }
+      /**
+       * <code>optional bool plan_cache_hit = 25;</code>
+       * @return The planCacheHit.
+       */
+      @java.lang.Override
+      public boolean getPlanCacheHit() {
+        return planCacheHit_;
+      }
+      /**
+       * <code>optional bool plan_cache_hit = 25;</code>
+       * @param value The planCacheHit to set.
+       * @return This builder for chaining.
+       */
+      public Builder setPlanCacheHit(boolean value) {
+        bitField0_ |= 0x01000000;
+        planCacheHit_ = value;
+        onChanged();
+        return this;
+      }
+      /**
+       * <code>optional bool plan_cache_hit = 25;</code>
+       * @return This builder for chaining.
+       */
+      public Builder clearPlanCacheHit() {
+        bitField0_ = (bitField0_ & ~0x01000000);
+        planCacheHit_ = false;
         onChanged();
         return this;
       }
@@ -28607,7 +28707,7 @@ public final class UserBitShared {
       "red.QueryResult.QueryState\022\017\n\004user\030\004 \001(\t" +
       ":\001-\022\'\n\007foreman\030\005 \001(\0132\026.exec.DrillbitEndp" +
       "oint\022\024\n\014options_json\030\006 \001(\t\022\022\n\ntotal_cost" +
-      "\030\007 \001(\001\022\025\n\nqueue_name\030\010 \001(\t:\001-\"\337\004\n\014QueryP" +
+      "\030\007 \001(\001\022\025\n\nqueue_name\030\010 \001(\t:\001-\"\367\004\n\014QueryP" +
       "rofile\022 \n\002id\030\001 \001(\0132\024.exec.shared.QueryId" +
       "\022$\n\004type\030\002 \001(\0162\026.exec.shared.QueryType\022\r" +
       "\n\005start\030\003 \001(\003\022\013\n\003end\030\004 \001(\003\022\r\n\005query\030\005 \001(" +
@@ -28622,46 +28722,46 @@ public final class UserBitShared {
       "tions_json\030\021 \001(\t\022\017\n\007planEnd\030\022 \001(\003\022\024\n\014que" +
       "ueWaitEnd\030\023 \001(\003\022\022\n\ntotal_cost\030\024 \001(\001\022\025\n\nq" +
       "ueue_name\030\025 \001(\t:\001-\022\017\n\007queryId\030\026 \001(\t\022\021\n\ta" +
-      "utoLimit\030\027 \001(\005\022\027\n\017scanned_plugins\030\030 \003(\t\"" +
-      "t\n\024MajorFragmentProfile\022\031\n\021major_fragmen" +
-      "t_id\030\001 \001(\005\022A\n\026minor_fragment_profile\030\002 \003" +
-      "(\0132!.exec.shared.MinorFragmentProfile\"\350\002" +
-      "\n\024MinorFragmentProfile\022)\n\005state\030\001 \001(\0162\032." +
-      "exec.shared.FragmentState\022(\n\005error\030\002 \001(\013" +
-      "2\031.exec.shared.DrillPBError\022\031\n\021minor_fra" +
-      "gment_id\030\003 \001(\005\0226\n\020operator_profile\030\004 \003(\013" +
-      "2\034.exec.shared.OperatorProfile\022\022\n\nstart_" +
-      "time\030\005 \001(\003\022\020\n\010end_time\030\006 \001(\003\022\023\n\013memory_u" +
-      "sed\030\007 \001(\003\022\027\n\017max_memory_used\030\010 \001(\003\022(\n\010en" +
-      "dpoint\030\t \001(\0132\026.exec.DrillbitEndpoint\022\023\n\013" +
-      "last_update\030\n \001(\003\022\025\n\rlast_progress\030\013 \001(\003" +
-      "\"\237\002\n\017OperatorProfile\0221\n\rinput_profile\030\001 " +
-      "\003(\0132\032.exec.shared.StreamProfile\022\023\n\013opera" +
-      "tor_id\030\003 \001(\005\022\031\n\roperator_type\030\004 \001(\005B\002\030\001\022" +
-      "\023\n\013setup_nanos\030\005 \001(\003\022\025\n\rprocess_nanos\030\006 " +
-      "\001(\003\022#\n\033peak_local_memory_allocated\030\007 \001(\003" +
-      "\022(\n\006metric\030\010 \003(\0132\030.exec.shared.MetricVal" +
-      "ue\022\022\n\nwait_nanos\030\t \001(\003\022\032\n\022operator_type_" +
-      "name\030\n \001(\t\"B\n\rStreamProfile\022\017\n\007records\030\001" +
-      " \001(\003\022\017\n\007batches\030\002 \001(\003\022\017\n\007schemas\030\003 \001(\003\"J" +
-      "\n\013MetricValue\022\021\n\tmetric_id\030\001 \001(\005\022\022\n\nlong" +
-      "_value\030\002 \001(\003\022\024\n\014double_value\030\003 \001(\001\")\n\010Re" +
-      "gistry\022\035\n\003jar\030\001 \003(\0132\020.exec.shared.Jar\"/\n" +
-      "\003Jar\022\014\n\004name\030\001 \001(\t\022\032\n\022function_signature" +
-      "\030\002 \003(\t\"W\n\013SaslMessage\022\021\n\tmechanism\030\001 \001(\t" +
-      "\022\014\n\004data\030\002 \001(\014\022\'\n\006status\030\003 \001(\0162\027.exec.sh" +
-      "ared.SaslStatus*5\n\nRpcChannel\022\017\n\013BIT_CON" +
-      "TROL\020\000\022\014\n\010BIT_DATA\020\001\022\010\n\004USER\020\002*V\n\tQueryT" +
-      "ype\022\007\n\003SQL\020\001\022\013\n\007LOGICAL\020\002\022\014\n\010PHYSICAL\020\003\022" +
-      "\r\n\tEXECUTION\020\004\022\026\n\022PREPARED_STATEMENT\020\005*\207" +
-      "\001\n\rFragmentState\022\013\n\007SENDING\020\000\022\027\n\023AWAITIN" +
-      "G_ALLOCATION\020\001\022\013\n\007RUNNING\020\002\022\014\n\010FINISHED\020" +
-      "\003\022\r\n\tCANCELLED\020\004\022\n\n\006FAILED\020\005\022\032\n\026CANCELLA" +
-      "TION_REQUESTED\020\006*g\n\nSaslStatus\022\020\n\014SASL_U" +
-      "NKNOWN\020\000\022\016\n\nSASL_START\020\001\022\024\n\020SASL_IN_PROG" +
-      "RESS\020\002\022\020\n\014SASL_SUCCESS\020\003\022\017\n\013SASL_FAILED\020" +
-      "\004B.\n\033org.apache.drill.exec.protoB\rUserBi" +
-      "tSharedH\001"
+      "utoLimit\030\027 \001(\005\022\027\n\017scanned_plugins\030\030 \003(\t\022" +
+      "\026\n\016plan_cache_hit\030\031 \001(\010\"t\n\024MajorFragment" +
+      "Profile\022\031\n\021major_fragment_id\030\001 \001(\005\022A\n\026mi" +
+      "nor_fragment_profile\030\002 \003(\0132!.exec.shared" +
+      ".MinorFragmentProfile\"\350\002\n\024MinorFragmentP" +
+      "rofile\022)\n\005state\030\001 \001(\0162\032.exec.shared.Frag" +
+      "mentState\022(\n\005error\030\002 \001(\0132\031.exec.shared.D" +
+      "rillPBError\022\031\n\021minor_fragment_id\030\003 \001(\005\0226" +
+      "\n\020operator_profile\030\004 \003(\0132\034.exec.shared.O" +
+      "peratorProfile\022\022\n\nstart_time\030\005 \001(\003\022\020\n\010en" +
+      "d_time\030\006 \001(\003\022\023\n\013memory_used\030\007 \001(\003\022\027\n\017max" +
+      "_memory_used\030\010 \001(\003\022(\n\010endpoint\030\t \001(\0132\026.e" +
+      "xec.DrillbitEndpoint\022\023\n\013last_update\030\n \001(" +
+      "\003\022\025\n\rlast_progress\030\013 \001(\003\"\237\002\n\017OperatorPro" +
+      "file\0221\n\rinput_profile\030\001 \003(\0132\032.exec.share" +
+      "d.StreamProfile\022\023\n\013operator_id\030\003 \001(\005\022\031\n\r" +
+      "operator_type\030\004 \001(\005B\002\030\001\022\023\n\013setup_nanos\030\005" +
+      " \001(\003\022\025\n\rprocess_nanos\030\006 \001(\003\022#\n\033peak_loca" +
+      "l_memory_allocated\030\007 \001(\003\022(\n\006metric\030\010 \003(\013" +
+      "2\030.exec.shared.MetricValue\022\022\n\nwait_nanos" +
+      "\030\t \001(\003\022\032\n\022operator_type_name\030\n \001(\t\"B\n\rSt" +
+      "reamProfile\022\017\n\007records\030\001 \001(\003\022\017\n\007batches\030" +
+      "\002 \001(\003\022\017\n\007schemas\030\003 \001(\003\"J\n\013MetricValue\022\021\n" +
+      "\tmetric_id\030\001 \001(\005\022\022\n\nlong_value\030\002 \001(\003\022\024\n\014" +
+      "double_value\030\003 \001(\001\")\n\010Registry\022\035\n\003jar\030\001 " +
+      "\003(\0132\020.exec.shared.Jar\"/\n\003Jar\022\014\n\004name\030\001 \001" +
+      "(\t\022\032\n\022function_signature\030\002 \003(\t\"W\n\013SaslMe" +
+      "ssage\022\021\n\tmechanism\030\001 \001(\t\022\014\n\004data\030\002 \001(\014\022\'" +
+      "\n\006status\030\003 \001(\0162\027.exec.shared.SaslStatus*" +
+      "5\n\nRpcChannel\022\017\n\013BIT_CONTROL\020\000\022\014\n\010BIT_DA" +
+      "TA\020\001\022\010\n\004USER\020\002*V\n\tQueryType\022\007\n\003SQL\020\001\022\013\n\007" +
+      "LOGICAL\020\002\022\014\n\010PHYSICAL\020\003\022\r\n\tEXECUTION\020\004\022\026" +
+      "\n\022PREPARED_STATEMENT\020\005*\207\001\n\rFragmentState" +
+      "\022\013\n\007SENDING\020\000\022\027\n\023AWAITING_ALLOCATION\020\001\022\013" +
+      "\n\007RUNNING\020\002\022\014\n\010FINISHED\020\003\022\r\n\tCANCELLED\020\004" +
+      "\022\n\n\006FAILED\020\005\022\032\n\026CANCELLATION_REQUESTED\020\006" +
+      "*g\n\nSaslStatus\022\020\n\014SASL_UNKNOWN\020\000\022\016\n\nSASL" +
+      "_START\020\001\022\024\n\020SASL_IN_PROGRESS\020\002\022\020\n\014SASL_S" +
+      "UCCESS\020\003\022\017\n\013SASL_FAILED\020\004B.\n\033org.apache." +
+      "drill.exec.protoB\rUserBitSharedH\001"
     };
     descriptor = com.google.protobuf.Descriptors.FileDescriptor
       .internalBuildGeneratedFileFrom(descriptorData,
@@ -28753,7 +28853,7 @@ public final class UserBitShared {
     internal_static_exec_shared_QueryProfile_fieldAccessorTable = new
       com.google.protobuf.GeneratedMessageV3.FieldAccessorTable(
         internal_static_exec_shared_QueryProfile_descriptor,
-        new java.lang.String[] { "Id", "Type", "Start", "End", "Query", "Plan", "Foreman", "State", "TotalFragments", "FinishedFragments", "FragmentProfile", "User", "Error", "VerboseError", "ErrorId", "ErrorNode", "OptionsJson", "PlanEnd", "QueueWaitEnd", "TotalCost", "QueueName", "QueryId", "AutoLimit", "ScannedPlugins", });
+        new java.lang.String[] { "Id", "Type", "Start", "End", "Query", "Plan", "Foreman", "State", "TotalFragments", "FinishedFragments", "FragmentProfile", "User", "Error", "VerboseError", "ErrorId", "ErrorNode", "OptionsJson", "PlanEnd", "QueueWaitEnd", "TotalCost", "QueueName", "QueryId", "AutoLimit", "ScannedPlugins", "PlanCacheHit", });
     internal_static_exec_shared_MajorFragmentProfile_descriptor =
       getDescriptor().getMessageTypes().get(14);
     internal_static_exec_shared_MajorFragmentProfile_fieldAccessorTable = new

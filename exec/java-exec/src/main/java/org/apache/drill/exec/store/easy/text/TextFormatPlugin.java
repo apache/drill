@@ -39,7 +39,9 @@ import org.apache.drill.exec.proto.ExecProtos.FragmentHandle;
 import org.apache.drill.exec.record.metadata.Propertied;
 import org.apache.drill.exec.server.DrillbitContext;
 import org.apache.drill.exec.server.options.OptionManager;
+import org.apache.drill.exec.store.PlanCacheTable;
 import org.apache.drill.exec.store.RecordWriter;
+import org.apache.drill.exec.store.dfs.DrillFileSystem;
 import org.apache.drill.exec.store.dfs.FileSelection;
 import org.apache.drill.exec.store.dfs.easy.EasyFormatPlugin;
 import org.apache.drill.exec.store.dfs.easy.EasyGroupScan;
@@ -49,7 +51,10 @@ import org.apache.drill.exec.store.easy.text.reader.CompliantTextBatchReader;
 import org.apache.drill.exec.store.easy.text.reader.TextParsingSettings;
 import org.apache.drill.exec.store.easy.text.writer.TextRecordWriter;
 import org.apache.drill.exec.store.schedule.CompleteFileWork;
+import org.apache.drill.exec.util.ImpersonationUtil;
 import org.apache.hadoop.conf.Configuration;
+import org.apache.hadoop.fs.FileStatus;
+import org.apache.hadoop.fs.Path;
 
 import java.io.IOException;
 import java.util.HashMap;
@@ -130,6 +135,35 @@ public class TextFormatPlugin extends EasyFormatPlugin<TextFormatConfig> {
         .scanVersion(ScanFrameworkVersion.EVF_V2)
         .supportsLimitPushdown(true)
         .build();
+  }
+
+  @Override
+  public boolean supportPlanCache(FileSelection selection) {
+    // A single explicit file cannot acquire value-dependent directory pruning.
+    // Directories and globs need file-selection reconstruction before opting in.
+    return selection != null && selection.getSelectionRoot() != null
+        && !selection.hadWildcard() && selection.getFiles().size() == 1
+        && Path.getPathWithoutSchemeAndAuthority(selection.getSelectionRoot()).equals(
+            Path.getPathWithoutSchemeAndAuthority(selection.getFiles().get(0)));
+  }
+
+  @Override
+  public PlanCacheTable planCacheTable(String userName, FileSelection selection) throws IOException {
+    if (!supportPlanCache(selection)) {
+      return null;
+    }
+    Path path = selection.getSelectionRoot();
+    // Read fresh status: the selection may already contain cached file metadata.
+    try (DrillFileSystem fs = ImpersonationUtil.createFileSystem(userName, getFsConf())) {
+      FileStatus status = fs.getFileStatus(path);
+      if (!status.isFile()) {
+        return null;
+      }
+      // Conservatively replan on file-status changes, including header/schema changes.
+      // EasyGroupScan's existing JSON reader rebuilds blocks and assignments.
+      return new PlanCacheTable(status.getPath().toString(),
+          status.getLen() + ":" + status.getModificationTime());
+    }
   }
 
   @Override
