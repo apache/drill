@@ -224,6 +224,12 @@ public class DrillSqlWorker {
    */
   private static PhysicalPlan getQueryPlan(QueryContext context, String sql, Pointer<String> textPlan)
       throws ForemanSetupException, RelConversionException, IOException, ValidationException {
+    return getQueryPlan(context, sql, textPlan, true);
+  }
+
+  private static PhysicalPlan getQueryPlan(QueryContext context, String sql, Pointer<String> textPlan,
+      boolean usePlanCache)
+      throws ForemanSetupException, RelConversionException, IOException, ValidationException {
     final SqlConverter parser = new SqlConverter(context);
     injector.injectChecked(context.getExecutionControls(), "sql-parsing", ForemanSetupException.class);
     final SqlNode sqlNode = checkAndApplyAutoLimit(parser, context, sql);
@@ -307,8 +313,10 @@ public class DrillSqlWorker {
 
     // Keep the original SQL if no safe snapshot is available or cache preparation fails.
     SqlNode planningSql = sqlNode;
+    boolean parameterizedPlanning = false;
+    String parameterizedTemplate = null;
     Consumer<PhysicalPlan> prepareCacheInsert = null;
-    if (context.getOptions().getOption(PlannerSettings.PLAN_CACHE)
+    if (usePlanCache && context.getOptions().getOption(PlannerSettings.PLAN_CACHE)
         && !context.getSession().hasTemporaryTables()
         && !hasMutableAliases(context)
         && PlanCacheEligibility.isSafeToCache(sqlNode, context.getFunctionRegistry())) {
@@ -366,6 +374,8 @@ public class DrillSqlWorker {
           };
           // On a cache miss, plan the parameterized SQL to produce a reusable template.
           planningSql = candidate.sql;
+          parameterizedPlanning = !candidate.literals.isEmpty();
+          parameterizedTemplate = candidate.template;
         }
       } catch (RuntimeException e) {
         logger.debug("Plan cache attempt fell back to ordinary planning", e);
@@ -374,7 +384,35 @@ public class DrillSqlWorker {
 
     // This planning path handles both cache bypass and cache misses.
     // Use the original SQL tree for bypassed queries, or the parameterized tree for misses.
-    PhysicalPlan planned = handler.getPlan(planningSql);
+    boolean fallbackEnabled = context.getOptions().getOption(PlannerSettings.PLAN_CACHE_FALLBACK);
+    String originalTextPlan = textPlan == null ? null : textPlan.value;
+    final PhysicalPlan planned;
+    try {
+      planned = handler.getPlan(planningSql);
+      if (parameterizedPlanning) {
+        injector.injectChecked(context.getExecutionControls(), "plan-cache-parameterized-planning", IOException.class);
+      }
+    } catch (Exception e) {
+      if (!parameterizedPlanning) {
+        throw e;
+      }
+      if (!fallbackEnabled) {
+        logger.warn("Parameterized planning failed; fallback is disabled by {}. SQL template: {}",
+            PlannerSettings.ENABLE_PLAN_CACHE_FALLBACK_OPTION, parameterizedTemplate, e);
+        throw e;
+      }
+      logger.warn("Parameterized planning failed; retrying the original SQL without the plan cache. SQL template: {}",
+          parameterizedTemplate, e);
+      // Validation mutates SQL trees; reparse with a fresh converter and handler.
+      context.clearSQLStatementType();
+      context.takePendingPlanCacheInsert();
+      if (textPlan != null) {
+        textPlan.value = originalTextPlan;
+      }
+      PhysicalPlan fallback = getQueryPlan(context, sql, textPlan, false);
+      context.getDrillbitContext().getPlanCache().recordPlanningFailure();
+      return fallback;
+    }
     if (prepareCacheInsert != null) {
       prepareCacheInsert.accept(planned);
     }

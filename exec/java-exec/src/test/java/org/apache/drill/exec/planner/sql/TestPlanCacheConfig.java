@@ -205,14 +205,19 @@ public class TestPlanCacheConfig extends BaseTest {
   public void testRegisteredInvalidationAndEntryMetrics() throws Exception {
     try (PlanCache cache = new PlanCache(1024, Duration.ZERO, Duration.ZERO, ticker)) {
       assertEquals(0L, metric("invalidations"));
+      assertEquals(0L, metric("planning_failures"));
+      cache.recordPlanningFailure();
+      assertEquals(1L, metric("planning_failures"));
       assertEquals(0L, metric("entries"));
       put(cache, "key");
       assertEquals(1L, metric("entries"));
       cache.invalidate("key");
       assertEquals(1L, metric("invalidations"));
       assertEquals(0L, metric("entries"));
+      assertEquals(1L, metric("planning_failures"));
     }
     assertNull(DrillMetrics.getRegistry().getGauges().get("drill.plan_cache.entries"));
+    assertNull(DrillMetrics.getRegistry().getGauges().get("drill.plan_cache.planning_failures"));
   }
 
   @Test

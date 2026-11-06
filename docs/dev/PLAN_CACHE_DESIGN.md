@@ -164,6 +164,23 @@ planning literal SQL, including on the first cache miss. This is an expected tra
 for avoiding repeated optimization. Cached row-count estimates come from the first optimization;
 new values and statistics changes alone do not trigger a new cost-based plan choice.
 
+`planner.enable_plan_cache_fallback` defaults to `true`. If planning a parameterized
+query throws an exception, Drill logs a WARN with the SQL template and exception,
+then retries the original SQL once with a fresh parser, converter and handler,
+without consulting or publishing to the plan cache. Queries with no bindable
+literals do not enter this fallback path. If both attempts fail, the ordinary
+planning error is returned; such queries incur the cost of both attempts.
+
+To expose parameterized planning errors directly during debugging or testing:
+
+```sql
+ALTER SESSION SET planner.enable_plan_cache_fallback = false;
+```
+
+This option can also be set at SYSTEM scope. When disabled, parameterized planning
+failures still produce a WARN, but are returned without this retry. Cache lookup,
+binding and publication failures retain their existing handling.
+
 The following boot options can be overridden in `drill-override.conf`. They are
 read once per Drillbit and changing them requires a restart. The effective settings
 are logged at startup. `planner.enable_plan_cache` remains the runtime on/off switch.
@@ -214,9 +231,25 @@ The following per-cache gauges are registered in `DrillMetrics` under
 | --- | --- |
 | `hits` | Plans successfully rebound and returned by eligible lookups. |
 | `misses` | Eligible lookups without a usable entry, including stale entries and binding failures. Queries that bypass caching are excluded. |
+| `planning_failures` | Parameterized planning attempts that threw an exception, followed by successful ordinary planning of the original SQL. |
 | `invalidations` | Explicit invalidation requests, including whole-cache clear commands. |
 | `evictions` | Guava automatic removals due to capacity or expiration. |
 | `entries` | Current entry count reported by Guava; expired entries may remain counted until maintenance. |
+
+`drill.plan_cache.planning_failures` is a cumulative, Drillbit-local counter
+exposed as a gauge, like `hits` and `misses`. It increments only after fallback
+**planning** succeeds, regardless of whether subsequent query execution succeeds.
+It does not count cases where both planning attempts fail, fallback is disabled,
+or only cache preparation, binding or publication fails. WARN logs therefore can
+outnumber this counter. Clearing the cache does not reset it; recreating the cache
+(normally a Drillbit restart) does.
+
+Treat this counter as evidence to investigate, rather than proof of a parameterization
+bug. False positives are possible: transient metadata changes, resource pressure,
+concurrent activity or nondeterministic planning can make the second attempt succeed
+even if parameterization did not cause the first failure. The counter also cannot
+detect a plan that succeeds but produces incorrect results; differential testing
+with caching disabled, on a miss and on a hit is still needed.
 
 JMX reporting is enabled by default and can be controlled with the JVM property
 `drill.metrics.jmx.enabled`. Periodic metric logging can be enabled with

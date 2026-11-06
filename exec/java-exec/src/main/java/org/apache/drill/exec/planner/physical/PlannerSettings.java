@@ -61,6 +61,10 @@ public class PlannerSettings implements Context{
   public static final String ENABLE_PLAN_CACHE_OPTION = "planner.enable_plan_cache";
   public static final BooleanValidator PLAN_CACHE = new BooleanValidator(ENABLE_PLAN_CACHE_OPTION,
       new OptionDescription("Enables reuse of compatible physical plans for parameterized SQL queries."));
+  public static final String ENABLE_PLAN_CACHE_FALLBACK_OPTION = "planner.enable_plan_cache_fallback";
+  public static final BooleanValidator PLAN_CACHE_FALLBACK = new BooleanValidator(ENABLE_PLAN_CACHE_FALLBACK_OPTION,
+      new OptionDescription("Retries the original SQL without the plan cache when parameterized planning fails. "
+          + "Disable to expose parameterized planning errors without retrying."));
   public static final String DISABLE_EXCHANGE_OPTION = "planner.disable_exchanges";
   public static final OptionValidator EXCHANGE = new BooleanValidator(DISABLE_EXCHANGE_OPTION,
       new OptionDescription("Toggles the state of hashing to a random exchange."));

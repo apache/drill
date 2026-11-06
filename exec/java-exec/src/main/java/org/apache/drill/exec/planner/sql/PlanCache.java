@@ -111,6 +111,7 @@ public final class PlanCache implements AutoCloseable {
   private final AtomicLong successfulBinds = new AtomicLong();
   private final AtomicLong misses = new AtomicLong();
   private final AtomicLong invalidations = new AtomicLong();
+  private final AtomicLong planningFailures = new AtomicLong();
   private final Map<String, Gauge<Long>> metrics = new LinkedHashMap<>();
   private volatile long generation;
   private final ThreadPoolExecutor writer = new ThreadPoolExecutor(1, 1, 0L,
@@ -148,6 +149,7 @@ public final class PlanCache implements AutoCloseable {
     registerMetric("hits", successfulBinds::get);
     registerMetric("misses", misses::get);
     registerMetric("invalidations", invalidations::get);
+    registerMetric("planning_failures", planningFailures::get);
     registerMetric("evictions", () -> entries.stats().evictionCount());
     registerMetric("entries", entries::size);
   }
@@ -169,6 +171,11 @@ public final class PlanCache implements AutoCloseable {
   /** Counts an eligible lookup that could not produce a compatible, bound plan. */
   public void recordMiss() {
     misses.incrementAndGet();
+  }
+
+  /** Counts a parameterized planning failure only after planning the original SQL succeeds. */
+  public void recordPlanningFailure() {
+    planningFailures.incrementAndGet();
   }
 
   /** Updates optional explain output using the cached template. */
