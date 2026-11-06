@@ -95,6 +95,73 @@ public class TestTextPlanCache extends ClusterTest {
   }
 
   @Test
+  public void testStringToNumericCastsOnMissAndHit() throws Exception {
+    for (String type : Arrays.asList("INTEGER", "BIGINT", "DOUBLE", "DECIMAL(10, 2)")) {
+      String sql = "SELECT id, label FROM " + table
+          + " WHERE CAST(id AS INTEGER) > CAST('%d' AS " + type + ")";
+      client.alterSession(PlannerSettings.ENABLE_PLAN_CACHE_OPTION, false);
+      rows(client, String.format(sql, 0), "1", "one", "2", "two", "3", "three");
+      rows(client, String.format(sql, 1), "2", "two", "3", "three");
+      client.alterSession(PlannerSettings.ENABLE_PLAN_CACHE_OPTION, true);
+      long hits = cache().getHitCount();
+      long misses = metric("misses");
+      rows(client, String.format(sql, 0), "1", "one", "2", "two", "3", "three");
+      cache().awaitWrites();
+      assertEquals(hits, cache().getHitCount());
+      assertEquals(misses + 1, metric("misses"));
+      rows(client, String.format(sql, 1), "2", "two", "3", "three");
+      rows(client, String.format(sql, 3));
+      assertEquals(hits + 2, cache().getHitCount());
+      assertEquals(misses + 1, metric("misses"));
+    }
+  }
+
+  @Test
+  public void testStringToTemporalCastsOnMissAndHit() throws Exception {
+    String[][] cases = {
+        {"DATE", "2020-01-01", "2021-01-01", "2022-01-01"},
+        {"TIME", "10:00:00", "12:00:00", "14:00:00"},
+        {"TIMESTAMP", "2020-01-01 00:00:00", "2021-01-01 00:00:00", "2022-01-01 00:00:00"}
+    };
+    for (String[] testCase : cases) {
+      String sql = "SELECT id, label FROM " + table + " WHERE CAST('%s' AS " + testCase[0]
+          + ") < " + testCase[0] + " '" + testCase[2] + "'";
+      client.alterSession(PlannerSettings.ENABLE_PLAN_CACHE_OPTION, false);
+      rows(client, String.format(sql, testCase[1]), "1", "one", "2", "two", "3", "three");
+      rows(client, String.format(sql, testCase[3]));
+      client.alterSession(PlannerSettings.ENABLE_PLAN_CACHE_OPTION, true);
+      long hits = cache().getHitCount();
+      long misses = metric("misses");
+      rows(client, String.format(sql, testCase[1]), "1", "one", "2", "two", "3", "three");
+      cache().awaitWrites();
+      assertEquals(hits, cache().getHitCount());
+      assertEquals(misses + 1, metric("misses"));
+      rows(client, String.format(sql, testCase[3]));
+      rows(client, String.format(sql, testCase[1]), "1", "one", "2", "two", "3", "three");
+      assertEquals(hits + 2, cache().getHitCount());
+      assertEquals(misses + 1, metric("misses"));
+    }
+  }
+
+  @Test
+  public void testNumericToStringCastOnMissAndHit() throws Exception {
+    String sql = "SELECT id, label FROM " + table + " WHERE id = CAST(%d AS VARCHAR(20))";
+    rows(client, String.format(sql, 1), "1", "one");
+    rows(client, String.format(sql, 2), "2", "two");
+    client.alterSession(PlannerSettings.ENABLE_PLAN_CACHE_OPTION, true);
+    long hits = cache().getHitCount();
+    long misses = metric("misses");
+    rows(client, String.format(sql, 1), "1", "one");
+    cache().awaitWrites();
+    assertEquals(hits, cache().getHitCount());
+    assertEquals(misses + 1, metric("misses"));
+    rows(client, String.format(sql, 2), "2", "two");
+    rows(client, String.format(sql, 9));
+    assertEquals(hits + 2, cache().getHitCount());
+    assertEquals(misses + 1, metric("misses"));
+  }
+
+  @Test
   public void testHeaderlessCsvAndTsv() throws Exception {
     for (String extension : Arrays.asList("csv", "tsv")) {
       Path data = file.resolveSibling(file.getFileName() + "." + extension);

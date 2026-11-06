@@ -50,6 +50,7 @@ import org.apache.drill.common.types.TypeProtos;
 import org.apache.drill.common.types.Types;
 import org.apache.drill.exec.expr.annotations.FunctionTemplate;
 import org.apache.drill.exec.expr.fn.DrillFuncHolder;
+import org.apache.drill.exec.planner.sql.conversion.SqlBoundDynamicParam;
 import org.apache.drill.exec.planner.types.DrillRelDataTypeSystem;
 import org.apache.drill.exec.resolver.FunctionResolver;
 import org.apache.drill.exec.resolver.FunctionResolverFactory;
@@ -774,11 +775,13 @@ public class TypeInferenceUtils {
         SqlCallBinding callBinding = (SqlCallBinding) opBinding;
         SqlNode operand0 = callBinding.operand(0);
 
-        // dynamic parameters and null constants need their types assigned
-        // to them using the type they are casted to.
+        // Unbound parameters and null constants take the cast's target type.
+        // Bound parameters already have the literal's source type; preserve it
+        // so the outer CAST performs the conversion rather than retyping its value.
         if(((operand0 instanceof SqlLiteral)
             && (((SqlLiteral) operand0).getValue() == null))
-                || (operand0 instanceof SqlDynamicParam)) {
+                || (operand0 instanceof SqlDynamicParam
+                    && !(operand0 instanceof SqlBoundDynamicParam))) {
           callBinding.getValidator().setValidatedNodeType(
               operand0,
               ret);

@@ -25,11 +25,17 @@ import java.util.stream.Collectors;
 import org.apache.calcite.sql.SqlNode;
 import org.apache.drill.categories.SqlTest;
 import org.apache.drill.common.config.DrillProperties;
+import org.apache.drill.common.expression.CastExpression;
+import org.apache.drill.common.expression.ExpressionStringBuilder;
+import org.apache.drill.common.expression.LogicalExpression;
+import org.apache.drill.common.expression.ValueExpressions.QuotedString;
+import org.apache.drill.common.types.TypeProtos.MinorType;
 import org.apache.drill.exec.ExecConstants;
 import org.apache.drill.exec.metrics.DrillMetrics;
 import org.apache.drill.exec.ops.QueryContext;
 import org.apache.drill.exec.physical.PhysicalPlan;
 import org.apache.drill.exec.physical.base.PhysicalOperator;
+import org.apache.drill.exec.physical.config.Filter;
 import org.apache.drill.exec.physical.rowSet.DirectRowSet;
 import org.apache.drill.exec.physical.rowSet.RowSetReader;
 import org.apache.drill.exec.planner.PhysicalPlanReader;
@@ -322,6 +328,85 @@ public class TestPlanCachePlanning extends ClusterTest {
       cache().awaitWrites();
       assertEquals(0L, metric("entries"));
     }
+  }
+
+  @Test
+  public void testCastKeepsStringParameterAndMatchesItsSourceType() throws Exception {
+    UserSession session = UserSession.Builder.newBuilder()
+        .withCredentials(UserCredentials.newBuilder().setUserName("cast-source-type-test").build())
+        .withOptionManager(cluster.drillbit().getContext().getOptionManager())
+        .setSupportComplexTypes(true).build();
+    session.getOptions().setLocalOption(PlannerSettings.ENABLE_PLAN_CACHE_OPTION, true);
+    String sql = "SELECT x AS cast_value FROM (VALUES (1), (2)) AS t(x) WHERE x > CAST(%s AS INTEGER)";
+    LogicalExpression original;
+    long hits = cache().getHitCount();
+    try (QueryContext context = new QueryContext(session, cluster.drillbit().getContext(), QueryId.getDefaultInstance())) {
+      PhysicalPlan planned = DrillSqlWorker.getPlan(context, String.format(sql, "'0'"), new Pointer<>());
+      assertFalse(context.isPlanCacheHit());
+      original = stringParameterCast(planned, "0");
+      assertEquals(Arrays.asList(1, 2), executeValues(planned));
+      Runnable publish = context.takePendingPlanCacheInsert();
+      assertNotNull(publish);
+      publish.run();
+      cache().awaitWrites();
+    }
+    try (QueryContext context = new QueryContext(session, cluster.drillbit().getContext(), QueryId.getDefaultInstance())) {
+      PhysicalPlan rebound = DrillSqlWorker.getPlan(context, String.format(sql, "'1'"), new Pointer<>());
+      assertTrue(context.isPlanCacheHit());
+      CastExpression cast = stringParameterCast(rebound, "1");
+      // Only the string inside the CAST changes; its type and the CAST itself survive rebinding.
+      assertEquals(ExpressionStringBuilder.toString(original).replace("'0'", "'1'"),
+          ExpressionStringBuilder.toString(cast));
+      assertEquals(Arrays.asList(2), executeValues(rebound));
+      assertEquals(hits + 1, cache().getHitCount());
+    }
+    long invalidations = metric("invalidations");
+    try (QueryContext context = new QueryContext(session, cluster.drillbit().getContext(), QueryId.getDefaultInstance())) {
+      PhysicalPlan numeric = DrillSqlWorker.getPlan(context, String.format(sql, "1"), new Pointer<>());
+      // An INTEGER literal must not select or invalidate the string-parameter template,
+      // even though both expressions have the same INTEGER cast result type.
+      assertFalse(context.isPlanCacheHit());
+      assertEquals(hits + 1, cache().getHitCount());
+      assertEquals(invalidations, metric("invalidations"));
+      assertEquals(Arrays.asList(2), executeValues(numeric));
+    }
+    try (QueryContext context = new QueryContext(session, cluster.drillbit().getContext(), QueryId.getDefaultInstance())) {
+      PhysicalPlan rebound = DrillSqlWorker.getPlan(context, String.format(sql, "'2'"), new Pointer<>());
+      assertTrue(context.isPlanCacheHit());
+      stringParameterCast(rebound, "2");
+      assertTrue(executeValues(rebound).isEmpty());
+      assertEquals(hits + 2, cache().getHitCount());
+    }
+  }
+
+  private CastExpression stringParameterCast(PhysicalPlan plan, String value) {
+    List<Filter> filters = plan.getSortedOperators().stream()
+        .filter(Filter.class::isInstance).map(Filter.class::cast).collect(Collectors.toList());
+    assertEquals(1, filters.size());
+    CastExpression cast = findStringParameterCast(filters.get(0).getExpr());
+    assertNotNull(cast);
+    assertEquals(MinorType.INT, cast.getMajorType().getMinorType());
+    QuotedString literal = (QuotedString) cast.getInput();
+    assertEquals(value, literal.getString());
+    assertEquals(MinorType.VARCHAR, literal.getMajorType().getMinorType());
+    assertEquals(0, literal.getDynamicParamIndex());
+    return cast;
+  }
+
+  private CastExpression findStringParameterCast(LogicalExpression expression) {
+    if (expression instanceof CastExpression) {
+      CastExpression cast = (CastExpression) expression;
+      if (cast.getInput() instanceof QuotedString && ((QuotedString) cast.getInput()).isDynamicParam()) {
+        return cast;
+      }
+    }
+    for (LogicalExpression child : expression) {
+      CastExpression cast = findStringParameterCast(child);
+      if (cast != null) {
+        return cast;
+      }
+    }
+    return null;
   }
 
   @Test
