@@ -35,6 +35,11 @@ import org.apache.drill.exec.metastore.MetadataProviderManager;
 import org.apache.drill.exec.planner.logical.DrillTable;
 import org.apache.drill.exec.planner.sql.SchemaUtilities;
 import org.apache.drill.exec.rpc.user.UserSession;
+import org.apache.drill.exec.security.AccessAuthorizerManager;
+import org.apache.drill.exec.security.TableAccessResource;
+import org.apache.drill.exec.security.spi.AccessAuthorizer;
+import org.apache.drill.exec.security.spi.AccessType;
+import org.apache.drill.exec.security.spi.UserIdentity;
 import com.google.common.cache.CacheBuilder;
 import com.google.common.cache.CacheLoader;
 import com.google.common.cache.LoadingCache;
@@ -103,12 +108,51 @@ class DrillCalciteCatalogReader extends CalciteCatalogReader {
   public Prepare.PreparingTable getTable(List<String> names) {
     checkTemporaryTable(names);
     Prepare.PreparingTable table = super.getTable(names);
-    DrillTable drillTable;
-    if (table != null && (drillTable = table.unwrap(DrillTable.class)) != null) {
-      drillTable.setOptions(session.getOptions());
-      drillTable.setTableMetadataProviderManager(tableCache.getUnchecked(DrillTableKey.of(names, drillTable)));
+    if (table != null) {
+      // Ranger SELECT authorization check for ALL table types, including
+      // JDBC storage plugin tables (JdbcTable) that are not DrillTable.
+      checkTableAccess(table);
+
+      DrillTable drillTable = table.unwrap(DrillTable.class);
+      if (drillTable != null) {
+        drillTable.setOptions(session.getOptions());
+        drillTable.setTableMetadataProviderManager(tableCache.getUnchecked(DrillTableKey.of(names, drillTable)));
+      }
     }
     return table;
+  }
+
+  /**
+   * Checks SELECT permission on the resolved table via the configured {@link AccessAuthorizer}
+   * (Ranger by default). No-op when authorization is disabled (fail-open). System schemas
+   * (INFORMATION_SCHEMA, sys) are bypassed inside the authorizer implementation.
+   *
+   * <p>Extracts datasource/schema/table from the resolved qualified name via
+   * {@link TableAccessResource#resolve(List)} so it works for both DrillTable
+   * (native storage plugins) and non-DrillTable (JDBC storage plugin), and so
+   * table-level and column-level checks address exactly the same resource.
+   */
+  private void checkTableAccess(Prepare.PreparingTable table) {
+    if (!AccessAuthorizerManager.isEnabled(drillConfig)) {
+      // When authorization is disabled, skip the check entirely (matching the
+      // SqlConverter guard). This also avoids the UserSession.getCredentials()
+      // call below, which would NPE for sessions without credentials (e.g.
+      // mock sessions in planner unit tests).
+      return;
+    }
+    AccessAuthorizer authorizer = AccessAuthorizerManager.getAuthorizer(drillConfig);
+    // Use the resolved qualified name (includes default schema resolution) rather than
+    // the raw input names, which may be incomplete when the user omits the schema.
+    TableAccessResource resource = TableAccessResource.resolve(table.getQualifiedName());
+    String userName = session.getCredentials().getUserName();
+
+    if (!authorizer.checkTableAccess(UserIdentity.of(userName), resource.getDataSource(),
+        resource.getSchemaPath(), resource.getTable(), AccessType.SELECT)) {
+      throw UserException.permissionError()
+          .message("Access denied: user '%s' lacks SELECT privilege on %s",
+              userName, resource)
+          .build(logger);
+    }
   }
 
   private void checkTemporaryTable(List<String> names) {

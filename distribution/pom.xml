@@ -35,6 +35,15 @@
     <!-- Hadoop has old AWS Jars. We are explicitly including the V1 libraries for Hadoop-S3 and using the V2 libraries for Drill. -->
     <aws.java.sdk.v1.version>1.12.367</aws.java.sdk.v1.version>
     <oci.hdfs.version>3.3.1.0.3.6</oci.hdfs.version>
+    <!--
+      Source directory for the isolated Ranger plugin classloader jars,
+      referenced by the fileSet in src/assemble/component.xml. The 'ranger'
+      profile overrides this to ${project.build.directory}/ranger-drill-plugin-impl,
+      which is populated by maven-dependency-plugin:copy. The default points
+      to a directory that never exists so the fileSet is skipped (and nothing
+      is shipped) when the profile is disabled.
+    -->
+    <ranger.impl.source.dir>${project.build.directory}/ranger-drill-plugin-impl.disabled</ranger.impl.source.dir>
   </properties>
 
   <dependencies>
@@ -66,6 +75,16 @@
     <dependency>
       <groupId>org.apache.drill.exec</groupId>
       <artifactId>drill-java-exec</artifactId>
+      <version>${project.version}</version>
+    </dependency>
+    <!--
+      Access authorization SPI module (consumed by drill-java-exec and by the
+      Ranger plugin via the plugin classloader's parent fallback). Ships on
+      the Drillbit main classpath (jars/), never in jars/ranger-drill-plugin-impl/.
+    -->
+    <dependency>
+      <groupId>org.apache.drill</groupId>
+      <artifactId>drill-security-spi</artifactId>
       <version>${project.version}</version>
     </dependency>
     <dependency>
@@ -360,6 +379,221 @@
     </plugins>
   </build>
   <profiles>
+
+    <!--
+      Ranger authorization integration. Disabled by default so that the
+      standard distribution tarball carries neither the Ranger 2.9.0
+      dependency tree nor the isolated Jersey 2.35 / HK2 2.6.1 stack
+      (the feature itself defaults to enabled:false anyway).
+
+      Enable with -Pranger. This adds:
+        - drill-ranger-plugin-shim and drill-ranger-plugin (plus the Ranger
+          framework jars they pull transitively) to the assembly, via the
+          dependencySets in src/assemble/component.xml;
+        - the force-copied Jersey 2.x / HK2 2.x / javax JAX-RS API jars that
+          the isolated RangerPluginClassLoader loads from
+          jars/ranger-drill-plugin-impl/;
+        - the property override that points the component.xml fileSet at the
+          populated directory.
+
+      The auth/ modules themselves are built by the matching 'ranger' profile
+      in the root pom. Mirrors the build-contrib / skipContrib pattern.
+    -->
+    <profile>
+      <id>ranger</id>
+      <properties>
+        <ranger.impl.source.dir>${project.build.directory}/ranger-drill-plugin-impl</ranger.impl.source.dir>
+      </properties>
+      <dependencies>
+        <!--
+          Ranger plugin shim: lives on the Drillbit main classpath (jars/),
+          implements the AccessAuthorizer SPI and delegates to
+          drill-ranger-plugin via the isolated RangerPluginClassLoader.
+          Its dependencies (drill-java-exec, ranger-plugin-classloader,
+          slf4j-api) are all provided scope, so nothing leaks transitively.
+        -->
+        <dependency>
+          <groupId>org.apache.drill</groupId>
+          <artifactId>drill-ranger-plugin-shim</artifactId>
+          <version>${project.version}</version>
+        </dependency>
+        <!--
+          Ranger plugin. Jersey / HK2 / jakarta API exclusions keep the
+          2.x-vs-3.x conflict jars out of the main classpath dependency
+          graph; the correct 2.x versions are force-copied below.
+        -->
+        <dependency>
+          <groupId>org.apache.drill</groupId>
+          <artifactId>drill-ranger-plugin</artifactId>
+          <version>${project.version}</version>
+          <exclusions>
+            <exclusion>
+              <groupId>org.glassfish.jersey.core</groupId>
+              <artifactId>*</artifactId>
+            </exclusion>
+            <exclusion>
+              <groupId>org.glassfish.jersey.inject</groupId>
+              <artifactId>*</artifactId>
+            </exclusion>
+            <exclusion>
+              <groupId>org.glassfish.hk2</groupId>
+              <artifactId>*</artifactId>
+            </exclusion>
+            <exclusion>
+              <groupId>org.glassfish.hk2.external</groupId>
+              <artifactId>*</artifactId>
+            </exclusion>
+            <exclusion>
+              <groupId>jakarta.ws.rs</groupId>
+              <artifactId>jakarta.ws.rs-api</artifactId>
+            </exclusion>
+            <exclusion>
+              <groupId>jakarta.annotation</groupId>
+              <artifactId>jakarta.annotation-api</artifactId>
+            </exclusion>
+            <exclusion>
+              <groupId>jakarta.inject</groupId>
+              <artifactId>jakarta.inject-api</artifactId>
+            </exclusion>
+          </exclusions>
+        </dependency>
+      </dependencies>
+      <build>
+        <plugins>
+          <plugin>
+            <groupId>org.apache.maven.plugins</groupId>
+            <artifactId>maven-dependency-plugin</artifactId>
+            <executions>
+              <execution>
+                <id>copy-ranger-plugin-isolated-deps</id>
+                <phase>prepare-package</phase>
+                <goals>
+                  <goal>copy</goal>
+                </goals>
+                <configuration>
+                  <!--
+                    Force-copy the 2.x versions of Jersey, HK2, JAX-RS API,
+                    and annotation APIs that Maven dependency mediation would
+                    otherwise resolve to 3.x (because Drill's own REST server
+                    depends on the 3.x versions at a shallower depth).
+
+                    These jars go into the isolated ranger-drill-plugin-impl/
+                    directory and are loaded by RangerPluginClassLoader, NOT
+                    the Drillbit classloader. Using maven-dependency-plugin:copy
+                    (not the assembly dependencySet) ensures we get the exact
+                    versions required by Jersey 2.35 / HK2 2.6.1, regardless of
+                    what Maven mediation picks for the main classpath.
+                  -->
+                  <artifactItems>
+                    <!-- JAX-RS 2.x API (javax.ws.rs.* package) -->
+                    <artifactItem>
+                      <groupId>jakarta.ws.rs</groupId>
+                      <artifactId>jakarta.ws.rs-api</artifactId>
+                      <version>${jaxrs.api.version}</version>
+                      <type>jar</type>
+                      <outputDirectory>${project.build.directory}/ranger-drill-plugin-impl</outputDirectory>
+                    </artifactItem>
+                    <!-- Jersey 2.x client runtime -->
+                    <artifactItem>
+                      <groupId>org.glassfish.jersey.core</groupId>
+                      <artifactId>jersey-client</artifactId>
+                      <version>${jersey.ranger.version}</version>
+                      <type>jar</type>
+                      <outputDirectory>${project.build.directory}/ranger-drill-plugin-impl</outputDirectory>
+                    </artifactItem>
+                    <artifactItem>
+                      <groupId>org.glassfish.jersey.core</groupId>
+                      <artifactId>jersey-common</artifactId>
+                      <version>${jersey.ranger.version}</version>
+                      <type>jar</type>
+                      <outputDirectory>${project.build.directory}/ranger-drill-plugin-impl</outputDirectory>
+                    </artifactItem>
+                    <artifactItem>
+                      <groupId>org.glassfish.jersey.inject</groupId>
+                      <artifactId>jersey-hk2</artifactId>
+                      <version>${jersey.ranger.version}</version>
+                      <type>jar</type>
+                      <outputDirectory>${project.build.directory}/ranger-drill-plugin-impl</outputDirectory>
+                    </artifactItem>
+                    <artifactItem>
+                      <groupId>org.glassfish.jersey.core</groupId>
+                      <artifactId>jersey-server</artifactId>
+                      <version>${jersey.ranger.version}</version>
+                      <type>jar</type>
+                      <outputDirectory>${project.build.directory}/ranger-drill-plugin-impl</outputDirectory>
+                    </artifactItem>
+                    <artifactItem>
+                      <groupId>org.glassfish.jersey.media</groupId>
+                      <artifactId>jersey-media-json-jackson</artifactId>
+                      <version>${jersey.ranger.version}</version>
+                      <type>jar</type>
+                      <outputDirectory>${project.build.directory}/ranger-drill-plugin-impl</outputDirectory>
+                    </artifactItem>
+                    <artifactItem>
+                      <groupId>org.glassfish.jersey.ext</groupId>
+                      <artifactId>jersey-entity-filtering</artifactId>
+                      <version>${jersey.ranger.version}</version>
+                      <type>jar</type>
+                      <outputDirectory>${project.build.directory}/ranger-drill-plugin-impl</outputDirectory>
+                    </artifactItem>
+                    <!-- HK2 2.6.1 (DI container used by Jersey 2.x) -->
+                    <artifactItem>
+                      <groupId>org.glassfish.hk2</groupId>
+                      <artifactId>hk2-locator</artifactId>
+                      <version>${hk2.ranger.version}</version>
+                      <type>jar</type>
+                      <outputDirectory>${project.build.directory}/ranger-drill-plugin-impl</outputDirectory>
+                    </artifactItem>
+                    <artifactItem>
+                      <groupId>org.glassfish.hk2</groupId>
+                      <artifactId>hk2-api</artifactId>
+                      <version>${hk2.ranger.version}</version>
+                      <type>jar</type>
+                      <outputDirectory>${project.build.directory}/ranger-drill-plugin-impl</outputDirectory>
+                    </artifactItem>
+                    <artifactItem>
+                      <groupId>org.glassfish.hk2</groupId>
+                      <artifactId>hk2-utils</artifactId>
+                      <version>${hk2.ranger.version}</version>
+                      <type>jar</type>
+                      <outputDirectory>${project.build.directory}/ranger-drill-plugin-impl</outputDirectory>
+                    </artifactItem>
+                    <artifactItem>
+                      <groupId>org.glassfish.hk2.external</groupId>
+                      <artifactId>aopalliance-repackaged</artifactId>
+                      <version>${hk2.ranger.version}</version>
+                      <type>jar</type>
+                      <outputDirectory>${project.build.directory}/ranger-drill-plugin-impl</outputDirectory>
+                    </artifactItem>
+                    <artifactItem>
+                      <groupId>org.glassfish.hk2</groupId>
+                      <artifactId>osgi-resource-locator</artifactId>
+                      <version>${osgi.resource.locator.version}</version>
+                      <type>jar</type>
+                      <outputDirectory>${project.build.directory}/ranger-drill-plugin-impl</outputDirectory>
+                    </artifactItem>
+                    <artifactItem>
+                      <groupId>jakarta.annotation</groupId>
+                      <artifactId>jakarta.annotation-api</artifactId>
+                      <version>${jakarta.annotation.api.version}</version>
+                      <type>jar</type>
+                      <outputDirectory>${project.build.directory}/ranger-drill-plugin-impl</outputDirectory>
+                    </artifactItem>
+                    <artifactItem>
+                      <groupId>jakarta.inject</groupId>
+                      <artifactId>jakarta.inject-api</artifactId>
+                      <version>${jakarta.inject.api.version}</version>
+                      <type>jar</type>
+                      <outputDirectory>${project.build.directory}/ranger-drill-plugin-impl</outputDirectory>
+                    </artifactItem>
+                  </artifactItems>
+                </configuration>
+              </execution>
+            </executions>
+          </plugin>
+        </plugins>
+      </build>
+    </profile>
 
     <profile>
       <id>build-jdbc-all</id>

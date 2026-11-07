@@ -34,6 +34,7 @@ import org.apache.drill.exec.coord.zk.ZKClusterCoordinator;
 import org.apache.drill.exec.exception.DrillbitStartupException;
 import org.apache.drill.exec.proto.CoordinationProtos.DrillbitEndpoint;
 import org.apache.drill.exec.proto.CoordinationProtos.DrillbitEndpoint.State;
+import org.apache.drill.exec.security.AccessAuthorizerManager;
 import org.apache.drill.exec.server.DrillbitStateManager.DrillbitState;
 import org.apache.drill.exec.server.options.OptionDefinition;
 import org.apache.drill.exec.server.options.OptionValue;
@@ -229,6 +230,9 @@ public class Drillbit implements AutoCloseable {
     final DrillbitContext drillbitContext = manager.getContext();
     storageRegistry = drillbitContext.getStorage();
     storageRegistry.init();
+    // Initialize the access authorizer if enabled (fail-fast at startup; the
+    // cached singleton is later reused by planner mount points)
+    AccessAuthorizerManager.getAuthorizer(context.getConfig());
     drillbitContext.getOptionManager().init();
     javaPropertiesToSystemOptions();
     manager.getContext().getRemoteFunctionRegistry().init(context.getConfig(), storeProvider, coord);
@@ -332,6 +336,12 @@ public class Drillbit implements AutoCloseable {
     } catch(Exception e) {
       logger.warn("Failure on close()", e);
     }
+
+    // Release access-authorizer plugin resources (e.g. Ranger policy-refresh
+    // threads, policy-engine caches) now that all queries have drained and the
+    // engine services above are closed. Idempotent; safe when authorization is
+    // disabled or was never initialized.
+    AccessAuthorizerManager.close();
 
     logger.info("Shutdown completed ({} ms).", w.elapsed(TimeUnit.MILLISECONDS) );
     stateManager.setState(DrillbitState.SHUTDOWN);
