@@ -1,0 +1,17 @@
+{
+  "tables": [
+    {
+      "name": "PrimaryResult",
+      "columns": [
+        {"name": "AlertName", "type": "string"},
+        {"name": "Severity", "type": "string"}
+      ],
+      "rows": [
+        ["Alert1", "High"],
+        ["Alert2", "Medium"],
+        ["Alert3", "Low"]
+      ]
+    }
+  ],
+  "@odata.nextLink": "https://api.loganalytics.io/v1/workspaces/test-workspace/query?$skip=1000"
+}

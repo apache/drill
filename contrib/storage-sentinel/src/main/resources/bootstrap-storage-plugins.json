@@ -1,0 +1,15 @@
+{
+  "storage":{
+    "sentinel" : {
+      "type":"sentinel",
+      "workspaceId":"",
+      "tenantId":"",
+      "clientId":"",
+      "clientSecret":"",
+      "defaultTimespan":"P1D",
+      "maxRows":10000,
+      "tables":[],
+      "enabled": false
+    }
+  }
+}
