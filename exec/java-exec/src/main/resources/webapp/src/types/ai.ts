@@ -289,3 +289,15 @@ export interface UsageEvent {
 export interface ErrorEvent {
   message: string;
 }
+
+/** A project-scoped Prospector conversation's metadata (messages are fetched separately). */
+export interface ConversationRecord {
+  id: string;
+  projectId: string;
+  owner: string;
+  name: string;
+  createdAt: number;
+  updatedAt: number;
+  messageCount: number;
+  version: number;
+}
