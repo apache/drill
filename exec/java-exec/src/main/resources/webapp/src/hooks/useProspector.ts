@@ -161,9 +161,9 @@ export const TOOL_DEFINITIONS: ToolDefinition[] = [
     name: 'create_workflow',
     description: 'Create a scheduled workflow in the current project: a SQL query that runs on a '
       + 'schedule, followed by actions such as an email or an alert. The workflow is always '
-      + 'created PAUSED and does nothing until the user activates it with the Activate button '
-      + 'that appears under it in the conversation. You cannot activate it, so never tell the '
-      + 'user it is running; tell them it is ready for them to review and activate. Only call '
+      + 'created PAUSED and does nothing until the user activates it themselves. You cannot '
+      + 'activate it, so never tell the user it is running; tell them it is ready for them to '
+      + 'review and activate, from the Workflows page (the result gives its path). Only call '
       + 'this after the user has agreed to the schedule and the actions. Give the query as sql '
       + '(it is saved into the project for you, so do not call save_query first), or as '
       + 'savedQueryId to reuse a query you already saved with this tool. Do not call '
@@ -1074,9 +1074,18 @@ export function useProspector(
               await addSavedQuery(projectId, saved.id);
             } catch (err) {
               console.error('Failed to add saved query to project', err);
+              // Only a project's owner can add to it, while any member can create a workflow.
+              // For a member neither sql nor savedQueryId can ever work, so say so and stop
+              // rather than offering a retry that fails the same way.
+              const status = (err as { response?: { status?: number } })?.response?.status;
+              if (status === 403) {
+                return JSON.stringify({
+                  error: 'No workflow was created. A workflow needs its query saved in the project, and only the project owner can add a saved query to it. Do not retry. Tell the user the project owner has to create this workflow, or has to add the saved query to the project first.',
+                });
+              }
+              const reason = err instanceof Error ? err.message : 'unknown error';
               return JSON.stringify({
-                error: `The query was saved but could not be added to the project, so no workflow was created. Call create_workflow again with savedQueryId "${saved.id}" instead of sql.`,
-                savedQueryId,
+                error: `No workflow was created: the query was saved but could not be added to the project (${reason}). Calling create_workflow again with sql will work only if the cause was temporary, and the query is saved again. Try that at most once, then tell the user.`,
               });
             }
           }
@@ -1107,13 +1116,14 @@ export function useProspector(
             });
             await queryClient.invalidateQueries({ queryKey: ['project', projectId] });
             await queryClient.invalidateQueries({ queryKey: ['workflows'] });
+            const viewPath = `/projects/${projectId}/workflows/${created.id}`;
             return JSON.stringify({
               id: created.id,
               name: created.name,
               savedQueryId,
               status: created.status,
-              message: `Workflow "${created.name}" was created paused. It is not running and will not run until the user activates it with the Activate button under this message.`,
-              viewPath: `/projects/${projectId}/workflows/${created.id}`,
+              message: `Workflow "${created.name}" was created paused. It is not running and will not run until the user activates it. They can review and activate it on the Workflows page at ${viewPath}.`,
+              viewPath,
             });
           } catch (err) {
             // Handled here rather than by the outer catch so the saved query's id survives

@@ -137,6 +137,43 @@ describe('WorkflowActivationCard', () => {
     expect(screen.queryByRole('button', { name: 'Activate' })).not.toBeInTheDocument();
   });
 
+  // Held or auto-repeating Enter must not be able to switch on an emailing workflow.
+  it('puts focus on Cancel, not on the button that activates', async () => {
+    renderCard();
+    await activate();
+    const d = await dialog();
+    await waitFor(() => expect(document.activeElement).toBe(within(d).getByRole('button', { name: 'Cancel' })));
+  });
+
+  it('shows where an action of an unrecognised type sends, so it is never confirmed blind', async () => {
+    vi.mocked(getWorkflow).mockResolvedValue(workflow({
+      actions: [
+        { id: 'hook', type: 'webhook', condition: { always: true },
+          config: { url: 'https://hooks.example.com/alerts', method: 'POST' } },
+        { id: 'page', type: 'pager', condition: { always: true }, config: { to: ['a@x.com', 'b@x.com'] } },
+        { id: 'misc', type: 'mystery', condition: { always: true }, config: { note: 'x' } },
+      ],
+    }));
+    renderCard();
+    await activate();
+    const d = await dialog();
+    expect(d).toHaveTextContent('webhook');
+    expect(d).toHaveTextContent('url: https://hooks.example.com/alerts');
+    expect(d).toHaveTextContent('to: a@x.com, b@x.com');
+    // Config with no recognisable destination is not dumped wholesale.
+    expect(d).not.toHaveTextContent('note');
+  });
+
+  it('says it could not load, and offers Retry, for a failure that is not a 404', async () => {
+    vi.mocked(getWorkflow).mockRejectedValueOnce({ isAxiosError: true, response: { status: 500 } });
+    renderCard();
+    expect(await screen.findByText(/could not load/i)).toBeInTheDocument();
+    expect(screen.queryByText(/no longer exists/i)).not.toBeInTheDocument();
+    expect(screen.queryByRole('button', { name: 'Activate' })).not.toBeInTheDocument();
+    fireEvent.click(screen.getByRole('button', { name: 'Retry' }));
+    expect(await screen.findByRole('button', { name: 'Activate' })).toBeInTheDocument();
+  });
+
   it('offers no Activate for a workflow that has been deleted', async () => {
     vi.mocked(getWorkflow).mockRejectedValue({ isAxiosError: true, response: { status: 404 } });
     renderCard();

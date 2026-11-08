@@ -29,6 +29,9 @@ export interface WorkflowActivationCardProps {
   name: string;
 }
 
+/** Config keys that name where an action sends something. */
+const DESTINATION_KEYS = ['url', 'webhook', 'endpoint', 'to'];
+
 /** What an action does, in a line, with the detail that matters before it is switched on. */
 function describeAction(a: WorkflowAction): string {
   const cfg = a.config ?? {};
@@ -43,8 +46,14 @@ function describeAction(a: WorkflowAction): string {
     }
     case 'record_alert':
       return 'Record an alert in the run history';
-    default:
-      return a.type;
+    default: {
+      // A type this dialog does not know. It may well send somewhere (a webhook, say), so
+      // show every config entry that looks like a destination rather than only the type.
+      const where = DESTINATION_KEYS
+        .filter((k) => cfg[k] !== undefined && cfg[k] !== null && cfg[k] !== '')
+        .map((k) => `${k}: ${Array.isArray(cfg[k]) ? (cfg[k] as unknown[]).join(', ') : String(cfg[k])}`);
+      return where.length > 0 ? `${a.type} (${where.join('; ')})` : a.type;
+    }
   }
 }
 
@@ -90,7 +99,7 @@ export default function WorkflowActivationCard({ workflowId, name }: WorkflowAct
   const queryClient = useQueryClient();
   const [refused, setRefused] = useState<string | null>(null);
   // Same key as the canvas viewer, so activating here updates the Summary tab too.
-  const { data: wf, isError } = useQuery({
+  const { data: wf, isError, error, refetch } = useQuery({
     queryKey: ['workflow', workflowId],
     queryFn: () => getWorkflow(workflowId),
     staleTime: 0,
@@ -112,13 +121,22 @@ export default function WorkflowActivationCard({ workflowId, name }: WorkflowAct
     content: <ConfirmBody wf={current} />,
     okText: 'Activate workflow',
     cancelText: 'Cancel',
+    // Switching on something that emails people: Enter must not confirm it by default.
+    autoFocusButton: 'cancel',
     onOk: activate,
   });
 
   let status: string;
   let canActivate = false;
+  let retryable = false;
   if (isError) {
-    status = 'This workflow no longer exists.';
+    // Only a 404 means the workflow is gone. Anything else may pass, so offer a retry.
+    if ((error as { response?: { status?: number } })?.response?.status === 404) {
+      status = 'This workflow no longer exists.';
+    } else {
+      status = 'Could not load this workflow.';
+      retryable = true;
+    }
   } else if (!wf) {
     return null;
   } else if (wf.status === 'expired') {
@@ -138,6 +156,7 @@ export default function WorkflowActivationCard({ workflowId, name }: WorkflowAct
       style={{ display: 'flex', alignItems: 'center', gap: 8, flexWrap: 'wrap', marginTop: 4, fontSize: 12 }}
     >
       <span style={{ flex: 1, minWidth: 0, opacity: 0.8 }}>{status}</span>
+      {retryable && <Button size="small" onClick={() => { void refetch(); }}>Retry</Button>}
       {canActivate && wf && (
         <Button size="small" type="primary" onClick={() => confirm(wf)}>Activate</Button>
       )}

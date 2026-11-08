@@ -533,6 +533,18 @@ describe('create_workflow tool', () => {
     expect(out.message).toMatch(/not running/i);
   });
 
+  // Not every surface renders the Activate button (only the Conversations page opens
+  // artifacts), so the model must be pointed at a route that exists everywhere.
+  it('points the model at the workflow page, not at a button that may not be on screen', async () => {
+    const out = await run(args());
+    expect(out.viewPath).toBe('/projects/proj-42/workflows/wf-1');
+    expect(out.message).toContain(out.viewPath);
+    expect(out.message).not.toMatch(/button under this message/i);
+    const description = TOOL_DEFINITIONS.find((t) => t.name === 'create_workflow')!.description;
+    expect(description).toContain('Workflows page');
+    expect(description).not.toMatch(/button that appears under it/i);
+  });
+
   it('uses an existing saved query when given its id, and saves nothing new', async () => {
     const out = await run(args({ sql: undefined, savedQueryId: 'sq-7' }));
     expect(createSavedQuery).not.toHaveBeenCalled();
@@ -559,8 +571,11 @@ describe('create_workflow tool', () => {
   });
 
   it('cannot reach setWorkflowEnabled at all', () => {
-    // Activation is a user action behind a confirm dialog (WorkflowActivationCard). The hook
-    // that runs model-issued tools must never grow a path to it.
+    // A cheap tripwire, not a guarantee: it shows only that this one file lacks these names
+    // today. It would miss an alias or helper in another module, a split-out executor, a
+    // dynamic import, or a raw apiClient call, and a comment could trip it. The protection is
+    // the server (create pins paused, the runner skips disabled workflows, update cannot
+    // enable) plus the single caller of setWorkflowEnabled, WorkflowActivationCard's confirm.
     expect(prospectorSource).not.toMatch(/setWorkflowEnabled/);
     expect(prospectorSource).not.toMatch(/updateWorkflow|runWorkflowNow/);
   });
@@ -608,12 +623,25 @@ describe('create_workflow tool', () => {
     expect(out.savedQueryId).toBe('sq-1');
   });
 
-  it('stops, naming the saved query, when it cannot be added to the project', async () => {
-    vi.mocked(addSavedQuery).mockRejectedValue(new Error('403'));
+  it('stops, without suggesting a retry, when a non-owner cannot add the query to the project', async () => {
+    vi.mocked(addSavedQuery).mockRejectedValue(
+      { isAxiosError: true, response: { status: 403, data: { message: 'Only the owner can modify this project' } } });
     const out = await run(args());
     expect(createWorkflow).not.toHaveBeenCalled();
-    expect(out.error).toMatch(/could not be added to the project/);
-    expect(out.savedQueryId).toBe('sq-1');
+    // A retry cannot succeed: with savedQueryId the query is still not in the project.
+    expect(out.error).toMatch(/project owner/i);
+    expect(out.error).not.toMatch(/call create_workflow again/i);
+    expect(out.error).not.toMatch(/instead of sql/i);
+    expect(out).not.toHaveProperty('savedQueryId');
+  });
+
+  it('allows one more attempt, saying what it costs, when adding the query fails for another reason', async () => {
+    vi.mocked(addSavedQuery).mockRejectedValue(new Error('Network Error'));
+    const out = await run(args());
+    expect(createWorkflow).not.toHaveBeenCalled();
+    expect(out.error).toContain('Network Error');
+    expect(out.error).toMatch(/saved again/i);
+    expect(out.error).not.toMatch(/instead of sql/i);
   });
 });
 
