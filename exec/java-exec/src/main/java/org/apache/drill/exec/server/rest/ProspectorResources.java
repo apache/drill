@@ -784,8 +784,8 @@ public class ProspectorResources {
       + "  A workflow is always created paused. You cannot activate it, so never say it is running\n"
       + "  or scheduled. Tell the user it is ready for them to review and activate, and point them\n"
       + "  to the viewPath in the tool result. Do not call create_workflow again for a workflow\n"
-      + "  that was created, because that makes a second one. If the server rejects it, fix the\n"
-      + "  fields and call it again.\n"
+      + "  that was created, because that makes a second one. If the server rejects it and the\n"
+      + "  result does not say not to retry, fix the fields and call it again.\n"
       + "- A written report is a wiki page. Save it with write_wiki_page once the user agrees, as\n"
       + "  described below.\n";
 

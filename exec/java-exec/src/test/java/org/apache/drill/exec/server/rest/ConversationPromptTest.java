@@ -155,7 +155,12 @@ public class ConversationPromptTest {
     String prompt = conversationPrompt();
 
     assertTrue(prompt.contains("Do not call create_workflow again for a workflow that was created"));
-    assertTrue(prompt.contains("If the server rejects it, fix the fields and call it again"));
+    assertTrue(prompt.contains("If the server rejects it and the result does not say not to "
+        + "retry, fix the fields and call it again"),
+        "an ordinary rejection is retried");
+    // A non-owner member gets "Do not retry" from the tool; the prompt must defer to it.
+    assertTrue(prompt.contains("does not say not to retry"),
+        "defers to an explicit do-not-retry in the tool result");
     assertFalse(prompt.contains("once per workflow"));
   }
 
