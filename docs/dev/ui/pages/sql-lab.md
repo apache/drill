@@ -37,7 +37,7 @@ In `src/components/sqllab/`:
 - `SaveQueryDialog` — save current tab as a new or existing saved query.
 - `QueryHistoryModal` — past executions for the current user.
 - `KeyboardShortcutsModal` — help overlay (triggered by `?`).
-- `AskProspectorButton` — in the query toolbar; opens the project's conversations, or the user's Scratch project outside a project. SQL Lab no longer hosts a chat, and Explain, Fix Error and Fix with Prospector were removed with it.
+- `AskProspectorButton` — in the query toolbar; opens the project's conversations, or the user's Scratch project outside a project. SQL Lab hosts no chat. Explain, Fix Error (toolbar menu) and Fix with Prospector (results grid) start a new conversation seeded with the SQL, error and schema context (`useAskProspector`); they are disabled (menu) or hidden (grid button) until the Scratch lookup resolves.
 - `ShareApiModal` — copyable cURL / API snippets for the active query.
 - `VizTabIcon` — overlay icon shown on tabs that carry visualizations.
 
@@ -127,7 +127,7 @@ Design and the reasoning behind the projection handling are in
 - Breadcrumb: `SQL Lab` (or project breadcrumb when wrapped by `ProjectQueryPage`).
 - Toolbar actions: format, save, schedule, share, settings.
 - Left rail: `SchemaExplorer`.
-- Inspector tabs: `History`, `Validation`.
+- No inspector tabs are registered; Prospector lives on the Conversations page.
 
 ## Behavior
 

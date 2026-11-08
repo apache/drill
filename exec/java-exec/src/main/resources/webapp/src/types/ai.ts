@@ -311,3 +311,13 @@ export interface ConversationRecord {
   messageCount: number;
   version: number;
 }
+
+/**
+ * A first turn handed to the Conversations page by another page (router state). It starts
+ * a new conversation and is consumed exactly once. The context carries what the sender had
+ * in view (SQL and error, log lines) and applies to that first turn only.
+ */
+export interface ConversationSeed {
+  prompt: string;
+  context?: Partial<ChatContext>;
+}

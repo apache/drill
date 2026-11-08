@@ -26,6 +26,8 @@ import {
   DownOutlined,
   SettingOutlined,
   ThunderboltOutlined,
+  BulbOutlined,
+  BugOutlined,
   QuestionCircleOutlined,
   WarningOutlined,
 } from '@ant-design/icons';
@@ -54,9 +56,12 @@ interface QueryToolbarProps {
   resultsSettings?: ResultsSettings;
   onResultsSettingsChange?: (settings: ResultsSettings) => void;
   onShowHistory?: () => void;
+  onExplainQuery?: () => void;
   onOptimizeQuery?: () => void;
+  onFixError?: () => void;
   hasSql?: boolean;
   hasSelection?: boolean;
+  hasError?: boolean;
   prospectorAvailable?: boolean;
   /** Set inside a project: Ask Prospector opens that project's conversations instead of Scratch. */
   projectId?: string;
@@ -77,9 +82,12 @@ export default function QueryToolbar({
   resultsSettings,
   onResultsSettingsChange,
   onShowHistory,
+  onExplainQuery,
   onOptimizeQuery,
+  onFixError,
   hasSql,
   hasSelection,
+  hasError,
   prospectorAvailable,
   projectId,
 }: QueryToolbarProps) {
@@ -135,7 +143,14 @@ export default function QueryToolbar({
       ? [
           { type: 'divider' as const },
           ...(hasSql
-            ? [{ key: 'optimize', icon: <ThunderboltOutlined />, label: 'Optimize with Prospector', onClick: onOptimizeQuery }]
+            ? [
+                // Disabled until the Scratch lookup resolves, so a click never goes nowhere.
+                { key: 'explain', icon: <BulbOutlined />, label: 'Explain with Prospector', onClick: onExplainQuery, disabled: !onExplainQuery },
+                { key: 'optimize', icon: <ThunderboltOutlined />, label: 'Optimize with Prospector', onClick: onOptimizeQuery },
+              ]
+            : []),
+          ...(hasError
+            ? [{ key: 'fix', icon: <BugOutlined />, label: 'Fix Error with Prospector', onClick: onFixError, disabled: !onFixError }]
             : []),
         ]
       : []),

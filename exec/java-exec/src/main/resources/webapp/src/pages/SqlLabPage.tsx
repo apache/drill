@@ -50,6 +50,7 @@ import { useTabPersistence, useRestoreTabs } from '../hooks/useTabPersistence';
 import { useSendDataToAi } from '../hooks/useSendDataToAi';
 import { useMonacoCompletion } from '../hooks/useMonacoCompletion';
 import { conversationLengthFor } from '../hooks/useProspector';
+import { useAskProspector } from '../hooks/useAskProspector';
 import { getAiStatus, streamChat, transpileSql, convertDataType } from '../api/ai';
 import { getSchemaTree } from '../api/metadata';
 import { getSavedQuery } from '../api/savedQueries';
@@ -75,7 +76,7 @@ import DeleteTabModal from '../components/query-editor/DeleteTabModal';
 import { getSharedQueryApis } from '../api/sharedQueries';
 import { useDeleteTab } from '../hooks/useDeleteTab';
 import NotebookPanel from '../components/notebook/NotebookPanel';
-import { useAppChrome, usePageChrome } from '../contexts/AppChromeContext';
+import { usePageChrome } from '../contexts/AppChromeContext';
 import type { SavedQuery, Visualization } from '../types';
 import { normalizeSql } from '../utils/sqlTransformations';
 import type { ChatContext, ChatMessage } from '../types/ai';
@@ -251,11 +252,8 @@ export default function SqlLabPage({ datasetFilter, headerContent, projectId, sa
 
   const [prospectorAvailable, setProspectorAvailable] = useState(false);
   // Starts closed and opens only once /status says the deployment permits sample data.
-  // Shared with useProspector via useSendDataToAi — see that hook's doc comment.
+  // See useSendDataToAi's doc comment.
   const { sendDataToAi } = useSendDataToAi();
-  const { setInspectorOpen, setInspectorActiveTab } = useAppChrome();
-
-
 
   // Fetch schemas for the schema selector
   const { data: schemas } = useSchemas();
@@ -342,7 +340,7 @@ export default function SqlLabPage({ datasetFilter, headerContent, projectId, sa
   // Real-time SQL validation markers in the editor
   useSqlValidation(sql, editorInstanceRef, monacoInstanceRef);
 
-  // Global keyboard shortcuts: ?, Ctrl+Shift+F (schema search), Ctrl+S (save)
+  // Global keyboard shortcuts: ?, Ctrl+S (save)
   useEffect(() => {
     const handler = (e: KeyboardEvent) => {
       const target = e.target as HTMLElement;
@@ -353,18 +351,6 @@ export default function SqlLabPage({ datasetFilter, headerContent, projectId, sa
       if (e.key === '?' && !inInput && !mod) {
         e.preventDefault();
         setShortcutsOpen(true);
-        return;
-      }
-
-      // Ctrl/Cmd+Shift+F — open inspector to Schema tab and focus search
-      if (mod && e.shiftKey && e.key === 'F') {
-        e.preventDefault();
-        setInspectorOpen(true);
-        setInspectorActiveTab('schema');
-        setTimeout(() => {
-          const searchEl = document.getElementById('schema-search-input') as HTMLInputElement | null;
-          searchEl?.focus();
-        }, 150);
         return;
       }
 
@@ -379,10 +365,10 @@ export default function SqlLabPage({ datasetFilter, headerContent, projectId, sa
     };
     window.addEventListener('keydown', handler);
     return () => window.removeEventListener('keydown', handler);
-  }, [sql, dispatch, setInspectorOpen, setInspectorActiveTab]);
+  }, [sql, dispatch]);
 
   // Check Prospector status and config on mount. sendDataToAi itself comes from
-  // useSendDataToAi (shared with useProspector), not from this fetch.
+  // useSendDataToAi, not from this fetch.
   useEffect(() => {
     getAiStatus()
       .then((status) => setProspectorAvailable(status.enabled))
@@ -420,6 +406,22 @@ export default function SqlLabPage({ datasetFilter, headerContent, projectId, sa
 
     return base;
   }, [sql, projectId, activeTab?.defaultSchema, schemas, error, results, datasetFilter]);
+
+  // Explain and Fix hand the SQL, error and schema to a new Prospector conversation, in the
+  // project when there is one and in Scratch otherwise. Undefined until the target is known.
+  const { ask } = useAskProspector(projectId);
+  const askWith = useCallback(
+    (prompt: string) => (ask ? () => ask({ prompt, context: aiContext }) : undefined),
+    [ask, aiContext],
+  );
+  const handleExplainQuery = useMemo(
+    () => askWith('Explain this SQL query. What does it do and how could it be improved?'),
+    [askWith],
+  );
+  const handleFixError = useMemo(
+    () => askWith('Fix the error in my SQL query. Explain what went wrong and provide a corrected version.'),
+    [askWith],
+  );
 
   // Build schema context for the optimize prompt
   const buildSchemaContext = useCallback(
@@ -1205,7 +1207,10 @@ export default function SqlLabPage({ datasetFilter, headerContent, projectId, sa
             resultsSettings={resultsSettings}
             onResultsSettingsChange={handleResultsSettingsChange}
             onShowHistory={handleShowHistory}
+            onExplainQuery={handleExplainQuery}
             onOptimizeQuery={handleOptimizeQuery}
+            onFixError={handleFixError}
+            hasError={!!error}
             hasSql={hasSql}
             hasSelection={hasSelection}
             projectId={projectId}
@@ -1268,6 +1273,8 @@ export default function SqlLabPage({ datasetFilter, headerContent, projectId, sa
                       onCreateVisualization={handleCreateVisualization}
                       resultsSettings={resultsSettings}
                       onResultsSettingsChange={handleResultsSettingsChange}
+                      onFixWithProspector={handleFixError}
+                      prospectorAvailable={prospectorAvailable}
                       onTransformColumn={handleTransformColumn}
                       onShareApi={handleShareApi}
                       cacheId={cacheId}

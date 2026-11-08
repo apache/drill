@@ -93,4 +93,31 @@ describe('QueryToolbar Ask Prospector', () => {
     renderWithRouter({ prospectorAvailable: false, projectId: 'proj_1' });
     expect(screen.queryByRole('button', { name: /ask prospector/i })).not.toBeInTheDocument();
   });
+
+  async function openMore() {
+    fireEvent.click(screen.getByRole('button', { name: /more/i }));
+    return screen;
+  }
+
+  it('Fix Error with Prospector hands the click to the page', async () => {
+    const onFixError = vi.fn();
+    renderWithRouter({ prospectorAvailable: true, hasSql: true, hasError: true, onFixError, onExplainQuery: vi.fn() });
+    await openMore();
+    fireEvent.click(await screen.findByText('Fix Error with Prospector'));
+    expect(onFixError).toHaveBeenCalledTimes(1);
+  });
+
+  it('offers Fix Error only when there is an error', async () => {
+    renderWithRouter({ prospectorAvailable: true, hasSql: true, hasError: false, onFixError: vi.fn() });
+    await openMore();
+    await screen.findByText('Explain with Prospector');
+    expect(screen.queryByText('Fix Error with Prospector')).not.toBeInTheDocument();
+  });
+
+  it('disables Explain and Fix while there is no target to send them to', async () => {
+    renderWithRouter({ prospectorAvailable: true, hasSql: true, hasError: true });
+    await openMore();
+    expect((await screen.findByText('Explain with Prospector')).closest('li')).toHaveClass('ant-dropdown-menu-item-disabled');
+    expect(screen.getByText('Fix Error with Prospector').closest('li')).toHaveClass('ant-dropdown-menu-item-disabled');
+  });
 });

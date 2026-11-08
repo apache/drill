@@ -30,3 +30,7 @@ Three panes: `ConversationList` (left, inside the page, not in the project sideb
 ## Not yet here
 
 Search of conversations in the list. Deleting a conversation does not clear its offline buffer in localStorage.
+
+## Seeded conversations
+
+Other pages (SQL Lab, Logs) can open a conversation with a first turn already written. They navigate to `/projects/<id>/chat` with router state `{ seed: { prompt, context } }` (`ConversationSeed`, `useAskProspector`). `ConversationsPage` then always creates a new conversation, never joining the most recent one, navigates to it replacing the entry, and `ConversationView` sends the prompt once `useProspector` reports `isLoaded`, with `context` merged over the project context and `conversationMode` kept on. The router state is cleared in the same step as the send, because history state survives a reload and a back-navigation. If creating the conversation fails the seed is dropped with an error message.

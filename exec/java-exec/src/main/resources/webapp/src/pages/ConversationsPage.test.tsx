@@ -18,7 +18,7 @@
 import { useEffect, useReducer, useState } from 'react';
 import { describe, it, expect, vi, beforeAll, beforeEach } from 'vitest';
 import { render, screen, waitFor, fireEvent, within, act } from '@testing-library/react';
-import { MemoryRouter } from 'react-router-dom';
+import { MemoryRouter, useLocation } from 'react-router-dom';
 import { QueryClient, QueryClientProvider } from '@tanstack/react-query';
 import App from '../App';
 import { useProspector } from '../hooks/useProspector';
@@ -82,7 +82,7 @@ function record(over: Partial<ConversationRecord> & { id: string }): Conversatio
 const reloadConversation = vi.fn();
 const clearChat = vi.fn();
 const sendMessage = vi.fn();
-let hookState: { messages: ChatMessage[]; saveStatus: SaveStatus; isStreaming: boolean };
+let hookState: { messages: ChatMessage[]; saveStatus: SaveStatus; isStreaming: boolean; isLoaded: boolean };
 // Pages that render the mocked hook, so a test can change what it returns mid-test.
 const hookSubscribers = new Set<() => void>();
 
@@ -94,8 +94,15 @@ function setHook(patch: Partial<typeof hookState>) {
   });
 }
 
+/** Where the router is now, so a test can see the state a page left behind. */
+let currentLocation: ReturnType<typeof useLocation>;
+function LocationProbe() {
+  currentLocation = useLocation();
+  return null;
+}
+
 function renderAt(
-  path: string,
+  path: string | { pathname: string; state: unknown },
   client = new QueryClient({ defaultOptions: { queries: { retry: false } } }),
 ) {
   return render(
@@ -104,6 +111,7 @@ function renderAt(
         initialEntries={[path]}
         future={{ v7_startTransition: true, v7_relativeSplatPath: true }}
       >
+        <LocationProbe />
         <App />
       </MemoryRouter>
     </QueryClientProvider>,
@@ -139,7 +147,7 @@ describe('ConversationsPage', () => {
     vi.clearAllMocks();
     // jsdom has no layout; the message list scrolls itself into view on every render.
     Element.prototype.scrollIntoView = vi.fn();
-    hookState = { messages: [], saveStatus: 'idle', isStreaming: false };
+    hookState = { messages: [], saveStatus: 'idle', isStreaming: false, isLoaded: true };
     hookSubscribers.clear();
     vi.mocked(useProspector).mockImplementation(
       (_a, _b, _c, _d, _e, conversationId) => {
@@ -163,6 +171,7 @@ describe('ConversationsPage', () => {
           storageKey: null,
           tabId: null,
           conversationId: conversationId ?? null,
+          isLoaded: hookState.isLoaded,
           saveStatus: hookState.saveStatus,
           reloadConversation,
         } as UseProspectorReturn;
@@ -218,6 +227,77 @@ describe('ConversationsPage', () => {
     expect(await screen.findByText(/could not load conversations/i)).toBeInTheDocument();
     expect(screen.queryByText('No conversations yet')).not.toBeInTheDocument();
     expect(boundConversation()).toBeUndefined();
+  });
+
+  describe('a conversation seeded by another page', () => {
+    const seed = {
+      prompt: 'Fix the error in my SQL query.',
+      context: { feature: 'sql_lab_chat', currentSql: 'select * from nope', error: 'table not found' },
+    };
+    const SEEDED = { pathname: '/projects/p1/chat', state: { seed } };
+
+    beforeEach(() => {
+      // Like the server: once created, the new conversation shows up in the list.
+      const existing = [record({ id: 'recent', name: 'Unrelated thread', updatedAt: 900 })];
+      const fresh = record({ id: 'fresh', name: 'New conversation', updatedAt: 1000 });
+      let created = false;
+      vi.mocked(listConversations).mockImplementation(async () => (created ? [fresh, ...existing] : existing));
+      vi.mocked(createConversation).mockImplementation(async () => {
+        created = true;
+        return fresh;
+      });
+    });
+
+    it('starts a new conversation instead of joining the most recent one, and sends the seed there', async () => {
+      renderAt(SEEDED);
+      await waitFor(() => expect(sendMessage).toHaveBeenCalledTimes(1));
+      expect(createConversation).toHaveBeenCalledWith('p1');
+      expect(boundConversation()).toEqual({ conversationId: 'fresh', projectId: 'p1' });
+      expect(vi.mocked(useProspector).mock.calls.some((c) => c[5] === 'recent')).toBe(false);
+      const [text, context] = sendMessage.mock.calls[0];
+      expect(text).toBe(seed.prompt);
+      expect(context).toMatchObject({
+        feature: 'sql_lab_chat',
+        currentSql: 'select * from nope',
+        error: 'table not found',
+        projectId: 'p1',
+        conversationMode: true,
+      });
+    });
+
+    it('waits for the conversation to load before sending', async () => {
+      hookState.isLoaded = false;
+      renderAt(SEEDED);
+      await waitFor(() => expect(boundConversation()?.conversationId).toBe('fresh'));
+      expect(sendMessage).not.toHaveBeenCalled();
+      setHook({ isLoaded: true });
+      await waitFor(() => expect(sendMessage).toHaveBeenCalledTimes(1));
+    });
+
+    it('consumes the seed: nothing is left in history to re-send on a reload or a back-navigation', async () => {
+      renderAt(SEEDED);
+      await waitFor(() => expect(sendMessage).toHaveBeenCalledTimes(1));
+      await waitFor(() => expect(currentLocation.state).toBeNull());
+      expect(currentLocation.pathname).toBe('/projects/p1/chat/fresh');
+      // Later renders of the same page do not send it again.
+      setHook({ isStreaming: true });
+      setHook({ isStreaming: false });
+      expect(sendMessage).toHaveBeenCalledTimes(1);
+    });
+
+    it('sends nothing when the same conversation is opened without a seed', async () => {
+      vi.mocked(listConversations).mockResolvedValue([record({ id: 'fresh' })]);
+      renderAt('/projects/p1/chat/fresh');
+      await waitFor(() => expect(boundConversation()?.conversationId).toBe('fresh'));
+      expect(sendMessage).not.toHaveBeenCalled();
+    });
+
+    it('drops the seed and says so when the conversation cannot be created', async () => {
+      vi.mocked(createConversation).mockRejectedValue(new Error('boom'));
+      renderAt(SEEDED);
+      await waitFor(() => expect(currentLocation.state).toBeNull());
+      expect(sendMessage).not.toHaveBeenCalled();
+    });
   });
 
   describe('naming', () => {

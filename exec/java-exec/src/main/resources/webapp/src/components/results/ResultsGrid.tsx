@@ -23,6 +23,7 @@ import {
   BarChartOutlined,
   ColumnWidthOutlined,
   ColumnHeightOutlined,
+  RobotOutlined,
   UnorderedListOutlined,
   SortAscendingOutlined,
   ApiOutlined,
@@ -67,6 +68,8 @@ export interface ResultsGridProps {
   onCreateVisualization?: () => void;
   resultsSettings?: ResultsSettings;
   onResultsSettingsChange?: (settings: ResultsSettings) => void;
+  onFixWithProspector?: () => void;
+  prospectorAvailable?: boolean;
   onTransformColumn?: (columnName: string, transformation: ColumnTransformation) => void;
   onShareApi?: () => void;
   cacheId?: string; // Backend cache ID for server-side exports
@@ -81,6 +84,8 @@ export default function ResultsGrid({
   isLoading,
   onCreateVisualization,
   resultsSettings,
+  onFixWithProspector,
+  prospectorAvailable,
   onTransformColumn,
   onShareApi,
   cacheId,
@@ -405,6 +410,17 @@ export default function ResultsGrid({
           type="error"
           showIcon
         />
+        {prospectorAvailable && onFixWithProspector && (
+          <Button
+            icon={<RobotOutlined />}
+            onClick={onFixWithProspector}
+            style={{ marginTop: 12 }}
+            type="primary"
+            ghost
+          >
+            Fix with Prospector
+          </Button>
+        )}
       </div>
     );
   }

@@ -43,6 +43,7 @@ import {
   CheckCircleOutlined,
   SettingOutlined,
   FolderOutlined,
+  RobotOutlined,
   WarningOutlined,
 } from '@ant-design/icons';
 import { Link } from 'react-router-dom';
@@ -59,6 +60,8 @@ import {
 import { executeQuery } from '../api/queries';
 import { getAiStatus } from '../api/ai';
 import AskProspectorButton from '../components/prospector/AskProspectorButton';
+import { useAskProspector } from '../hooks/useAskProspector';
+import { analyzeSeed, errorSeed } from './logSeeds';
 import type { LogFile } from '../api/logs';
 
 const { Text } = Typography;
@@ -87,11 +90,13 @@ const EXAMPLE_QUERIES = [
   },
 ];
 
-function LogFilesTab() {
+function LogFilesTab({ aiAvailable }: { aiAvailable: boolean }) {
+  const { ask } = useAskProspector();
   const [search, setSearch] = useState('');
   const [selectedLog, setSelectedLog] = useState<string | null>(null);
   const [logSearch, setLogSearch] = useState('');
   const logContentRef = useRef<HTMLPreElement>(null);
+  const canAsk = aiAvailable && !!ask;
 
   const { data: logFiles, isLoading, error: logFilesError, refetch } = useQuery({
     queryKey: ['logs'],
@@ -305,6 +310,9 @@ function LogFilesTab() {
               size="small"
               style={{ width: 200 }}
             />
+            {aiAvailable && logContent && selectedLog && (
+              <AskProspectorButton label="Analyze" seed={analyzeSeed(selectedLog, logContent.lines)} />
+            )}
             <Tooltip title="Scroll to top">
               <Button size="small" icon={<ArrowUpOutlined />} onClick={() => {
                 if (logContentRef.current) {
@@ -364,12 +372,17 @@ function LogFilesTab() {
               return (
                 <div
                   key={entry.num}
-                  style={{ color }}
+                  style={{ color, cursor: isError && canAsk ? 'pointer' : undefined }}
+                  onClick={isError && canAsk ? () => ask!(errorSeed(selectedLog!, logContent!.lines, entry.num)) : undefined}
+                  title={isError && canAsk ? 'Click to ask Prospector about this error' : undefined}
                 >
                   <span style={{ color: 'var(--color-text-quaternary)', userSelect: 'none', marginRight: 12, display: 'inline-block', width: 48, textAlign: 'right' }}>
                     {entry.num}
                   </span>
                   {entry.line}
+                  {isError && canAsk && (
+                    <RobotOutlined style={{ marginLeft: 8, fontSize: 11, opacity: 0.5 }} />
+                  )}
                 </div>
               );
             })}
@@ -586,7 +599,7 @@ export default function LogsPage() {
                   {' Log Files'}
                 </span>
               ),
-              children: <LogFilesTab />,
+              children: <LogFilesTab aiAvailable={aiAvailable} />,
             },
             {
               key: 'sql',

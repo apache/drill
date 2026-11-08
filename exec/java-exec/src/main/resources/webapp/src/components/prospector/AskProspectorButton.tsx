@@ -17,8 +17,8 @@
  */
 import { Button, Typography } from 'antd';
 import { RobotOutlined } from '@ant-design/icons';
-import { useNavigate } from 'react-router-dom';
-import { useScratchProject } from '../../hooks/useScratchProject';
+import { useAskProspector } from '../../hooks/useAskProspector';
+import type { ConversationSeed } from '../../types/ai';
 
 interface AskProspectorButtonProps {
   /**
@@ -26,29 +26,30 @@ interface AskProspectorButtonProps {
    * user's personal Scratch project, which is where Prospector chats started outside a project live.
    */
   projectId?: string;
+  /** Start a new conversation whose first turn is this prompt, with the sender's context. */
+  seed?: ConversationSeed;
+  label?: string;
 }
 
 /**
  * The one way into Prospector from pages that are not themselves the Conversations page. It
  * navigates to the chat surface rather than hosting a chat of its own.
  */
-export default function AskProspectorButton({ projectId }: AskProspectorButtonProps) {
-  const navigate = useNavigate();
-  const scratch = useScratchProject(!projectId);
-  const targetId = projectId ?? scratch.projectId;
+export default function AskProspectorButton({ projectId, seed, label = 'Ask Prospector' }: AskProspectorButtonProps) {
+  const { ask, isLoading, isError } = useAskProspector(projectId);
 
   return (
     <>
       <Button
         icon={<RobotOutlined />}
         size="small"
-        loading={!projectId && scratch.isLoading}
-        disabled={!targetId}
-        onClick={() => targetId && navigate(`/projects/${targetId}/chat`)}
+        loading={isLoading}
+        disabled={!ask}
+        onClick={() => ask?.(seed)}
       >
-        Ask Prospector
+        {label}
       </Button>
-      {!projectId && scratch.isError && (
+      {isError && (
         <Typography.Text type="secondary" style={{ fontSize: 12, marginLeft: 8 }}>
           Prospector is unavailable right now. Reload the page to try again.
         </Typography.Text>

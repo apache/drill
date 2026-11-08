@@ -1219,7 +1219,7 @@ export default function SchemaExplorer({ onInsertText, onSelectQuery, onOpenInNe
       <div style={{ padding: '8px 8px 0', display: 'flex', gap: 8 }}>
         <Search
           id="schema-search-input"
-          placeholder="Search schemas, tables, columns... (Ctrl+Shift+F)"
+          placeholder="Search schemas, tables, columns..."
           allowClear
           size="small"
           prefix={<SearchOutlined />}

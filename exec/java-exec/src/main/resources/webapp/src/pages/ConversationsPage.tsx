@@ -16,7 +16,7 @@
  * limitations under the License.
  */
 import { useCallback, useEffect, useMemo, useRef, useState } from 'react';
-import { Navigate, useNavigate, useParams } from 'react-router-dom';
+import { Navigate, useLocation, useNavigate, useParams } from 'react-router-dom';
 import { useQuery, useQueryClient } from '@tanstack/react-query';
 import { Alert, Button, Empty, Spin, message } from 'antd';
 import { PlusOutlined } from '@ant-design/icons';
@@ -35,7 +35,7 @@ import { useOpenArtifact } from '../components/conversation/ArtifactCanvas';
 import type { ArtifactKind } from '../components/conversation/ArtifactCanvas';
 import { artifactsOfLastTurn, nextCanvasTarget } from '../components/conversation/autoFollow';
 import type { CanvasTarget } from '../components/conversation/CanvasHost';
-import type { ChatContext, ConversationRecord } from '../types/ai';
+import type { ChatContext, ConversationRecord, ConversationSeed } from '../types/ai';
 import type { QueryResult } from '../types';
 
 /** The name the server gives a conversation created without one. */
@@ -55,6 +55,12 @@ function nameFromMessage(text: string): string {
 }
 
 const listKey = (projectId: string) => ['conversations', projectId];
+
+/** The seed another page navigated here with, if any. Router state outlives a reload. */
+function seedFromState(state: unknown): ConversationSeed | undefined {
+  const seed = (state as { seed?: ConversationSeed } | null)?.seed;
+  return seed && typeof seed.prompt === 'string' ? seed : undefined;
+}
 
 interface ConversationViewProps {
   projectId: string;
@@ -87,7 +93,7 @@ function ConversationView({ projectId, conversationId, record, onNew }: Conversa
   const prospector = useProspector(
     undefined, undefined, undefined, null, null, conversationId, projectId, handleQueryResult,
   );
-  const { messages, isStreaming, saveStatus, reloadConversation } = prospector;
+  const { messages, isStreaming, isLoaded, saveStatus, reloadConversation } = prospector;
   const openArtifact = useOpenArtifact(projectId);
 
   // At the end of a turn the canvas settles on the last artifact the turn created. Only on
@@ -131,6 +137,23 @@ function ConversationView({ projectId, conversationId, record, onNew }: Conversa
     () => ({ feature: 'project_chat', projectId, conversationMode: true }),
     [projectId],
   );
+
+  // A first turn handed over by another page (SQL Lab's Fix Error, a log Analyze). Sent once
+  // the conversation has loaded, and the router state is cleared in the same step: history
+  // state survives a reload and a back-navigation, so leaving it would re-send the turn.
+  const location = useLocation();
+  const navigate = useNavigate();
+  const seed = seedFromState(location.state);
+  const seedSent = useRef(false);
+  const { sendMessage } = prospector;
+  useEffect(() => {
+    if (!seed || !isLoaded || seedSent.current) {
+      return;
+    }
+    seedSent.current = true;
+    navigate(location.pathname, { replace: true, state: null });
+    sendMessage(seed.prompt, { ...context, ...seed.context, projectId, conversationMode: true });
+  }, [seed, isLoaded, context, projectId, sendMessage, navigate, location.pathname]);
 
   // In this page "clear" means "start over somewhere else". Emptying a saved
   // conversation is something the hook refuses to do.
@@ -213,7 +236,10 @@ export default function ConversationsPage() {
   const { conversationId } = useParams<{ conversationId: string }>();
   const navigate = useNavigate();
   const queryClient = useQueryClient();
+  const location = useLocation();
   const [isCreating, setIsCreating] = useState(false);
+  const pageSeed = conversationId ? undefined : seedFromState(location.state);
+  const seeding = useRef(false);
 
   const { data, isLoading, isFetching, error, refetch } = useQuery({
     queryKey: listKey(projectId ?? ''),
@@ -226,25 +252,52 @@ export default function ConversationsPage() {
     [data],
   );
 
-  const handleNew = useCallback(async () => {
-    if (!projectId || isCreating) {
+  const startConversation = useCallback(async (seed?: ConversationSeed) => {
+    if (!projectId) {
       return;
     }
     setIsCreating(true);
     try {
       const created = await createConversation(projectId);
+      // A list fetch still in flight predates this conversation. Left to land, it would
+      // replace the entry below and the unknown-id fallback would bounce the user away.
+      await queryClient.cancelQueries({ queryKey: listKey(projectId) });
       queryClient.setQueryData<ConversationRecord[]>(listKey(projectId), (old) => [
         created,
         ...(old ?? []),
       ]);
-      navigate(`/projects/${projectId}/chat/${created.id}`);
+      // The seed moves into the new conversation's own navigation, replacing this entry, so
+      // it is never left behind in history under /chat.
+      navigate(
+        `/projects/${projectId}/chat/${created.id}`,
+        seed ? { replace: true, state: { seed } } : undefined,
+      );
     } catch (err) {
       console.error('Creating conversation failed', err);
       message.error('Could not create a conversation. Try again.');
+      if (seed) {
+        navigate(`/projects/${projectId}/chat`, { replace: true, state: null });
+      }
     } finally {
       setIsCreating(false);
     }
-  }, [projectId, isCreating, queryClient, navigate]);
+  }, [projectId, queryClient, navigate]);
+
+  const handleNew = useCallback(async () => {
+    if (!isCreating) {
+      await startConversation();
+    }
+  }, [isCreating, startConversation]);
+
+  // Arriving with a seed always starts a new conversation. Appending it to whichever one is
+  // most recent would put an unrelated question into somebody else's thread.
+  useEffect(() => {
+    if (!pageSeed || !projectId || seeding.current) {
+      return;
+    }
+    seeding.current = true;
+    void startConversation(pageSeed);
+  }, [pageSeed, projectId, startConversation]);
 
   const handleRename = useCallback(async (id: string, name: string) => {
     try {
@@ -284,7 +337,13 @@ export default function ConversationsPage() {
   }
 
   let main;
-  if (conversationId) {
+  if (pageSeed) {
+    main = (
+      <div style={{ flex: 1, padding: 24, textAlign: 'center' }}>
+        <Spin size="large" />
+      </div>
+    );
+  } else if (conversationId) {
     main = (
       <ConversationView
         key={conversationId}

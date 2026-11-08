@@ -434,6 +434,9 @@ export interface UseProspectorReturn {
   tabId: string | null;
   /** The server-side conversation this hook is bound to, or null when it is not. */
   conversationId: string | null;
+  /** True once the bound conversation's messages are in state, so sendMessage will be accepted.
+   *  Always false without a conversationId. */
+  isLoaded: boolean;
   /** Sync state of a server-primary conversation; always 'idle' without a conversationId. */
   saveStatus: SaveStatus;
   /** Discards unsaved local turns and takes the server's copy. The way out of a 'conflict'
@@ -542,6 +545,8 @@ export function useProspector(
   activeConversationRef.current = serverMode ? (conversationId ?? null) : null;
   // The conversation whose messages are in state now; null while loading or after a failed load.
   const loadedForRef = useRef<string | null>(null);
+  // The same fact as loadedForRef, as state, so a caller can wait for it.
+  const [loadedId, setLoadedId] = useState<string | null>(null);
   // Last server version known per conversation. Read when a save RUNS, not when it is
   // scheduled, so turns batched by the debounce never send a stale version.
   const versionsRef = useRef<Record<string, number>>({});
@@ -767,6 +772,7 @@ export function useProspector(
   const loadConversation = useCallback((pid: string, cid: string) => {
     const token = ++loadTokenRef.current;
     loadedForRef.current = null;
+    setLoadedId(null);
     setSaveStatus('idle');
     const key = conversationBufferKey(pid, cid);
     getServerConversation(pid, cid).then(({ record, messages: serverMessages }) => {
@@ -793,6 +799,7 @@ export function useProspector(
         removeConversationBuffer(key);
       }
       loadedForRef.current = cid;
+      setLoadedId(cid);
       setMessages(shown);
       setUsage(null);
       toolRoundsRef.current = 0;
@@ -1495,6 +1502,7 @@ export function useProspector(
     storageKey: storageKey ?? null,
     tabId: tabId ?? null,
     conversationId: serverMode ? (conversationId ?? null) : null,
+    isLoaded: serverMode && loadedId === conversationId,
     saveStatus,
     reloadConversation,
   };

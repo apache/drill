@@ -1021,6 +1021,18 @@ describe('server-primary conversation persistence', () => {
     }
   });
 
+  it('reports isLoaded only once the conversation has loaded, and again false after a switch', async () => {
+    let finish!: (v: unknown) => void;
+    vi.mocked(getServerConversation).mockImplementation((() =>
+      new Promise((r) => { finish = r; })) as never);
+    const { result, rerender } = mount();
+    expect(result.current.isLoaded).toBe(false);
+    await act(async () => { finish({ record: record(3), messages: OLD }); await vi.advanceTimersByTimeAsync(0); });
+    expect(result.current.isLoaded).toBe(true);
+    rerender({ id: 'c2' });
+    expect(result.current.isLoaded).toBe(false);
+  });
+
   it('loads messages from the server when a conversationId is given', async () => {
     const { result } = mount();
     await settle();

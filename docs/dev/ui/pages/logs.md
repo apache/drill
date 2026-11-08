@@ -5,7 +5,7 @@
 
 ## Purpose
 
-Browse Drillbit log files (raw text) and run pre-canned SQL queries against them via the `dfs.logs` schema. When Prospector is configured, an Ask Prospector button opens a conversation in the user's Scratch project; the page has no chat of its own.
+Browse Drillbit log files (raw text) and run pre-canned SQL queries against them via the `dfs.logs` schema. When Prospector is configured, the page links into a conversation in the user's Scratch project (see `conversations.md`); it has no chat of its own.
 
 ## Data sources
 
@@ -17,26 +17,30 @@ Browse Drillbit log files (raw text) and run pre-canned SQL queries against them
 | `GET /api/v1/logs/sql/status` (`getLogSqlStatus`) | `api/logs.ts` |
 | `POST /api/v1/logs/sql/setup` (`setupLogSql`) | `api/logs.ts` |
 | `POST /query.json` (`executeQuery`) | `api/queries.ts` |
-| `POST /api/v1/ai/chat` (`streamChat`) | `api/ai.ts` |
+| `GET /api/v1/ai/status` (`getAiStatus`) | `api/ai.ts` |
+| `GET /api/v1/projects/scratch` (via `useScratchProject`) | `api/conversations.ts` |
 
 ## Child components
 
 - Tabs: `LogFilesTab`, `LogSqlTab`.
-- `AskProspectorButton` — navigates to `/projects/<scratch>/chat`; disabled with a message if the Scratch lookup fails. The page no longer hosts a chat, and the per-line and Analyze affordances that fed log lines to the dock were removed.
+- `AskProspectorButton` (page header, and "Analyze" in the log drawer) and `useAskProspector` (the ERROR-line click). Each navigates to `/projects/<scratch>/chat`; they are disabled, with a message, if the Scratch lookup fails.
+- `logSeeds.ts` — builds the seeded first turns below.
 
 ### LogFilesTab
 
 - File list with date and size.
 - Click to view content in a drawer (paginated for large files).
 - Download link per file.
-- AI analyze button → opens a chat with the log content as context.
+- **Analyze** (drawer header): starts a new Scratch conversation seeded with the last 200 lines of the open file (`analyzeSeed`).
+- **Click an ERROR line**: starts a new Scratch conversation seeded with that line and five lines either side (`errorSeed`).
+- Both seeds carry `feature: 'log_analysis'`, `logAnalysisMode`, `logFileName` and `logLines`, so the server's log-analysis prompt applies to that first turn. Later turns in the conversation use the ordinary project context, so the lines are not re-sent.
+- A seed travels in router state (`{ seed }`) and is consumed once by `ConversationsPage`.
 
 ### LogSqlTab
 
 - Pre-canned example queries (recent errors, frequency by hour, level distribution, top loggers).
 - Free-form SQL editor against `dfs.logs.*`.
 - Results in an AG Grid table.
-- AI analysis of results.
 
 ## Key state
 
@@ -45,13 +49,12 @@ Browse Drillbit log files (raw text) and run pre-canned SQL queries against them
 - `searchText`
 - `selectedQueryExample` — pre-canned query picker
 - `sqlResult` — output of log SQL query
-- `aiStream` — markdown response accumulator
 
 ## Behavior
 
 - **`setupLogSql`** registers the `dfs.logs` workspace pointing at the log directory. The page calls `getLogSqlStatus` on mount and offers a one-click setup if it isn't configured.
-- **`redactCredentials()`** sanitizes log lines before sending to the AI to keep secrets out of the LLM provider.
-- **AI gating.** `getAiStatus()` decides whether the AI buttons are enabled.
+- **No redaction.** Log lines are sent to the LLM provider as they appear in the file (`analyzeSeed` and `errorSeed` do not filter them), so credentials in a log reach the provider.
+- **AI gating.** `getAiStatus()` decides whether the Ask Prospector, Analyze and ERROR-line affordances appear.
 
 ## Chrome
 
