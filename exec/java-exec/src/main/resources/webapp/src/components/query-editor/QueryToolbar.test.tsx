@@ -17,6 +17,8 @@
  */
 import { describe, it, expect, vi } from 'vitest';
 import { render, screen, fireEvent } from '@testing-library/react';
+import { MemoryRouter } from 'react-router-dom';
+import { QueryClient, QueryClientProvider } from '@tanstack/react-query';
 import QueryToolbar from './QueryToolbar';
 
 function renderToolbar(props: Partial<React.ComponentProps<typeof QueryToolbar>> = {}) {
@@ -68,5 +70,27 @@ describe('QueryToolbar Run button', () => {
     expect(cancel).toBeEnabled();
     fireEvent.click(cancel);
     expect(onCancel).toHaveBeenCalledTimes(1);
+  });
+});
+
+describe('QueryToolbar Ask Prospector', () => {
+  function renderWithRouter(props: Partial<React.ComponentProps<typeof QueryToolbar>>) {
+    render(
+      <QueryClientProvider client={new QueryClient({ defaultOptions: { queries: { retry: false } } })}>
+        <MemoryRouter>
+          <QueryToolbar onExecute={vi.fn()} onCancel={vi.fn()} isExecuting={false} {...props} />
+        </MemoryRouter>
+      </QueryClientProvider>
+    );
+  }
+
+  it('offers Ask Prospector when AI is available', () => {
+    renderWithRouter({ prospectorAvailable: true, projectId: 'proj_1' });
+    expect(screen.getByRole('button', { name: /ask prospector/i })).toBeEnabled();
+  });
+
+  it('hides Ask Prospector when AI is not available', () => {
+    renderWithRouter({ prospectorAvailable: false, projectId: 'proj_1' });
+    expect(screen.queryByRole('button', { name: /ask prospector/i })).not.toBeInTheDocument();
   });
 });

@@ -5,7 +5,7 @@
 
 ## Purpose
 
-Browse Drillbit log files (raw text) and run pre-canned SQL queries against them via the `dfs.logs` schema. AI-powered log analysis is available when Prospector is configured.
+Browse Drillbit log files (raw text) and run pre-canned SQL queries against them via the `dfs.logs` schema. When Prospector is configured, an Ask Prospector button opens a conversation in the user's Scratch project; the page has no chat of its own.
 
 ## Data sources
 
@@ -22,7 +22,7 @@ Browse Drillbit log files (raw text) and run pre-canned SQL queries against them
 ## Child components
 
 - Tabs: `LogFilesTab`, `LogSqlTab`.
-- `ProspectorPanel` — optional right-inspector chat tab for log-aware analysis.
+- `AskProspectorButton` — navigates to `/projects/<scratch>/chat`; disabled with a message if the Scratch lookup fails. The page no longer hosts a chat, and the per-line and Analyze affordances that fed log lines to the dock were removed.
 
 ### LogFilesTab
 
@@ -55,7 +55,7 @@ Browse Drillbit log files (raw text) and run pre-canned SQL queries against them
 
 ## Chrome
 
-Breadcrumb: `Administration > Server Logs`. Toolbar: tab switcher, refresh. Inspector: Prospector (log-analysis mode).
+Breadcrumb: `Administration > Server Logs`. Toolbar: tab switcher, refresh. Right side: Ask Prospector.
 
 ## Quirks
 

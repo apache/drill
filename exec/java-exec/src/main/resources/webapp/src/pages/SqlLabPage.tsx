@@ -18,8 +18,8 @@
 import { useCallback, useState, useEffect, useRef, useMemo, lazy, Suspense, type MutableRefObject } from 'react';
 import { useSelector, useDispatch } from 'react-redux';
 import { useLocation, useNavigate } from 'react-router-dom';
-import { Tabs, message, notification, Tooltip, Modal, Alert, Button, Space, Spin, Dropdown, Grid, Input } from 'antd';
-import { PlusOutlined, RobotOutlined, MoreOutlined, EditOutlined, CopyOutlined, CloseOutlined, DeleteOutlined, GlobalOutlined, PlayCircleOutlined, StopOutlined, ExperimentOutlined, TableOutlined, LockOutlined, UnlockOutlined, ApiOutlined, StarOutlined, StarFilled } from '@ant-design/icons';
+import { Tabs, message, Tooltip, Modal, Alert, Button, Space, Spin, Dropdown, Grid, Input } from 'antd';
+import { PlusOutlined, MoreOutlined, EditOutlined, CopyOutlined, CloseOutlined, DeleteOutlined, GlobalOutlined, PlayCircleOutlined, StopOutlined, ExperimentOutlined, TableOutlined, LockOutlined, UnlockOutlined, ApiOutlined, StarOutlined, StarFilled } from '@ant-design/icons';
 import MarkdownView from '../components/MarkdownView';
 import type { RootState, AppDispatch } from '../store';
 import {
@@ -47,14 +47,14 @@ import { useQueryExecution } from '../hooks/useQuery';
 import { useQueryHistory } from '../hooks/useQueryHistory';
 import { useSchemas } from '../hooks/useMetadata';
 import { useTabPersistence, useRestoreTabs } from '../hooks/useTabPersistence';
-import { useProspector, prospectorChatKey, conversationLengthFor } from '../hooks/useProspector';
 import { useSendDataToAi } from '../hooks/useSendDataToAi';
 import { useMonacoCompletion } from '../hooks/useMonacoCompletion';
-import { getAiStatus, getAiConfig, streamChat, transpileSql, convertDataType } from '../api/ai';
+import { conversationLengthFor } from '../hooks/useProspector';
+import { getAiStatus, streamChat, transpileSql, convertDataType } from '../api/ai';
 import { getSchemaTree } from '../api/metadata';
 import { getSavedQuery } from '../api/savedQueries';
 import { getVisualizations } from '../api/visualizations';
-import { useQuery, useQueryClient } from '@tanstack/react-query';
+import { useQuery } from '@tanstack/react-query';
 import SchemaExplorer from '../components/schema-explorer/SchemaExplorer';
 import type { DatasetFilter } from '../components/schema-explorer/SchemaExplorer';
 import SqlEditor, { DEFAULT_EDITOR_SETTINGS } from '../components/query-editor/SqlEditor';
@@ -75,9 +75,7 @@ import DeleteTabModal from '../components/query-editor/DeleteTabModal';
 import { getSharedQueryApis } from '../api/sharedQueries';
 import { useDeleteTab } from '../hooks/useDeleteTab';
 import NotebookPanel from '../components/notebook/NotebookPanel';
-import type { NotebookPanelHandle } from '../components/notebook/NotebookPanel';
-import { ProspectorPanel } from '../components/prospector';
-import { useAppChrome, usePageChrome, type InspectorTab } from '../contexts/AppChromeContext';
+import { useAppChrome, usePageChrome } from '../contexts/AppChromeContext';
 import type { SavedQuery, Visualization } from '../types';
 import { normalizeSql } from '../utils/sqlTransformations';
 import type { ChatContext, ChatMessage } from '../types/ai';
@@ -136,7 +134,6 @@ export default function SqlLabPage({ datasetFilter, headerContent, projectId, sa
   const dispatch = useDispatch<AppDispatch>();
   const location = useLocation();
   const navigate = useNavigate();
-  const queryClient = useQueryClient();
   const { tabs, activeTabId } = useSelector((state: RootState) => state.query);
   const activeTab = tabs.find((t) => t.id === activeTabId);
 
@@ -159,7 +156,6 @@ export default function SqlLabPage({ datasetFilter, headerContent, projectId, sa
   const [shareApiModalOpen, setShareApiModalOpen] = useState(false);
   const [resultsPanelTab, setResultsPanelTab] = useState<string>('results');
   const [maxNotebookRows, setMaxNotebookRows] = useState(50000);
-  const [notebookHandle, setNotebookHandle] = useState<NotebookPanelHandle | null>(null);
   const [sharedQueryApiIds, setSharedQueryApiIds] = useState<Record<string, string | undefined>>({});
   const [shortcutsOpen, setShortcutsOpen] = useState(false);
 
@@ -253,19 +249,13 @@ export default function SqlLabPage({ datasetFilter, headerContent, projectId, sa
   const [renamingTabId, setRenamingTabId] = useState<string | null>(null);
   const [renameDraft, setRenameDraft] = useState('');
 
-  // Prospector visibility comes from the global inspector chrome — no local state.
-  const {
-    inspectorOpen,
-    setInspectorOpen,
-    inspectorActiveTab,
-    setInspectorActiveTab,
-  } = useAppChrome();
-  const prospectorOpen = inspectorOpen && inspectorActiveTab === 'prospector';
   const [prospectorAvailable, setProspectorAvailable] = useState(false);
   // Starts closed and opens only once /status says the deployment permits sample data.
   // Shared with useProspector via useSendDataToAi — see that hook's doc comment.
   const { sendDataToAi } = useSendDataToAi();
-  const [maxToolRounds, setMaxToolRounds] = useState(15);
+  const { setInspectorOpen, setInspectorActiveTab } = useAppChrome();
+
+
 
   // Fetch schemas for the schema selector
   const { data: schemas } = useSchemas();
@@ -349,55 +339,6 @@ export default function SqlLabPage({ datasetFilter, headerContent, projectId, sa
   // handleExecute itself, so the keyboard shortcut cannot fire a query the button refuses.
   const hasSql = !!sql && sql.trim().length > 0;
 
-  // Suggested queries from Prospector open in a new tab, unless the current tab
-  // is empty (then reuse it). Reads the active tab through a ref so repeated
-  // suggestions within one AI turn each see the latest tab state.
-  // ponytail: relies on the existing pendingQueryRef effect to fill the new tab;
-  // two suggestions fired faster than a render could both target the same new
-  // tab — acceptable, the model streams these one at a time in practice.
-  const activeTabRef = useRef(activeTab);
-  activeTabRef.current = activeTab;
-  const handleProspectorSql = useCallback((newSql: string, title?: string) => {
-    if (activeTabRef.current?.sql?.trim()) {
-      // The model names the tab after what the query answers. It may not supply
-      // one, in which case the tab keeps the generic name it has always had.
-      const name = title || 'Query';
-      pendingQueryRef.current = { sql: newSql, name };
-      dispatch(addTab(name));
-    } else {
-      updateSql(newSql);
-    }
-  }, [updateSql, dispatch]);
-
-  // Prospector hook
-  const prospector = useProspector(handleProspectorSql, useCallback((id: string, name: string) => {
-    // The tool has already attached it to the project; refresh the cached views
-    // so it shows up without a reload.
-    queryClient.invalidateQueries({ queryKey: ['visualizations'] });
-    if (projectId) {
-      queryClient.invalidateQueries({ queryKey: ['project', projectId] });
-    }
-    notification.success({
-      message: 'Visualization Created',
-      description: `"${name}" has been saved.`,
-      btn: (
-        <Button
-          size="small"
-          type="primary"
-          onClick={() => {
-            notification.destroy();
-            navigate('/visualizations');
-          }}
-        >
-          View Visualizations
-        </Button>
-      ),
-      duration: 0,
-      key: `viz-created-${id}`,
-    });
-  }, [navigate, queryClient, projectId]), maxToolRounds,
-  prospectorChatKey(projectId, activeTabId), activeTabId);
-
   // Real-time SQL validation markers in the editor
   useSqlValidation(sql, editorInstanceRef, monacoInstanceRef);
 
@@ -446,20 +387,9 @@ export default function SqlLabPage({ datasetFilter, headerContent, projectId, sa
     getAiStatus()
       .then((status) => setProspectorAvailable(status.enabled))
       .catch(() => setProspectorAvailable(false));
-    getAiConfig()
-      .then((cfg) => setMaxToolRounds(cfg.maxToolRounds || 15))
-      .catch(() => {});
   }, []);
 
-  // Derive notebook DataFrame name from tab name (same logic as NotebookPanel)
-  const notebookDfName = useMemo(() => {
-    const name = activeTab?.name || 'df';
-    const sanitized = name.replace(/\s+/g, '_').replace(/[^a-zA-Z0-9_]/g, '').replace(/^[0-9]/, '_$&');
-    return sanitized || 'df';
-  }, [activeTab?.name]);
-
   // Build AI context from current state
-  const isNotebookTab = resultsPanelTab === 'notebook';
   const aiContext: ChatContext = useMemo(() => {
     // When inside a project, scope schemas to project datasets only
     const projectSchemas = datasetFilter?.datasets?.length
@@ -488,61 +418,8 @@ export default function SqlLabPage({ datasetFilter, headerContent, projectId, sa
         : undefined,
     };
 
-    if (isNotebookTab) {
-      base.notebookMode = true;
-      base.notebookDfName = notebookDfName;
-      base.notebookColumns = results?.columns;
-      if (results) {
-        base.notebookDfShape = `${results.rows?.length ?? 0} rows x ${results.columns?.length ?? 0} columns`;
-      }
-      if (notebookHandle) {
-        const cellCode = notebookHandle.getLastCellCode();
-        if (cellCode) {
-          base.notebookCellCode = cellCode;
-        }
-        const cellError = notebookHandle.getLastCellError();
-        if (cellError) {
-          base.notebookCellError = cellError;
-        }
-      }
-    }
-
     return base;
-  }, [sql, projectId, activeTab?.defaultSchema, schemas, error, results, isNotebookTab, notebookDfName, notebookHandle, datasetFilter]);
-
-  // Toggle the inspector to show the Prospector tab.
-  const toggleProspector = useCallback(() => {
-    if (prospectorOpen) {
-      setInspectorOpen(false);
-    } else {
-      setInspectorOpen(true);
-      setInspectorActiveTab('prospector');
-    }
-  }, [prospectorOpen, setInspectorOpen, setInspectorActiveTab]);
-
-  // Handle Prospector actions from toolbar/results (opens inspector + sends message)
-  const handleProspectorAction = useCallback(
-    (prompt: string) => {
-      if (!prospectorOpen) {
-        setInspectorOpen(true);
-        setInspectorActiveTab('prospector');
-      }
-      prospector.sendMessage(prompt, aiContext);
-    },
-    [prospectorOpen, prospector, aiContext, setInspectorOpen, setInspectorActiveTab],
-  );
-
-  const handleExplainQuery = useCallback(() => {
-    handleProspectorAction('Explain this SQL query. What does it do and how could it be improved?');
-  }, [handleProspectorAction]);
-
-  const handleFixError = useCallback(() => {
-    handleProspectorAction('Fix the error in my SQL query. Explain what went wrong and provide a corrected version.');
-  }, [handleProspectorAction]);
-
-  const handleFixWithProspector = useCallback(() => {
-    handleProspectorAction('Fix the error in my SQL query. Explain what went wrong and provide a corrected version.');
-  }, [handleProspectorAction]);
+  }, [sql, projectId, activeTab?.defaultSchema, schemas, error, results, datasetFilter]);
 
   // Build schema context for the optimize prompt
   const buildSchemaContext = useCallback(
@@ -920,32 +797,6 @@ export default function SqlLabPage({ datasetFilter, headerContent, projectId, sa
     }
   }, [activeTab, dispatch]);
 
-  // Register Prospector as the right-rail inspector tab. The schema browser
-  // moved out of the inspector to a dedicated left rail; the right rail is
-  // now AI-only on this page.
-  const inspectorTabs = useMemo<InspectorTab[]>(() => {
-    if (!prospectorAvailable) {
-      return [];
-    }
-    return [
-      {
-        key: 'prospector',
-        title: 'Prospector',
-        icon: <RobotOutlined />,
-        content: (
-          <ProspectorPanel
-            prospector={prospector}
-            context={aiContext}
-            onInsertCell={notebookHandle ? (code) => {
-              notebookHandle.addCell(code);
-              setResultsPanelTab('notebook');
-            } : undefined}
-          />
-        ),
-      },
-    ];
-  }, [prospectorAvailable, prospector, aiContext, notebookHandle]);
-
   // Schema browser owns the left rail. Keeps clicks/inserts wired through to
   // the editor exactly as before — the data didn't change, only the address.
   const leftRail = useMemo(() => ({
@@ -974,7 +825,7 @@ export default function SqlLabPage({ datasetFilter, headerContent, projectId, sa
     lastQueryResult,
   ]);
 
-  usePageChrome({ inspectorTabs, leftRail });
+  usePageChrome({ leftRail });
 
   // Handle tab operations
   const handleTabChange = useCallback(
@@ -1354,14 +1205,10 @@ export default function SqlLabPage({ datasetFilter, headerContent, projectId, sa
             resultsSettings={resultsSettings}
             onResultsSettingsChange={handleResultsSettingsChange}
             onShowHistory={handleShowHistory}
-            onExplainQuery={handleExplainQuery}
             onOptimizeQuery={handleOptimizeQuery}
-            onFixError={handleFixError}
-            onToggleProspector={toggleProspector}
             hasSql={hasSql}
             hasSelection={hasSelection}
-            hasError={!!error}
-            prospectorOpen={prospectorOpen}
+            projectId={projectId}
             prospectorAvailable={prospectorAvailable}
           />
 
@@ -1421,8 +1268,6 @@ export default function SqlLabPage({ datasetFilter, headerContent, projectId, sa
                       onCreateVisualization={handleCreateVisualization}
                       resultsSettings={resultsSettings}
                       onResultsSettingsChange={handleResultsSettingsChange}
-                      onFixWithProspector={handleFixWithProspector}
-                      prospectorAvailable={prospectorAvailable}
                       onTransformColumn={handleTransformColumn}
                       onShareApi={handleShareApi}
                       cacheId={cacheId}
@@ -1445,7 +1290,6 @@ export default function SqlLabPage({ datasetFilter, headerContent, projectId, sa
                       maxNotebookRows={maxNotebookRows}
                       onMaxNotebookRowsChange={setMaxNotebookRows}
                       tabName={activeTab?.name}
-                      onHandle={setNotebookHandle}
                     />
                   </div>
                 ),

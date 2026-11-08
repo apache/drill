@@ -25,13 +25,11 @@ import {
   HistoryOutlined,
   DownOutlined,
   SettingOutlined,
-  RobotOutlined,
-  BulbOutlined,
-  BugOutlined,
   ThunderboltOutlined,
   QuestionCircleOutlined,
   WarningOutlined,
 } from '@ant-design/icons';
+import AskProspectorButton from '../prospector/AskProspectorButton';
 import KeyboardShortcutsModal from './KeyboardShortcutsModal';
 import type { MenuProps } from 'antd';
 import type { EditorSettings } from './SqlEditor';
@@ -56,15 +54,12 @@ interface QueryToolbarProps {
   resultsSettings?: ResultsSettings;
   onResultsSettingsChange?: (settings: ResultsSettings) => void;
   onShowHistory?: () => void;
-  onExplainQuery?: () => void;
   onOptimizeQuery?: () => void;
-  onFixError?: () => void;
-  onToggleProspector?: () => void;
   hasSql?: boolean;
   hasSelection?: boolean;
-  hasError?: boolean;
-  prospectorOpen?: boolean;
   prospectorAvailable?: boolean;
+  /** Set inside a project: Ask Prospector opens that project's conversations instead of Scratch. */
+  projectId?: string;
 }
 
 export default function QueryToolbar({
@@ -82,15 +77,11 @@ export default function QueryToolbar({
   resultsSettings,
   onResultsSettingsChange,
   onShowHistory,
-  onExplainQuery,
   onOptimizeQuery,
-  onFixError,
-  onToggleProspector,
   hasSql,
   hasSelection,
-  hasError,
-  prospectorOpen,
   prospectorAvailable,
+  projectId,
 }: QueryToolbarProps) {
   const [autoLimitEnabled, setAutoLimitEnabled] = useState(true);
   const [settingsModalOpen, setSettingsModalOpen] = useState(false);
@@ -144,13 +135,7 @@ export default function QueryToolbar({
       ? [
           { type: 'divider' as const },
           ...(hasSql
-            ? [
-                { key: 'explain', icon: <BulbOutlined />, label: 'Explain with Prospector', onClick: onExplainQuery },
-                { key: 'optimize', icon: <ThunderboltOutlined />, label: 'Optimize with Prospector', onClick: onOptimizeQuery },
-              ]
-            : []),
-          ...(hasError
-            ? [{ key: 'fix', icon: <BugOutlined />, label: 'Fix Error with Prospector', onClick: onFixError }]
+            ? [{ key: 'optimize', icon: <ThunderboltOutlined />, label: 'Optimize with Prospector', onClick: onOptimizeQuery }]
             : []),
         ]
       : []),
@@ -238,17 +223,9 @@ export default function QueryToolbar({
         </Dropdown>
       </Space>
 
-      {/* Right side: Prospector toggle + Execution Time */}
+      {/* Right side: Ask Prospector + Execution Time */}
       <div style={{ marginLeft: 'auto', display: 'flex', alignItems: 'center', gap: 8, flexShrink: 0 }}>
-        {prospectorAvailable && (
-          <Tooltip title={prospectorOpen ? 'Hide Prospector' : 'Show Prospector'}>
-            <Button
-              icon={<RobotOutlined />}
-              type={prospectorOpen ? 'primary' : 'default'}
-              onClick={onToggleProspector}
-            />
-          </Tooltip>
-        )}
+        {prospectorAvailable && <AskProspectorButton projectId={projectId} />}
         {executionTime !== undefined && !isExecuting && (
           <Text type="secondary" style={{ whiteSpace: 'nowrap' }}>
             {(executionTime / 1000).toFixed(2)}s

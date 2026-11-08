@@ -7,7 +7,7 @@ The most complex page in the app.
 
 ## Purpose
 
-A full SQL IDE: Monaco editor with multi-tab support, schema browser, results grid with visualization builder, saved-query management, scheduling, AI features (chat via Prospector, transpile, optimize, explain), and an optional notebook panel for query narratives.
+A full SQL IDE: Monaco editor with multi-tab support, schema browser, results grid with visualization builder, saved-query management, scheduling, AI features (Ask Prospector link into a conversation, transpile, optimize), and an optional notebook panel for query narratives.
 
 ## Data sources
 
@@ -37,7 +37,7 @@ In `src/components/sqllab/`:
 - `SaveQueryDialog` — save current tab as a new or existing saved query.
 - `QueryHistoryModal` — past executions for the current user.
 - `KeyboardShortcutsModal` — help overlay (triggered by `?`).
-- `ProspectorPanel` — chat assistant rendered in the Right Inspector when the inspector is open.
+- `AskProspectorButton` — in the query toolbar; opens the project's conversations, or the user's Scratch project outside a project. SQL Lab no longer hosts a chat, and Explain, Fix Error and Fix with Prospector were removed with it.
 - `ShareApiModal` — copyable cURL / API snippets for the active query.
 - `VizTabIcon` — overlay icon shown on tabs that carry visualizations.
 
@@ -101,7 +101,7 @@ user's SQL. Full design in [`../../TabPersistence.md`](../../TabPersistence.md).
 - `useQueryExecution` — wraps `executeQuery`, manages `isRunning` and abort.
 - `useQueryHistory` — fetches and groups past executions.
 - `useSchemas` — caches schema tree.
-- `useProspector` — chat-assistant state, shared with the right-inspector panel.
+- `useScratchProject` — the caller's Scratch project id, used by Ask Prospector outside a project.
 - `useMonacoCompletion` — completion provider feeding off schema tree.
 - `useSqlValidation` — inline error markers.
 
@@ -127,7 +127,7 @@ Design and the reasoning behind the projection handling are in
 - Breadcrumb: `SQL Lab` (or project breadcrumb when wrapped by `ProjectQueryPage`).
 - Toolbar actions: format, save, schedule, share, settings.
 - Left rail: `SchemaExplorer`.
-- Inspector tabs: `Prospector` (chat), `History`, `Validation`.
+- Inspector tabs: `History`, `Validation`.
 
 ## Behavior
 

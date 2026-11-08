@@ -42,7 +42,6 @@ import {
   PlayCircleOutlined,
   CheckCircleOutlined,
   SettingOutlined,
-  RobotOutlined,
   FolderOutlined,
   WarningOutlined,
 } from '@ant-design/icons';
@@ -59,10 +58,8 @@ import {
 } from '../api/logs';
 import { executeQuery } from '../api/queries';
 import { getAiStatus } from '../api/ai';
-import { useProspector } from '../hooks/useProspector';
-import { ProspectorPanel } from '../components/prospector/index';
+import AskProspectorButton from '../components/prospector/AskProspectorButton';
 import type { LogFile } from '../api/logs';
-import type { ChatContext } from '../types/ai';
 
 const { Text } = Typography;
 const { TextArea } = Input;
@@ -90,12 +87,7 @@ const EXAMPLE_QUERIES = [
   },
 ];
 
-interface LogFilesTabProps {
-  onAnalyzeWithAi?: (prompt: string, lines: string[], fileName: string) => void;
-  aiAvailable: boolean;
-}
-
-function LogFilesTab({ onAnalyzeWithAi, aiAvailable }: LogFilesTabProps) {
+function LogFilesTab() {
   const [search, setSearch] = useState('');
   const [selectedLog, setSelectedLog] = useState<string | null>(null);
   const [logSearch, setLogSearch] = useState('');
@@ -141,36 +133,6 @@ function LogFilesTab({ onAnalyzeWithAi, aiAvailable }: LogFilesTabProps) {
       .map((line, i) => ({ line, num: i + 1 }))
       .filter((entry) => entry.line.toLowerCase().includes(q));
   }, [logContent, logSearch]);
-
-  const handleAnalyzeAll = useCallback(() => {
-    if (!onAnalyzeWithAi || !logContent || !selectedLog) {
-      return;
-    }
-    const lines = logContent.lines.slice(-200);
-    onAnalyzeWithAi(
-      'Analyze these log lines. Identify any errors, warnings, or issues. Suggest potential root causes and fixes.',
-      lines,
-      selectedLog,
-    );
-  }, [onAnalyzeWithAi, logContent, selectedLog]);
-
-  const handleAskAboutError = useCallback(
-    (lineNum: number, line: string) => {
-      if (!onAnalyzeWithAi || !logContent || !selectedLog) {
-        return;
-      }
-      // Grab context: 5 lines before and after the error
-      const startIdx = Math.max(0, lineNum - 6);
-      const endIdx = Math.min(logContent.lines.length, lineNum + 5);
-      const contextLines = logContent.lines.slice(startIdx, endIdx);
-      onAnalyzeWithAi(
-        `Explain this error and suggest how to fix it:\n\n${line}`,
-        contextLines,
-        selectedLog,
-      );
-    },
-    [onAnalyzeWithAi, logContent, selectedLog],
-  );
 
   const getLogTypeColor = (name: string): string => {
     if (name.endsWith('.log')) {
@@ -343,19 +305,6 @@ function LogFilesTab({ onAnalyzeWithAi, aiAvailable }: LogFilesTabProps) {
               size="small"
               style={{ width: 200 }}
             />
-            {aiAvailable && (
-              <Tooltip title="Analyze with Prospector AI">
-                <Button
-                  size="small"
-                  icon={<RobotOutlined />}
-                  onClick={handleAnalyzeAll}
-                  type="primary"
-                  ghost
-                >
-                  Analyze
-                </Button>
-              </Tooltip>
-            )}
             <Tooltip title="Scroll to top">
               <Button size="small" icon={<ArrowUpOutlined />} onClick={() => {
                 if (logContentRef.current) {
@@ -415,17 +364,12 @@ function LogFilesTab({ onAnalyzeWithAi, aiAvailable }: LogFilesTabProps) {
               return (
                 <div
                   key={entry.num}
-                  style={{ color, cursor: isError && aiAvailable ? 'pointer' : undefined }}
-                  onClick={isError && aiAvailable ? () => handleAskAboutError(entry.num, entry.line) : undefined}
-                  title={isError && aiAvailable ? 'Click to ask Prospector about this error' : undefined}
+                  style={{ color }}
                 >
                   <span style={{ color: 'var(--color-text-quaternary)', userSelect: 'none', marginRight: 12, display: 'inline-block', width: 48, textAlign: 'right' }}>
                     {entry.num}
                   </span>
                   {entry.line}
-                  {isError && aiAvailable && (
-                    <RobotOutlined style={{ marginLeft: 8, fontSize: 11, opacity: 0.5 }} />
-                  )}
                 </div>
               );
             })}
@@ -609,37 +553,12 @@ function SqlQueryTab() {
 }
 
 export default function LogsPage() {
-  const [prospectorOpen, setProspectorOpen] = useState(false);
   const [aiAvailable, setAiAvailable] = useState(false);
-  const [logContext, setLogContext] = useState<ChatContext>({ feature: 'log_analysis', logAnalysisMode: true });
-
-  const prospector = useProspector();
 
   useEffect(() => {
     getAiStatus()
       .then((status) => setAiAvailable(status.enabled))
       .catch(() => setAiAvailable(false));
-  }, []);
-
-  const handleAnalyzeWithAi = useCallback(
-    (prompt: string, lines: string[], fileName: string) => {
-      const ctx: ChatContext = {
-        feature: 'log_analysis',
-        logAnalysisMode: true,
-        logFileName: fileName,
-        logLines: lines,
-      };
-      setLogContext(ctx);
-      if (!prospectorOpen) {
-        setProspectorOpen(true);
-      }
-      prospector.sendMessage(prompt, ctx);
-    },
-    [prospectorOpen, prospector],
-  );
-
-  const toggleProspector = useCallback(() => {
-    setProspectorOpen((prev) => !prev);
   }, []);
 
   return (
@@ -653,16 +572,7 @@ export default function LogsPage() {
               </Button>
             </Link>
           </Space>
-          {aiAvailable && (
-            <Button
-              icon={<RobotOutlined />}
-              type={prospectorOpen ? 'primary' : 'default'}
-              onClick={toggleProspector}
-              size="small"
-            >
-              Prospector
-            </Button>
-          )}
+          {aiAvailable && <AskProspectorButton />}
         </div>
 
         <Tabs
@@ -676,12 +586,7 @@ export default function LogsPage() {
                   {' Log Files'}
                 </span>
               ),
-              children: (
-                <LogFilesTab
-                  onAnalyzeWithAi={aiAvailable ? handleAnalyzeWithAi : undefined}
-                  aiAvailable={aiAvailable}
-                />
-              ),
+              children: <LogFilesTab />,
             },
             {
               key: 'sql',
@@ -697,22 +602,6 @@ export default function LogsPage() {
         />
       </div>
 
-      {aiAvailable && prospectorOpen && (
-        <div
-          style={{
-            width: 380,
-            borderLeft: '1px solid var(--color-border)',
-            display: 'flex',
-            flexDirection: 'column',
-            overflow: 'hidden',
-          }}
-        >
-          <ProspectorPanel
-            prospector={prospector}
-            context={logContext}
-          />
-        </div>
-      )}
     </div>
   );
 }
