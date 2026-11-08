@@ -294,6 +294,21 @@ function removeConversationBuffer(key: string): void {
   }
 }
 
+/**
+ * Drops an assistant tool_use message that nothing answers. Anthropic and OpenAI both
+ * reject a tool_use with no matching tool_result with a 400, so a conversation holding
+ * one cannot take another turn, and one saved to the server stays that way for good.
+ * One only exists when a tool round was cut off (page closed, conversation switched
+ * away) and the in-progress history reached the offline buffer, so it is stripped
+ * wherever that buffer is read back, and from anything about to go to a provider.
+ */
+function dropUnmatchedToolUse(messages: ChatMessage[]): ChatMessage[] {
+  const last = messages[messages.length - 1];
+  return last && last.role === 'assistant' && last.toolCalls && last.toolCalls.length > 0
+    ? messages.slice(0, -1)
+    : messages;
+}
+
 export interface UseProspectorReturn {
   messages: ChatMessage[];
   isStreaming: boolean;
@@ -649,11 +664,12 @@ export function useProspector(
       lastSyncedRef.current = serverMessages;
       let shown = serverMessages;
       const buffer = readConversationBuffer(key);
-      if (buffer && JSON.stringify(buffer.messages) !== JSON.stringify(serverMessages)) {
+      const buffered = buffer ? dropUnmatchedToolUse(buffer.messages) : null;
+      if (buffer && JSON.stringify(buffered) !== JSON.stringify(serverMessages)) {
         // Unsaved turns from an earlier session. They are never dropped here: shown as
         // they were, and either replayed (the save effect picks them up) or, when the
         // server has moved on since, held back as a conflict for the user to resolve.
-        shown = buffer.messages;
+        shown = buffered as ChatMessage[];
         if (buffer.baseVersion !== record.version) {
           // Keep the buffer rooted at the version it was built on; saves are paused, and
           // rebasing it onto the server's version would make the next load overwrite.
@@ -683,13 +699,15 @@ export function useProspector(
     if (!conversationId || !projectId) {
       return;
     }
+    // Overtakes any stream or tool round still running for the copy being discarded.
+    stopStreaming();
     if (serverSaveTimerRef.current) {
       clearTimeout(serverSaveTimerRef.current);
     }
     pendingSaveRef.current = null;
     removeConversationBuffer(conversationBufferKey(projectId, conversationId));
     loadConversation(projectId, conversationId);
-  }, [conversationId, projectId, loadConversation]);
+  }, [conversationId, projectId, loadConversation, stopStreaming]);
 
   // Load on mount and whenever the conversation changes. The previous conversation's
   // stream is stopped first so its late deltas cannot land in the new thread.
@@ -1045,10 +1063,17 @@ export function useProspector(
         if (epoch !== streamEpochRef.current) {
           return;
         }
-        setIsStreaming(false);
+        const continuing = doneEvent.finish_reason === 'tool_calls' && pendingToolCalls.size > 0;
+        // Stays true through the tool phase (the next round sets it again). The history
+        // holds an assistant tool_use with no result until the tool returns, and while
+        // isStreaming is true the input is disabled and no save is scheduled, so no turn
+        // can be built on, or persisted with, that unmatched tool_use.
+        if (!continuing) {
+          setIsStreaming(false);
+        }
         setStreamingContent('');
 
-        if (doneEvent.finish_reason === 'tool_calls' && pendingToolCalls.size > 0) {
+        if (continuing) {
           // Build assistant message with tool calls
           // A tool invoked with no arguments (get_available_functions, or
           // get_project_docs listing page titles) streams no argument deltas, leaving
@@ -1102,6 +1127,7 @@ export function useProspector(
               content: 'I\'ve reached the maximum number of tool call rounds. Please send another message if you need more help.',
             };
             setMessages((prev) => [...prev, limitMsg]);
+            setIsStreaming(false);
             return;
           }
 
@@ -1186,7 +1212,8 @@ export function useProspector(
       content: text,
     };
 
-    const updatedMessages = [...messages, userMsg];
+    // Never send a provider an unanswered tool_use (see dropUnmatchedToolUse).
+    const updatedMessages = [...dropUnmatchedToolUse(messages), userMsg];
     setMessages(updatedMessages);
     setUsage(null);
     toolRoundsRef.current = 0;

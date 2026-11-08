@@ -850,6 +850,120 @@ describe('server-primary conversation persistence', () => {
     });
   });
 
+  /**
+   * Both providers answer an unmatched tool_use with a 400, so a conversation persisted
+   * with one can never take another turn. These pin that it cannot get there.
+   */
+  describe('the unanswered tool_use window', () => {
+    let finishTool: (schemas: unknown[]) => void = () => {};
+    const endsWithToolUse = (messages: ChatMessage[]) => {
+      const last = messages[messages.length - 1];
+      return last?.role === 'assistant' && (last.toolCalls?.length ?? 0) > 0;
+    };
+
+    beforeEach(() => {
+      vi.mocked(getSchemas).mockImplementation(
+        () => new Promise((resolve) => { finishTool = resolve as never; }) as never);
+      let round = 0;
+      vi.mocked(streamChat).mockImplementation(((_req, onDelta, onDone) => {
+        if (round++ === 0) {
+          onDelta({ type: 'tool_call_start', id: 'call-1', name: 'list_schemas' } as never);
+          onDelta({ type: 'tool_call_end', id: 'call-1' } as never);
+          onDone({ finish_reason: 'tool_calls' } as never);
+        } else {
+          onDelta({ type: 'content', content: 'round two' } as never);
+          onDone({ finish_reason: 'stop' } as never);
+        }
+        return new AbortController();
+      }) as never);
+    });
+
+    /** The input is only disabled while isStreaming, so it has to stay true while the tool runs. */
+    it('refuses a message typed while a tool is running, so none is built on the open tool_use', async () => {
+      const { result } = mount();
+      await settle();
+      await send(result, 'list my schemas');
+
+      expect(result.current.isStreaming).toBe(true);
+      await send(result, 'typed during the tool');
+      expect(streamChat).toHaveBeenCalledTimes(1);
+      expect(result.current.messages.map((m) => m.content)).not.toContain('typed during the tool');
+
+      await act(async () => { finishTool([{ name: 'dfs' }]); await vi.advanceTimersByTimeAsync(0); });
+      await settle(DEBOUNCE_MS);
+
+      expect(result.current.isStreaming).toBe(false);
+      expect(result.current.messages.map((m) => m.role).slice(-4))
+        .toEqual(['user', 'assistant', 'tool', 'assistant']);
+      const saves = vi.mocked(saveConversationMessages).mock.calls;
+      expect(saves.length).toBeGreaterThan(0);
+      for (const call of saves) {
+        expect(endsWithToolUse(call[2])).toBe(false);
+      }
+    });
+
+    /** A round cut off by a switch leaves the open tool_use in the buffer; replaying it would brick the thread. */
+    it('does not replay an unanswered tool_use from the buffer', async () => {
+      const { result, rerender } = mount('c1');
+      await settle();
+      await send(result, 'list my schemas');
+      serverHolds([{ role: 'user', content: 'c2 only' }], 1, 'c2');
+      rerender({ id: 'c2' });
+      await settle();
+      await act(async () => { finishTool([{ name: 'dfs' }]); await vi.advanceTimersByTimeAsync(0); });
+      serverHolds(OLD);
+      rerender({ id: 'c1' });
+      await settle();
+      await settle(DEBOUNCE_MS);
+
+      // The turn the user sent is kept; only the unanswerable tool_use is dropped.
+      expect(result.current.messages).toEqual([...OLD, { role: 'user', content: 'list my schemas' }]);
+      const saves = vi.mocked(saveConversationMessages).mock.calls.filter((c) => c[1] === 'c1');
+      expect(saves).toHaveLength(1);
+      expect(endsWithToolUse(saves[0][2])).toBe(false);
+      expect(saves[0][2].map((m) => m.content)).toContain('list my schemas');
+    });
+
+    it('does not send a provider a history that ends in an unanswered tool_use', async () => {
+      serverHolds([
+        ...OLD,
+        { role: 'user', content: 'list my schemas' },
+        { role: 'assistant', content: null, toolCalls: [{ id: 'old', name: 'list_schemas', arguments: '{}' }] },
+      ]);
+      vi.mocked(streamChat).mockClear();
+      vi.mocked(streamChat).mockImplementation(((_req, _onDelta, onDone) => {
+        onDone({ finish_reason: 'stop' } as never);
+        return new AbortController();
+      }) as never);
+      const { result } = mount();
+      await settle();
+      await send(result, 'try again');
+
+      const sent = vi.mocked(streamChat).mock.calls[0][0].messages;
+      expect(sent.some((m) => m.toolCalls?.length)).toBe(false);
+      expect(sent[sent.length - 1].content).toBe('try again');
+    });
+
+    /** A reload takes the server's copy; a tool round for the discarded copy must not write it back. */
+    it('does not let a tool round running during a reload overwrite the reloaded copy', async () => {
+      const { result } = mount();
+      await settle();
+      await send(result, 'list my schemas');
+
+      const theirs: ChatMessage[] = [...OLD, { role: 'user', content: 'from the other device' }];
+      serverHolds(theirs, 9);
+      await act(async () => { result.current.reloadConversation(); await vi.advanceTimersByTimeAsync(0); });
+      await act(async () => { finishTool([{ name: 'dfs' }]); await vi.advanceTimersByTimeAsync(0); });
+      await settle(DEBOUNCE_MS);
+      await settle(DEBOUNCE_MS);
+
+      expect(result.current.messages).toEqual(theirs);
+      expect(result.current.isStreaming).toBe(false);
+      expect(streamChat).toHaveBeenCalledTimes(1);
+      expect(saveConversationMessages).not.toHaveBeenCalled();
+    });
+  });
+
   /** The panel's trash button is wired to clearChat; it must not be able to empty the record. */
   describe('clearChat on a server-primary conversation', () => {
     it('does not empty the conversation or write [] to the server', async () => {
