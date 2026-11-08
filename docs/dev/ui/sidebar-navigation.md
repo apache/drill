@@ -147,10 +147,10 @@ Edit `BASE_PROJECT_SECTIONS` or `TRAILING_PROJECT_SECTIONS`. The `key` must matc
 - Section ordering matters — Library and Administration are after Projects to keep workspace-level nav at the top.
 - The "Administration" section is collapsed by default; new pages added there start hidden.
 - Update [`sidebar-navigation.md`](sidebar-navigation.md) and the [`README.md`](README.md) page index when you add an item that introduces a new top-level route.
-- If you change the project sub-nav, also check `ProjectNavBar.tsx` — it renders the same set of tabs horizontally at the top of project pages.
+- If you change the project sub-nav, also update `ProjectNavBar.tsx` to match. It is not mounted anywhere today, so the sidebar is the only visible project navigation.
 
 ## Related components
 
 - `LeftRail.tsx` — the optional second column inside a page (e.g. SQL Lab's schema browser). Not part of the sidebar. See [`components/app-shell.md`](components/app-shell.md).
 - `Toolbar.tsx` — owns the sidebar collapse button. See [`components/app-shell.md`](components/app-shell.md).
-- `ProjectNavBar.tsx` — horizontal tabbed nav rendered at the top of project pages. Mirrors the project sub-nav.
+- `ProjectNavBar.tsx` — horizontal tabbed nav that mirrors the project sub-nav. Exported but not mounted.

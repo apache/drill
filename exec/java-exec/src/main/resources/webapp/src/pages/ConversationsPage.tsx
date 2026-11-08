@@ -22,7 +22,12 @@ import { Alert, Button, Empty, Spin, message } from 'antd';
 import { PlusOutlined } from '@ant-design/icons';
 import { useProjectContext } from '../contexts/ProjectContext';
 import { useProspector } from '../hooks/useProspector';
-import { createConversation, listConversations, renameConversation } from '../api/conversations';
+import {
+  createConversation,
+  deleteConversation,
+  listConversations,
+  renameConversation,
+} from '../api/conversations';
 import { ProspectorPanel } from '../components/prospector';
 import ConversationList from '../components/conversation/ConversationList';
 import type { ChatContext, ConversationRecord } from '../types/ai';
@@ -159,7 +164,7 @@ export default function ConversationsPage() {
   const queryClient = useQueryClient();
   const [isCreating, setIsCreating] = useState(false);
 
-  const { data, isLoading, error, refetch } = useQuery({
+  const { data, isLoading, isFetching, error, refetch } = useQuery({
     queryKey: listKey(projectId ?? ''),
     queryFn: () => listConversations(projectId!),
     enabled: !!projectId,
@@ -190,8 +195,41 @@ export default function ConversationsPage() {
     }
   }, [projectId, isCreating, queryClient, navigate]);
 
+  const handleRename = useCallback(async (id: string, name: string) => {
+    try {
+      await renameConversation(projectId!, id, name);
+    } catch (err) {
+      console.error('Renaming conversation failed', err);
+      message.error('Could not rename the conversation. Try again.');
+      throw err;
+    }
+    await queryClient.invalidateQueries({ queryKey: listKey(projectId!) });
+  }, [projectId, queryClient]);
+
+  const handleDelete = useCallback(async (id: string) => {
+    try {
+      await deleteConversation(projectId!, id);
+    } catch (err) {
+      console.error('Deleting conversation failed', err);
+      message.error('Could not delete the conversation. Try again.');
+      await queryClient.invalidateQueries({ queryKey: listKey(projectId!) });
+      return;
+    }
+    // If this was the open conversation it is now missing from the list, and the unknown-id
+    // fallback below sends the user to the most recent one left, or the empty state.
+    queryClient.setQueryData<ConversationRecord[]>(listKey(projectId!), (old) =>
+      (old ?? []).filter((c) => c.id !== id));
+  }, [projectId, queryClient]);
+
   if (!projectId) {
     return null;
+  }
+
+  // The list is only trusted once it is not being refreshed. A cached copy can still name
+  // a conversation deleted elsewhere, and a redirect to it would dead-end on a 404.
+  const settled = data !== undefined && !isFetching && !error;
+  if (conversationId && settled && !conversations.some((c) => c.id === conversationId)) {
+    return <Navigate to={`/projects/${projectId}/chat`} replace />;
   }
 
   let main;
@@ -218,7 +256,7 @@ export default function ConversationsPage() {
         />
       </div>
     );
-  } else if (isLoading) {
+  } else if (isLoading || isFetching) {
     main = (
       <div style={{ flex: 1, padding: 24, textAlign: 'center' }}>
         <Spin size="large" />
@@ -247,6 +285,8 @@ export default function ConversationsPage() {
         isLoading={isLoading}
         isCreating={isCreating}
         onNew={handleNew}
+        onRename={handleRename}
+        onDelete={handleDelete}
       />
       {main}
       <CanvasPane />

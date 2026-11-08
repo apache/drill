@@ -17,10 +17,12 @@
  */
 import { describe, it, expect, vi, beforeEach } from 'vitest';
 import { render, screen, fireEvent, waitFor } from '@testing-library/react';
-import { MemoryRouter } from 'react-router-dom';
+import { MemoryRouter, useLocation } from 'react-router-dom';
 import { QueryClient, QueryClientProvider } from '@tanstack/react-query';
 import type { ReactNode } from 'react';
 import CommandPalette from './CommandPalette';
+import { getProjects } from '../../api/projects';
+import type { Project } from '../../types';
 
 vi.mock('../../api/projects', () => ({
   getProjects: vi.fn(() => Promise.resolve([])),
@@ -38,6 +40,10 @@ vi.mock('../../api/dashboards', () => ({
   getDashboards: vi.fn(() => Promise.resolve([])),
 }));
 
+function Location() {
+  return <div data-testid="location">{useLocation().pathname}</div>;
+}
+
 function createQueryClient() {
   return new QueryClient({
     defaultOptions: {
@@ -52,6 +58,7 @@ function renderWithProviders(ui: ReactNode) {
     <QueryClientProvider client={queryClient}>
       <MemoryRouter>
         {ui}
+        <Location />
       </MemoryRouter>
     </QueryClientProvider>
   );
@@ -90,5 +97,18 @@ describe('CommandPalette', () => {
         screen.getByPlaceholderText(/Search projects, queries, visualizations, dashboards/i)
       ).toBeInTheDocument();
     });
+  });
+
+  it('opens a project on its Conversations tab', async () => {
+    vi.mocked(getProjects).mockResolvedValue([
+      { id: 'p1', name: 'Alpha Project', tags: [] } as unknown as Project,
+    ]);
+    renderWithProviders(<CommandPalette />);
+    fireEvent.keyDown(window, { key: 'k', ctrlKey: true });
+    const input = await screen.findByPlaceholderText(/Search projects, queries/i);
+    fireEvent.change(input, { target: { value: 'alpha' } });
+
+    fireEvent.click(await screen.findByText('Alpha Project'));
+    expect(screen.getByTestId('location')).toHaveTextContent('/projects/p1/chat');
   });
 });

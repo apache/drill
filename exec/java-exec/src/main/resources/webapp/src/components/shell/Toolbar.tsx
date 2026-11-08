@@ -251,7 +251,7 @@ function deriveBreadcrumb(
       {
         key: 'project',
         label: projectName,
-        to: section ? `/projects/${projectId}/query` : undefined,
+        to: section ? `/projects/${projectId}/chat` : undefined,
       },
     ];
     if (section && section !== 'query') {

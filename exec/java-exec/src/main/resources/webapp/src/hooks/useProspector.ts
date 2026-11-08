@@ -481,7 +481,6 @@ export function useProspector(
       // A server-primary conversation is a durable, named artifact: emptying it would
       // write [] over the server record in one click, including at the size cap where
       // this is the button a user reaches for. The hook refuses regardless of the caller.
-      // TODO(Task 6): route the panel's "Clear chat" affordance to creating a new conversation.
       message.info('A saved conversation cannot be cleared. Start a new conversation instead.');
       return;
     }

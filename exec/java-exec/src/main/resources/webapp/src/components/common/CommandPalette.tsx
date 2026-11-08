@@ -190,7 +190,7 @@ export default function CommandPalette({ externalOpen, onExternalOpenChange }: C
         projects,
         (p) => p.name,
         (p) => p.description,
-        (p) => navigate(`/projects/${p.id}/query`),
+        (p) => navigate(`/projects/${p.id}/chat`),
         (p) => p.tags ?? [],
       ),
       buildGroup(

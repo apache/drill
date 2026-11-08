@@ -5,14 +5,13 @@
 
 ## Purpose
 
-The shell for everything that happens inside a project. Loads the project, provides project state via `ProjectContext`, renders the tabbed project nav (`ProjectNavBar`), and renders child pages via React Router's `<Outlet />`.
+The shell for everything that happens inside a project. Loads the project, provides project state via `ProjectContext`, and renders child pages via React Router's `<Outlet />`. It does not render a nav of its own: project navigation is the Sidebar's per-project sub-nav (see [`../sidebar-navigation.md`](../sidebar-navigation.md)).
 
 ## Architecture
 
 ```
 /projects/:id  →  ProjectLayout
                   ├─ ProjectContextProvider  (fetches /api/v1/projects/:id, provides via useProjectContext())
-                  ├─ ProjectNavBar           (horizontal tabs mirroring the sidebar project sub-nav)
                   └─ <Outlet />              (renders the active child route)
 ```
 
@@ -20,7 +19,9 @@ The shell for everything that happens inside a project. Loads the project, provi
 
 ## Tabs
 
-`ProjectNavBar` renders, in order:
+The Sidebar's project sub-nav (`BASE_PROJECT_SECTIONS`, Workflows, then Wiki and Settings in `Sidebar.tsx`) is how users reach these pages, and the Conversations entry reaches the Conversations page that way. Opening a project from the sidebar row, the Projects page or the command palette also lands on Conversations.
+
+`ProjectNavBar` (`src/components/project/ProjectNavBar.tsx`) is exported and kept in step with that list, but **it is not mounted anywhere**. If it is ever mounted it renders, in order:
 
 - Conversations → `/projects/:id/chat` (the project index route redirects here)
 - Query → `/projects/:id/query`
@@ -71,7 +72,7 @@ Project pages come in three flavors:
 - A 404 on `getProject` does not retry; the layout renders an empty state and a back link to `/projects`.
 - All child pages read from `useProjectContext()` rather than re-fetching the project — saves duplicate requests.
 - Updating the project (rename, appearance change, dataset change) invalidates `['project', projectId]` and re-renders all subscribed children.
-- Workflows are in both `ProjectNavBar` and the sidebar, which always lists them (see [project-workflows.md](project-workflows.md)).
+- Workflows are always listed in the sidebar sub-nav (see [project-workflows.md](project-workflows.md)).
 
 ## Quirks
 

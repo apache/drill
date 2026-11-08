@@ -27,6 +27,7 @@ import {
   listConversations,
   createConversation,
   renameConversation,
+  deleteConversation,
 } from '../api/conversations';
 import type { ChatMessage, ConversationRecord } from '../types/ai';
 
@@ -35,6 +36,7 @@ vi.mock('../api/conversations', () => ({
   listConversations: vi.fn(),
   createConversation: vi.fn(),
   renameConversation: vi.fn(),
+  deleteConversation: vi.fn(),
 }));
 vi.mock('../api/projects', () => ({
   getProject: vi.fn(async () => ({ id: 'p1', name: 'Project One' })),
@@ -63,8 +65,10 @@ const clearChat = vi.fn();
 const sendMessage = vi.fn();
 let hookState: { messages: ChatMessage[]; saveStatus: SaveStatus };
 
-function renderAt(path: string) {
-  const client = new QueryClient({ defaultOptions: { queries: { retry: false } } });
+function renderAt(
+  path: string,
+  client = new QueryClient({ defaultOptions: { queries: { retry: false } } }),
+) {
   return render(
     <QueryClientProvider client={client}>
       <MemoryRouter
@@ -115,6 +119,7 @@ describe('ConversationsPage', () => {
         }) as UseProspectorReturn,
     );
     vi.mocked(renameConversation).mockResolvedValue(record({ id: 'c1' }));
+    vi.mocked(deleteConversation).mockResolvedValue(undefined);
   });
 
   it('lands on Conversations when opening a project', async () => {
@@ -312,5 +317,142 @@ describe('ConversationsPage', () => {
     expect(args[4]).toBeNull();
     expect(args[5]).toBe('c1');
     expect(args[6]).toBe('p1');
+  });
+
+  describe('renaming from the list', () => {
+    it('renames a conversation and shows the new name', async () => {
+      vi.mocked(listConversations)
+        .mockResolvedValueOnce([record({ id: 'c1', name: 'Quarterly review' })])
+        .mockResolvedValue([record({ id: 'c1', name: 'Q3 review' })]);
+      renderAt('/projects/p1/chat/c1');
+
+      fireEvent.click(await screen.findByRole('button', { name: 'Rename Quarterly review' }));
+      const dialog = await screen.findByRole('dialog');
+      const input = within(dialog).getByRole('textbox');
+      expect(input).toHaveValue('Quarterly review');
+      fireEvent.change(input, { target: { value: '  Q3 review ' } });
+      fireEvent.click(within(dialog).getByRole('button', { name: /^(ok|save|rename)$/i }));
+
+      await waitFor(() => expect(renameConversation).toHaveBeenCalledWith('p1', 'c1', 'Q3 review'));
+      expect(await screen.findByText('Q3 review')).toBeInTheDocument();
+    });
+
+    it('does not send a blank name', async () => {
+      vi.mocked(listConversations).mockResolvedValue([record({ id: 'c1', name: 'Quarterly review' })]);
+      renderAt('/projects/p1/chat/c1');
+
+      fireEvent.click(await screen.findByRole('button', { name: 'Rename Quarterly review' }));
+      const dialog = await screen.findByRole('dialog');
+      fireEvent.change(within(dialog).getByRole('textbox'), { target: { value: '   ' } });
+      fireEvent.click(within(dialog).getByRole('button', { name: /^(ok|save|rename)$/i }));
+
+      await new Promise((resolve) => setTimeout(resolve, 50));
+      expect(renameConversation).not.toHaveBeenCalled();
+    });
+  });
+
+  describe('deleting from the list', () => {
+    const twoConversations = () => [
+      record({ id: 'a', name: 'Alpha thread', updatedAt: 900 }),
+      record({ id: 'b', name: 'Beta thread', updatedAt: 500 }),
+    ];
+
+    async function confirmDelete(name: string) {
+      fireEvent.click(await screen.findByRole('button', { name: `Delete ${name}` }));
+      expect(await screen.findByText(`Delete "${name}"?`)).toBeInTheDocument();
+      fireEvent.click(screen.getByRole('button', { name: 'Delete' }));
+    }
+
+    it('asks for confirmation naming the conversation and deletes nothing until confirmed', async () => {
+      vi.mocked(listConversations).mockResolvedValue(twoConversations());
+      renderAt('/projects/p1/chat/a');
+
+      fireEvent.click(await screen.findByRole('button', { name: 'Delete Beta thread' }));
+      expect(await screen.findByText('Delete "Beta thread"?')).toBeInTheDocument();
+      expect(deleteConversation).not.toHaveBeenCalled();
+
+      fireEvent.click(screen.getByRole('button', { name: 'Cancel' }));
+      await new Promise((resolve) => setTimeout(resolve, 50));
+      expect(deleteConversation).not.toHaveBeenCalled();
+      expect(screen.getByText('Beta thread')).toBeInTheDocument();
+    });
+
+    it('removes a conversation that is not open and keeps the open one', async () => {
+      vi.mocked(listConversations).mockResolvedValue(twoConversations());
+      renderAt('/projects/p1/chat/a');
+
+      await confirmDelete('Beta thread');
+
+      await waitFor(() => expect(deleteConversation).toHaveBeenCalledWith('p1', 'b'));
+      await waitFor(() => expect(screen.queryByText('Beta thread')).not.toBeInTheDocument());
+      expect(boundConversation()?.conversationId).toBe('a');
+    });
+
+    it('moves to the next most recent conversation when the open one is deleted', async () => {
+      vi.mocked(listConversations).mockResolvedValue(twoConversations());
+      renderAt('/projects/p1/chat/a');
+
+      await confirmDelete('Alpha thread');
+
+      await waitFor(() => expect(boundConversation()?.conversationId).toBe('b'));
+      expect(deleteConversation).toHaveBeenCalledWith('p1', 'a');
+    });
+
+    it('shows the empty state when the last conversation is deleted', async () => {
+      vi.mocked(listConversations).mockResolvedValue([record({ id: 'a', name: 'Alpha thread' })]);
+      renderAt('/projects/p1/chat/a');
+
+      await confirmDelete('Alpha thread');
+
+      expect(await screen.findByText('No conversations yet')).toBeInTheDocument();
+    });
+
+    it('keeps the conversation and says so when the delete fails', async () => {
+      vi.mocked(listConversations).mockResolvedValue(twoConversations());
+      vi.mocked(deleteConversation).mockRejectedValue(new Error('boom'));
+      const logged = vi.spyOn(console, 'error').mockImplementation(() => undefined);
+      renderAt('/projects/p1/chat/a');
+
+      await confirmDelete('Beta thread');
+
+      expect(await screen.findByText(/could not delete/i)).toBeInTheDocument();
+      expect(screen.getByText('Beta thread')).toBeInTheDocument();
+      logged.mockRestore();
+    });
+  });
+
+  describe('conversations deleted elsewhere', () => {
+    it('does not redirect /chat to a conversation that only a stale cache still lists', async () => {
+      const client = new QueryClient({ defaultOptions: { queries: { retry: false } } });
+      client.setQueryData(['conversations', 'p1'], [
+        record({ id: 'gone', name: 'Deleted elsewhere', updatedAt: 900 }),
+        record({ id: 'kept', name: 'Still here', updatedAt: 100 }),
+      ]);
+      // The refresh is held open: until it answers, the cached list must not be trusted.
+      let answer: (list: ConversationRecord[]) => void = () => undefined;
+      vi.mocked(listConversations).mockReturnValue(new Promise((resolve) => { answer = resolve; }));
+      renderAt('/projects/p1/chat', client);
+
+      await new Promise((resolve) => setTimeout(resolve, 100));
+      expect(vi.mocked(useProspector).mock.calls.some((c) => c[5] === 'gone')).toBe(false);
+
+      answer([record({ id: 'kept', name: 'Still here', updatedAt: 100 })]);
+      await waitFor(() => expect(boundConversation()?.conversationId).toBe('kept'));
+      expect(vi.mocked(useProspector).mock.calls.some((c) => c[5] === 'gone')).toBe(false);
+    });
+
+    it('falls back to the most recent conversation when the URL names one that no longer exists', async () => {
+      vi.mocked(listConversations).mockResolvedValue([record({ id: 'kept', name: 'Still here' })]);
+      renderAt('/projects/p1/chat/ghost');
+
+      await waitFor(() => expect(boundConversation()?.conversationId).toBe('kept'));
+    });
+
+    it('falls back to the empty state when nothing is left', async () => {
+      vi.mocked(listConversations).mockResolvedValue([]);
+      renderAt('/projects/p1/chat/ghost');
+
+      expect(await screen.findByText('No conversations yet')).toBeInTheDocument();
+    });
   });
 });

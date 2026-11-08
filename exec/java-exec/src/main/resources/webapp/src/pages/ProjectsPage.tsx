@@ -584,7 +584,7 @@ export default function ProjectsPage() {
               project={project}
               cover={coverFromProject(project, TINT_PALETTE)}
               isFavorite={favoriteSet.has(project.id)}
-              onOpen={() => navigate(`/projects/${project.id}/query`)}
+              onOpen={() => navigate(`/projects/${project.id}/chat`)}
               onToggleFavorite={() => favoriteMutation.mutate(project.id)}
               onEdit={(e) => handleEdit(project, e)}
               onDelete={() => deleteProjectWithUndo(project.id)}

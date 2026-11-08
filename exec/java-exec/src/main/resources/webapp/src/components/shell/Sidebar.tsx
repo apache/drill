@@ -312,7 +312,7 @@ function ProjectRow({
     return (
       <Tooltip title={project.name} placement="right">
         <Link
-          to={`/projects/${project.id}/query`}
+          to={`/projects/${project.id}/chat`}
           className={`shell-sidebar-item${active && !activeProjectSubPath ? ' is-active' : ''}`}
           style={{ paddingLeft: 8 }}
         >
@@ -361,7 +361,7 @@ function ProjectRow({
       }`}
     >
       <a
-        href={`/projects/${project.id}/query`}
+        href={`/projects/${project.id}/chat`}
         onClick={handleRowClick}
         className={`shell-sidebar-item shell-sidebar-project-row${active && !activeProjectSubPath ? ' is-active' : ''}`}
         draggable
@@ -499,7 +499,7 @@ export default function Sidebar() {
   const handleNavigateToProject = useCallback(
     (id: string) => {
       setExpanded(id, true);
-      navigate(`/projects/${id}/query`);
+      navigate(`/projects/${id}/chat`);
     },
     [navigate, setExpanded],
   );

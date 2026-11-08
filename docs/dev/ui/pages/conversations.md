@@ -21,8 +21,10 @@ Three panes: `ConversationList` (left, inside the page, not in the project sideb
   - `too-large`: the conversation hit its size cap and takes no more messages. The banner offers "Start a new conversation".
   - `conflict`: another device wrote first. The banner offers "Reload", which calls `reloadConversation()` and discards local changes. The hook never does this on its own.
   - `error`: informational, saving is retried.
+- The list rows have Rename (a dialog; blank names are refused) and Delete. Delete asks for confirmation naming the conversation. Deleting the open conversation moves to the most recent one left, or the empty state.
+- The list is only trusted once it is not being refreshed. `/chat` waits for the refresh before redirecting, and a conversation id that is absent from the fresh list (deleted on another device) falls back to `/chat`, so a stale cache never dead-ends on a 404.
 - Analytics feature slug: `project_chat`.
 
 ## Not yet here
 
-Rename, delete and search of conversations in the list. The sidebar and the Projects page still open a project at `/query`.
+Search of conversations in the list. Deleting a conversation does not clear its offline buffer in localStorage.

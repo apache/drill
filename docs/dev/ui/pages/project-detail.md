@@ -5,7 +5,7 @@
 
 ## Purpose
 
-Project administration: edit metadata, manage member datasets, view activity, see lineage. Reached from the project nav's "Settings" button (gear icon on the right side of `ProjectNavBar`).
+Project administration: edit metadata, manage member datasets, view activity, see lineage. Reached from the "Settings" entry of the sidebar's project sub-nav.
 
 ## Tabs
 
