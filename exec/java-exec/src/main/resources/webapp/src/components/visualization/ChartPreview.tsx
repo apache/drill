@@ -654,7 +654,11 @@ const ChartPreviewComponent = forwardRef<any, ChartPreviewProps>(({
       return null;
     }
 
-    const { xAxis, yAxis, metrics, dimensions } = config;
+    const { xAxis, yAxis, metrics } = config;
+    // A dimension that repeats the x axis is not a grouping: it splits each category into one
+    // series per category, which draws every bar as a hairline. Charts generated from a
+    // description often arrive that way, so drop it here rather than in each chart type.
+    const dimensions = config.dimensions?.filter((d) => d !== xAxis);
 
     switch (chartType) {
       case 'bar': {

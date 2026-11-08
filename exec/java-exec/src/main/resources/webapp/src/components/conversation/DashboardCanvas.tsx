@@ -29,7 +29,10 @@ export const INITIAL_PANELS = 6;
 
 // A panel's grid height is in rows of 120px on the page; beside a chat each gets a
 // single-column slot, scaled down but kept within a range a chart can be read in.
-const panelHeight = (p: DashboardPanel) => Math.min(Math.max(p.height * 60, 160), 320);
+const panelHeight = (p: DashboardPanel) => Math.min(Math.max(p.height * 60, 240), 380);
+
+/** The card's own chrome above the chart: title row and padding. */
+const CARD_CHROME = 64;
 
 const byPosition = (a: DashboardPanel, b: DashboardPanel) => a.y - b.y || a.x - b.x;
 
@@ -81,6 +84,9 @@ export default function DashboardCanvas({ dashboard }: { dashboard: Dashboard })
                   dashboardUpdatedAt={dashboard.updatedAt}
                   darkMode={darkMode}
                   allPanels={dashboard.panels}
+                  // The card sizes its chart from the dashboard grid, which is taller than
+                  // this slot: without this the x axis and legend are clipped off the bottom.
+                  chartHeight={panelHeight(panel) - CARD_CHROME}
                 />
               </div>
             ))}

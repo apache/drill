@@ -107,7 +107,7 @@ export const TOOL_DEFINITIONS: ToolDefinition[] = [
             xAxis: { type: 'string', description: 'Column name for x-axis' },
             yAxis: { type: 'string', description: 'Column name for y-axis' },
             metrics: { type: 'array', items: { type: 'string' }, description: 'Column names to use as metrics' },
-            dimensions: { type: 'array', items: { type: 'string' }, description: 'Column names to use as dimensions' },
+            dimensions: { type: 'array', items: { type: 'string' }, description: 'Column names that split the data into one series per value. Leave empty unless the chart compares groups; never repeat the xAxis column here' },
           },
         },
         sql: { type: 'string', description: 'The SQL query for this visualization' },
