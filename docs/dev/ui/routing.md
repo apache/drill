@@ -93,7 +93,9 @@ Declared in `src/App.tsx`:
 /                                  →  redirect to /projects
 /projects                          →  ProjectsPage
 /projects/:id                      →  ProjectLayout
-  ├─ (index)                       →  redirect to ./query
+  ├─ (index)                       →  redirect to ./chat
+  ├─ chat                          →  ConversationsPage (redirects to the most recent conversation)
+  ├─ chat/:conversationId          →  ConversationsPage
   ├─ query                         →  ProjectQueryPage
   ├─ queries                       →  ProjectSavedQueriesPage
   ├─ visualizations                →  ProjectVisualizationsPage

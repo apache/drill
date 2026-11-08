@@ -57,6 +57,7 @@ Pages live in `src/pages/`. Each doc covers route, purpose, data sources (which 
 |---|---|
 | [`pages/project-layout.md`](pages/project-layout.md) | `/projects/:id/*` shell + tabbed nav |
 | [`pages/project-detail.md`](pages/project-detail.md) | `/projects/:id/settings` |
+| [`pages/conversations.md`](pages/conversations.md) | `/projects/:id/chat`, `/projects/:id/chat/:conversationId` |
 | [`pages/project-query.md`](pages/project-query.md) | `/projects/:id/query` |
 | [`pages/project-wiki.md`](pages/project-wiki.md) | `/projects/:id/wiki`, `/projects/:id/wiki/:pageId` |
 | [`pages/project-data-sources.md`](pages/project-data-sources.md) | `/projects/:id/datasources` |

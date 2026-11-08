@@ -53,6 +53,7 @@ Admin-only dashboard for AI / LLM feature usage and cost. Per-feature event log,
   | `report_generation` | Prospector "Generate Report" quick action |
   | `profile_analysis` | Query profile detail page |
   | `global_chat` | Global Prospector tab (shell) |
+  | `project_chat` | Conversations page (`/projects/:id/chat`) |
   | `query_suggestions` | Query suggestions panel |
   | `explain_query` | Explain Query action |
   | `optimize_query` | Optimize Query action |

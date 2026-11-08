@@ -51,6 +51,7 @@ export const FEATURE_LABEL = {
   report_generation: 'Report generation',
   profile_analysis: 'Profile analysis',
   global_chat: 'Global Prospector chat',
+  project_chat: 'Project conversation',
   filesystem_form: 'Filesystem plugin form',
   // Server-originated
   config_test: 'AI config test',

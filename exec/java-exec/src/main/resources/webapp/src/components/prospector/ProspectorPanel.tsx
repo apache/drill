@@ -15,7 +15,7 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
-import { useCallback, useState } from 'react';
+import { useCallback, useState, type ReactNode } from 'react';
 import { Button, Tooltip, Tag } from 'antd';
 import { DeleteOutlined, RobotOutlined, ExperimentOutlined } from '@ant-design/icons';
 import ChatMessageList from './ChatMessageList';
@@ -31,12 +31,18 @@ interface ProspectorPanelProps {
   context: ChatContext;
   /** Callback to insert Python code as a new notebook cell */
   onInsertCell?: (code: string) => void;
+  /** Tooltip and accessible name of the header's clear button. Defaults to "Clear chat". */
+  clearLabel?: string;
+  /** Icon of the header's clear button. Defaults to a trash can. */
+  clearIcon?: ReactNode;
 }
 
 export default function ProspectorPanel({
   prospector,
   context,
   onInsertCell,
+  clearLabel = 'Clear chat',
+  clearIcon = <DeleteOutlined />,
 }: ProspectorPanelProps) {
   const {
     messages,
@@ -97,10 +103,11 @@ export default function ProspectorPanel({
             </Tag>
           )}
         </span>
-        <Tooltip title="Clear chat">
+        <Tooltip title={clearLabel}>
           <Button
             size="small"
-            icon={<DeleteOutlined />}
+            aria-label={clearLabel}
+            icon={clearIcon}
             onClick={clearChat}
             disabled={messages.length === 0 && !isStreaming}
           />

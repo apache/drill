@@ -19,6 +19,8 @@ import { useMemo } from 'react';
 import { useLocation, useNavigate } from 'react-router-dom';
 import { Menu, Button, Space, Typography, Tooltip, Dropdown } from 'antd';
 import {
+  MessageOutlined,
+  FieldTimeOutlined,
   CodeOutlined,
   FileTextOutlined,
   BarChartOutlined,
@@ -40,10 +42,12 @@ import { useRecentItems } from '../../hooks/useRecentItems';
 const { Text } = Typography;
 
 const navItems = [
+  { key: 'chat', label: 'Conversations', icon: <MessageOutlined /> },
   { key: 'query', label: 'Query', icon: <CodeOutlined /> },
   { key: 'queries', label: 'Queries', icon: <FileTextOutlined /> },
   { key: 'visualizations', label: 'Visualizations', icon: <BarChartOutlined /> },
   { key: 'dashboards', label: 'Dashboards', icon: <DashboardOutlined /> },
+  { key: 'workflows', label: 'Workflows', icon: <FieldTimeOutlined /> },
   { key: 'datasources', label: 'Data Sources', icon: <DatabaseOutlined /> },
   { key: 'wiki', label: 'Wiki', icon: <BookOutlined /> },
 ];
@@ -63,7 +67,7 @@ export default function ProjectNavBar() {
   // Determine active key from current path
   const pathSegments = location.pathname.split('/');
   // /projects/:id/something -> something is at index 3
-  const activeKey = pathSegments[3] || 'query';
+  const activeKey = pathSegments[3] || 'chat';
 
   // Build dropdown menu items for project switcher
   const projectMenuItems = useMemo(() => {

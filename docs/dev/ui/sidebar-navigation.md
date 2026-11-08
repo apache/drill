@@ -91,6 +91,7 @@ Each project row expands (via chevron click) into a sub-nav. `BASE_PROJECT_SECTI
 
 ```ts
 [
+  { key: 'chat',            label: 'Conversations',  icon: <MessageOutlined /> },
   { key: 'query',           label: 'Query',          icon: <CodeOutlined /> },
   { key: 'queries',         label: 'Saved Queries',  icon: <SaveOutlined /> },
   { key: 'visualizations',  label: 'Visualizations', icon: <BarChartOutlined /> },

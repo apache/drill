@@ -34,7 +34,7 @@ Pages instantiate `useProspector()`, pass its return value plus a `ChatContext` 
 
 ### ProspectorPanel
 
-**Entry component.** Props: prospector state (from `useProspector()`), `ChatContext`, optional `onInsertCell` (for notebook integration).
+**Entry component.** Props: prospector state (from `useProspector()`), `ChatContext`, optional `onInsertCell` (for notebook integration), optional `clearLabel` / `clearIcon` (the header button defaults to a trash can labelled "Clear chat"; the [Conversations page](../pages/conversations.md) relabels it "New conversation" and wires it to create one).
 
 Renders four child elements:
 

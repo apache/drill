@@ -30,6 +30,7 @@ const ProjectDetailPage = lazy(() => import('./pages/ProjectDetailPage'));
 const DataSourcesPage = lazy(() => import('./pages/DataSourcesPage'));
 const DataSourceEditPage = lazy(() => import('./pages/DataSourceEditPage'));
 const SqlLabPage = lazy(() => import('./pages/SqlLabPage'));
+const ConversationsPage = lazy(() => import('./pages/ConversationsPage'));
 const ProjectQueryPage = lazy(() => import('./pages/ProjectQueryPage'));
 const ProjectSavedQueriesPage = lazy(() => import('./pages/ProjectSavedQueriesPage'));
 const ProjectVisualizationsPage = lazy(() => import('./pages/ProjectVisualizationsPage'));
@@ -91,7 +92,9 @@ function App() {
               <Route path="/" element={<Navigate to="/projects" replace />} />
               <Route path="/projects" element={<ProjectsPage />} />
               <Route path="/projects/:id" element={<ProjectLayout />}>
-                <Route index element={<Navigate to="query" replace />} />
+                <Route index element={<Navigate to="chat" replace />} />
+                <Route path="chat" element={<ConversationsPage />} />
+                <Route path="chat/:conversationId" element={<ConversationsPage />} />
                 <Route path="query" element={<ProjectQueryPage />} />
                 <Route path="queries" element={<ProjectSavedQueriesPage />} />
                 <Route path="visualizations" element={<ProjectVisualizationsPage />} />

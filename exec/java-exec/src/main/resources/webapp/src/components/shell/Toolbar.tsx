@@ -41,6 +41,7 @@ import PreferencesModal from './PreferencesModal';
 import { getProjects } from '../../api/projects';
 
 const PROJECT_SECTION_LABELS: Record<string, string> = {
+  chat: 'Conversations',
   query: 'Query',
   queries: 'Saved Queries',
   visualizations: 'Visualizations',

@@ -22,10 +22,12 @@ The shell for everything that happens inside a project. Loads the project, provi
 
 `ProjectNavBar` renders, in order:
 
+- Conversations → `/projects/:id/chat` (the project index route redirects here)
 - Query → `/projects/:id/query`
 - Saved Queries → `/projects/:id/queries`
 - Visualizations → `/projects/:id/visualizations`
 - Dashboards → `/projects/:id/dashboards`
+- Workflows → `/projects/:id/workflows`
 - Data Sources → `/projects/:id/datasources`
 - Wiki → `/projects/:id/wiki`
 - (right-aligned) Recent items chip, project switcher dropdown, Settings button → `/projects/:id/settings`
@@ -69,7 +71,7 @@ Project pages come in three flavors:
 - A 404 on `getProject` does not retry; the layout renders an empty state and a back link to `/projects`.
 - All child pages read from `useProjectContext()` rather than re-fetching the project — saves duplicate requests.
 - Updating the project (rename, appearance change, dataset change) invalidates `['project', projectId]` and re-renders all subscribed children.
-- `ProjectNavBar` has no Workflows tab. Workflows are reached from the sidebar, which always lists them (see [project-workflows.md](project-workflows.md)).
+- Workflows are in both `ProjectNavBar` and the sidebar, which always lists them (see [project-workflows.md](project-workflows.md)).
 
 ## Quirks
 

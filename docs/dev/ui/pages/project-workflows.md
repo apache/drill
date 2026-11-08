@@ -18,7 +18,7 @@ That is the whole component. `WorkflowsPage` fetches `GET /api/v1/workflows?proj
 
 ## Visibility
 
-The Workflows entry is always shown in the project sidebar (`sectionsFor` in `Sidebar.tsx`), whether or not the project has workflows yet. `ProjectNavBar` has no Workflows tab. The server decides what each person sees: public-project viewers see definitions but not run records. See [`../sidebar-navigation.md`](../sidebar-navigation.md).
+The Workflows entry is always shown in the project sidebar (`sectionsFor` in `Sidebar.tsx`), whether or not the project has workflows yet. `ProjectNavBar` also has a Workflows tab. The server decides what each person sees: public-project viewers see definitions but not run records. See [`../sidebar-navigation.md`](../sidebar-navigation.md).
 
 ## Chrome
 

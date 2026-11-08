@@ -39,6 +39,7 @@ import {
   KeyOutlined,
   PartitionOutlined,
   FieldTimeOutlined as WorkflowIcon,
+  MessageOutlined,
 } from '@ant-design/icons';
 import { useQuery } from '@tanstack/react-query';
 import { listTabs } from '../../api/tabs';
@@ -144,6 +145,7 @@ interface ProjectSection {
 }
 
 const BASE_PROJECT_SECTIONS: ProjectSection[] = [
+  { key: 'chat', label: 'Conversations', icon: <MessageOutlined /> },
   { key: 'query', label: 'Query', icon: <CodeOutlined /> },
   { key: 'queries', label: 'Saved Queries', icon: <SaveOutlined /> },
   { key: 'visualizations', label: 'Visualizations', icon: <BarChartOutlined /> },
