@@ -90,17 +90,15 @@ export function artifactsOfLastTurn(messages: ChatMessage[]): CreatedArtifact[] 
 }
 
 /**
- * Where the canvas goes when a turn ends. Not pinned: the last artifact the turn created, so
- * a turn that builds several settles once on the last rather than stepping through each.
- * Pinned, or a turn that created nothing: wherever it already is.
+ * Where the canvas goes when a turn ends: the last artifact the turn created, so a turn that
+ * builds several settles once on the last rather than stepping through each; or wherever it
+ * already is when the turn created nothing. There is no pinned case here. A pin holds the
+ * view in CanvasHost, which catches up to this target when it is released, the same as it
+ * does for a query result that arrived while pinned.
  */
 export function nextCanvasTarget(
   turnArtifacts: CanvasTarget[],
-  pinned: boolean,
   current: CanvasTarget | null,
 ): CanvasTarget | null {
-  if (pinned || turnArtifacts.length === 0) {
-    return current;
-  }
-  return turnArtifacts[turnArtifacts.length - 1];
+  return turnArtifacts.length === 0 ? current : turnArtifacts[turnArtifacts.length - 1];
 }

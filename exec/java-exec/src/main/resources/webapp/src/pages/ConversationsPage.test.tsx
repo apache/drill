@@ -655,7 +655,7 @@ describe('ConversationsPage', () => {
         expect(cards()[0]).toHaveAttribute('aria-current', 'true');
       });
 
-      it('keeps a pinned canvas where it is when a turn creates something', async () => {
+      it('holds a pinned canvas through a turn that creates something, and catches up on unpin', async () => {
         await openConversation();
         queryResultEmitter('c1')('SELECT 1', [{ n: 1 }]);
         fireEvent.click(await screen.findByRole('button', { name: 'Pin canvas' }));
@@ -669,11 +669,12 @@ describe('ConversationsPage', () => {
         expect(cards()).toHaveLength(1);
         expect(cards()[0]).not.toHaveAttribute('aria-current');
 
-        // The pin held the follow rule too, not only the view: unpinning does not jump to
-        // something the pinned canvas was never going to follow.
+        // The pin only held the view. Unpinning catches up to what the turn built, as it does
+        // for a query result that arrived while pinned.
         fireEvent.click(screen.getByRole('button', { name: 'Unpin canvas' }));
-        expect(screen.getByTestId('grid')).toHaveTextContent('{"n":1}');
-        expect(getSavedQuery).not.toHaveBeenCalled();
+        expect(await screen.findByText("SELECT 'q1' AS which")).toBeInTheDocument();
+        expect(screen.queryByTestId('grid')).not.toBeInTheDocument();
+        expect(cards()[0]).toHaveAttribute('aria-current', 'true');
       });
 
       it('keeps the card of the pinned artifact live while a query result arrives behind it', async () => {

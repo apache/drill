@@ -76,7 +76,8 @@ function ConversationView({ projectId, conversationId, record, onNew }: Conversa
   const [canvasTarget, setCanvasTarget] = useState<CanvasTarget | null>(null);
   const [pinned, setPinned] = useState(false);
   // What the canvas was showing when it was pinned. A pinned canvas holds this while
-  // canvasTarget goes on moving (a query result still lands there, so unpinning catches up).
+  // canvasTarget goes on moving (query results and finished turns still land there, so
+  // unpinning catches up).
   const [frozenTarget, setFrozenTarget] = useState<CanvasTarget | null>(null);
   const [fullScreen, setFullScreen] = useState(false);
   const handleQueryResult = useCallback(
@@ -93,15 +94,20 @@ function ConversationView({ projectId, conversationId, record, onNew }: Conversa
   // streaming going from true to false: a conversation loaded from the server was not just
   // built, so it must not pull the canvas to its last artifact, and nothing steps through
   // the artifacts of a turn while it runs. isStreaming stays true across the whole tool
-  // phase of a turn, so this is once per turn however many rounds it took.
+  // phase of a turn, so this is once per turn however many rounds it took. That invariant
+  // lives in the hook and is guarded by useProspector.test.tsx ("has to stay true while the
+  // tool runs"); the page tests mock the hook, so they cannot catch it being reverted.
+  //
+  // Not conditional on the pin: a pin holds the view in CanvasHost, which catches up to
+  // canvasTarget when released, so the target keeps following either way.
   const wasStreaming = useRef(false);
   useEffect(() => {
     if (wasStreaming.current && !isStreaming) {
       const turn = artifactsOfLastTurn(messages).map(({ kind, id }): CanvasTarget => ({ kind, id }));
-      setCanvasTarget((current) => nextCanvasTarget(turn, pinned, current));
+      setCanvasTarget((current) => nextCanvasTarget(turn, current));
     }
     wasStreaming.current = isStreaming;
-  }, [isStreaming, messages, pinned]);
+  }, [isStreaming, messages]);
 
   const handleTogglePin = () => {
     if (!pinned) {

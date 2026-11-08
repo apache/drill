@@ -34,19 +34,13 @@ const results: CanvasTarget = {
 describe('nextCanvasTarget', () => {
   it('settles on the last artifact of a turn, not each in sequence', () => {
     const turn = [chart('a'), { kind: 'dashboard', id: 'b' } as CanvasTarget, chart('c')];
-    expect(nextCanvasTarget(turn, false, null)).toBe(turn[2]);
-    expect(nextCanvasTarget(turn, false, chart('old'))).toBe(turn[2]);
-  });
-
-  it('keeps the current target when pinned', () => {
-    const current = chart('pinned');
-    expect(nextCanvasTarget([chart('new')], true, current)).toBe(current);
-    expect(nextCanvasTarget([chart('new')], true, null)).toBeNull();
+    expect(nextCanvasTarget(turn, null)).toBe(turn[2]);
+    expect(nextCanvasTarget(turn, chart('old'))).toBe(turn[2]);
   });
 
   it('returns the current target when a turn produced no artifacts', () => {
-    expect(nextCanvasTarget([], false, results)).toBe(results);
-    expect(nextCanvasTarget([], false, null)).toBeNull();
+    expect(nextCanvasTarget([], results)).toBe(results);
+    expect(nextCanvasTarget([], null)).toBeNull();
   });
 });
 
