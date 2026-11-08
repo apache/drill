@@ -395,4 +395,34 @@ describe('CanvasHost', () => {
       expect(chat).not.toHaveAttribute('inert');
     });
   });
+  describe('resizing', () => {
+    it('widens as the left edge is dragged left, clamps at the minimum, and remembers the width', () => {
+      // jsdom measures every element as 0 wide, so the drag starts from the stored width.
+      window.localStorage.setItem('conversations.canvasWidth', '400');
+      host({ target: results('SELECT 1') });
+      const handle = screen.getByLabelText('Resize canvas');
+      const canvas = screen.getByLabelText('Canvas');
+
+      fireEvent.pointerDown(handle, { clientX: 1000 });
+      fireEvent.pointerMove(document, { clientX: 800 });
+      expect(canvas).toHaveStyle({ width: '600px' });
+
+      // Dragging well past the right edge stops at the floor rather than collapsing.
+      fireEvent.pointerMove(document, { clientX: 2000 });
+      expect(canvas).toHaveStyle({ width: '280px' });
+
+      fireEvent.pointerMove(document, { clientX: 800 });
+      fireEvent.pointerUp(document);
+      expect(window.localStorage.getItem('conversations.canvasWidth')).toBe('600');
+
+      // Released: further movement no longer resizes.
+      fireEvent.pointerMove(document, { clientX: 400 });
+      expect(canvas).toHaveStyle({ width: '600px' });
+    });
+
+    it('has no handle while full screen', () => {
+      host({ target: results('SELECT 1'), isFullScreen: true });
+      expect(screen.queryByLabelText('Resize canvas')).toBeNull();
+    });
+  });
 });

@@ -76,6 +76,20 @@ function viewerFor(target: CanvasTarget, messages: ChatMessage[]): Viewer {
 // Things that handle Escape themselves and are drawn outside the canvas. While one is open
 // the key belongs to it, not to full screen. Modals and select/dropdown/popover panels
 // from antd, and the context menus ag-grid opens.
+/** Narrowest useful canvas, and the room the chat keeps at its left. */
+const MIN_CANVAS_WIDTH = 280;
+const MIN_CHAT_WIDTH = 420;
+const WIDTH_KEY = 'conversations.canvasWidth';
+
+function storedWidth(): number | null {
+  try {
+    const saved = Number(window.localStorage.getItem(WIDTH_KEY));
+    return saved >= MIN_CANVAS_WIDTH ? saved : null;
+  } catch {
+    return null;
+  }
+}
+
 const OPEN_OVERLAY_SELECTOR = [
   '.ant-modal-wrap:not([style*="display: none"])',
   '.ant-dropdown:not(.ant-dropdown-hidden)',
@@ -188,6 +202,33 @@ export default function CanvasHost({
     };
   }, [isFullScreen]);
 
+  // Dragging the left edge sets an explicit width, which outranks the stylesheet's clamp.
+  // Remembered per browser; the narrow-viewport media query still hides the canvas outright.
+  const [width, setWidth] = useState<number | null>(storedWidth);
+  const startResize = (e: React.PointerEvent) => {
+    e.preventDefault();
+    const startX = e.clientX;
+    // `||`, not `??`: an unmeasurable element reports 0, which is no width to drag from.
+    const startWidth = asideRef.current?.offsetWidth || width || MIN_CANVAS_WIDTH;
+    let latest = startWidth;
+    const onMove = (ev: PointerEvent) => {
+      const max = Math.max(MIN_CANVAS_WIDTH, window.innerWidth - MIN_CHAT_WIDTH);
+      latest = Math.min(Math.max(startWidth + (startX - ev.clientX), MIN_CANVAS_WIDTH), max);
+      setWidth(latest);
+    };
+    const onUp = () => {
+      document.removeEventListener('pointermove', onMove);
+      document.removeEventListener('pointerup', onUp);
+      try {
+        window.localStorage.setItem(WIDTH_KEY, String(Math.round(latest)));
+      } catch {
+        // A browser that refuses storage just forgets the width.
+      }
+    };
+    document.addEventListener('pointermove', onMove);
+    document.addEventListener('pointerup', onUp);
+  };
+
   return (
     <aside
       ref={asideRef}
@@ -199,6 +240,8 @@ export default function CanvasHost({
       className={isFullScreen ? undefined : 'conversations-canvas'}
       style={{
         borderLeft: '1px solid var(--color-border-secondary)',
+        position: 'relative',
+        ...(isFullScreen || width === null ? {} : { width, flexShrink: 0 }),
         display: 'flex',
         flexDirection: 'column',
         minHeight: 0,
@@ -208,6 +251,24 @@ export default function CanvasHost({
           : {}),
       }}
     >
+      {!isFullScreen && (
+        <div
+          role="separator"
+          aria-orientation="vertical"
+          aria-label="Resize canvas"
+          onPointerDown={startResize}
+          style={{
+            position: 'absolute',
+            top: 0,
+            bottom: 0,
+            left: -3,
+            width: 6,
+            cursor: 'col-resize',
+            touchAction: 'none',
+            zIndex: 1,
+          }}
+        />
+      )}
       <div
         style={{
           display: 'flex',

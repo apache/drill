@@ -30,6 +30,7 @@ import { getSavedQuery } from '../../api/savedQueries';
 import { getWorkflow } from '../../api/workflows';
 import { getPlugin } from '../../api/storage';
 import { executeQuery } from '../../api/queries';
+import { getErrorMessage } from '../../api/client';
 import { getEffectiveQuery } from '../../utils/sqlTransformations';
 import ChartPreview from '../visualization/ChartPreview';
 import MarkdownView from '../MarkdownView';
@@ -199,7 +200,9 @@ function ChartViewer({ id, tab }: { id: string; tab: string }) {
         query,
         queryType: 'SQL',
         autoLimitRowCount: 10000,
-        defaultSchema: viz!.defaultSchema || 'public',
+        // Only the chart's own schema: Drill rejects a default schema that does not exist
+        // with a 500 at submission, so a made-up fallback breaks every schemaless chart.
+        defaultSchema: viz!.defaultSchema,
       });
     },
     enabled: tab === 'chart' && !!viz?.sql?.trim(),
@@ -222,7 +225,7 @@ function ChartViewer({ id, tab }: { id: string; tab: string }) {
               type="error"
               showIcon
               message="The chart's query failed."
-              description={dataQuery.error instanceof Error ? dataQuery.error.message : 'Failed to run query'}
+              description={getErrorMessage(dataQuery.error)}
             />
           );
         } else {
