@@ -72,12 +72,10 @@ export default function ConversationList({
   return (
     <nav
       aria-label="Conversations"
+      className="conversations-list"
       style={{
-        width: 260,
-        flexShrink: 0,
         display: 'flex',
         flexDirection: 'column',
-        borderRight: '1px solid var(--color-border-secondary)',
         background: 'var(--color-bg-elevated)',
         minHeight: 0,
       }}

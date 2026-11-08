@@ -9,7 +9,9 @@ A project's Prospector conversations as durable, project-scoped records. They ar
 
 ## Layout
 
-Three panes: `ConversationList` (left, inside the page, not in the project sidebar), `ProspectorPanel` (middle), and `CanvasHost` (right, a 440 px aside that shows what Prospector is working on).
+Three panes: `ConversationList` (left, inside the page, not in the project sidebar), `ProspectorPanel` (middle), and `CanvasHost` (right, an aside that shows what Prospector is working on).
+
+Widths come from `index.css` (the `conversations-*` classes), not inline styles. The list is 200 px, the chat keeps a 300 px minimum, and the canvas is `clamp(280px, 30%, 480px)`. At 1100 px and below the canvas is hidden, since with the main sidebar open that leaves too little room for all three panes. At 768 px and below the list stacks above the chat as a strip 30% of the viewport height. Full screen is unaffected: it drops the canvas class and fills the window.
 
 ## Behavior
 

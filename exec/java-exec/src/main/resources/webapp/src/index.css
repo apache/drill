@@ -7774,3 +7774,53 @@ html.dark .ant-btn:not(.ant-btn-primary):not(.ant-btn-text):not(.ant-btn-link):n
     word-break: break-all;
   }
 }
+
+/* ==================== Conversations page layout ==================== */
+
+/* Three panes: conversation list, chat, canvas. The chat keeps a floor so the two side panes
+   cannot crush it, and the canvas gives up its space before the chat does. The 1100px
+   threshold assumes the main navigation sidebar is open (about 260px), which leaves roughly
+   840px for the page: the 200px list, a 300px chat and the smallest canvas just fit. */
+.conversations-list {
+  width: 200px;
+  flex-shrink: 0;
+  border-right: 1px solid var(--color-border-secondary);
+}
+
+.conversations-chat {
+  min-width: 300px;
+}
+
+.conversations-canvas {
+  width: clamp(280px, 30%, 480px);
+  flex-shrink: 0;
+}
+
+/* Too narrow for a canvas beside the chat, so it is not shown. Anything it would hold is
+   still in the thread; a wider window brings the canvas back. */
+@media (max-width: 1100px) {
+  .conversations-canvas {
+    /* The canvas sets display inline, which only !important outranks. */
+    display: none !important;
+  }
+}
+
+/* Phones: the list stacks above the chat as a short scrolling strip. */
+@media (max-width: 768px) {
+  .conversations-page {
+    flex-direction: column;
+  }
+
+  .conversations-list {
+    width: auto;
+    /* A definite height: the list scrolls inside it, and has no height of its own to give. */
+    height: 30vh;
+    flex-shrink: 0;
+    border-right: none;
+    border-bottom: 1px solid var(--color-border-secondary);
+  }
+
+  .conversations-chat {
+    min-width: 0;
+  }
+}

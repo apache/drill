@@ -179,7 +179,7 @@ function ConversationView({ projectId, conversationId, record, onNew }: Conversa
 
   return (
     <>
-      <div style={{ flex: 1, minWidth: 0, display: 'flex', flexDirection: 'column', minHeight: 0 }}>
+      <div className="conversations-chat" style={{ flex: 1, display: 'flex', flexDirection: 'column', minHeight: 0 }}>
         {saveStatus === 'too-large' && (
           <Alert
             type="warning"
@@ -395,7 +395,7 @@ export default function ConversationsPage() {
   }
 
   return (
-    <div style={{ flex: 1, display: 'flex', minHeight: 0, height: '100%' }}>
+    <div className="conversations-page" style={{ flex: 1, display: 'flex', minHeight: 0, height: '100%' }}>
       <ConversationList
         projectId={projectId}
         conversations={conversations}

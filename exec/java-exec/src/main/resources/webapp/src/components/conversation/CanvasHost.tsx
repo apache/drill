@@ -194,9 +194,10 @@ export default function CanvasHost({
       aria-label="Canvas"
       role={isFullScreen ? 'dialog' : undefined}
       aria-modal={isFullScreen ? true : undefined}
+      // The inline width lives in index.css so it can respond to the viewport; full screen
+      // drops the class and fills the window instead.
+      className={isFullScreen ? undefined : 'conversations-canvas'}
       style={{
-        width: isFullScreen ? undefined : 440,
-        flexShrink: 0,
         borderLeft: '1px solid var(--color-border-secondary)',
         display: 'flex',
         flexDirection: 'column',
