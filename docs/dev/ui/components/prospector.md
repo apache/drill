@@ -146,7 +146,7 @@ Other AI endpoints in this module:
 
 - `ChatRequest` — `{ messages, tools, context }`
 - `ChatMessage` — `{ role: 'user'|'assistant'|'system'|'tool', content, toolCalls?, toolCallId?, name? }`
-- `ChatContext` — page / mode signals: `currentSql`, `schema`, `errorMessage`, `notebookMode`, `logAnalysisMode`, `projectDatasets`, …
+- `ChatContext` — page / mode signals: `currentSql`, `schema`, `errorMessage`, `conversationMode` (set by the Conversations page; the server then builds the conversation-mode prompt), `notebookMode` (client-side quick actions only; the server ignores it), `logAnalysisMode`, `projectDatasets`, …
 - `DeltaEvent` — discriminated union for streamed content / tool calls
 - `DoneEvent` — `{ finish_reason }`
 - `UsageEvent` — `{ promptTokens?, responseTokens?, totalTokens?, costUsd?, currency? }`

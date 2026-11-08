@@ -369,6 +369,19 @@ describe('ConversationsPage', () => {
     expect(args[6]).toBe('p1');
   });
 
+  it('tells the server a chat from this page is a conversation, so the prompt builds rather than narrates', async () => {
+    vi.mocked(listConversations).mockResolvedValue([record({ id: 'c1' })]);
+    renderAt('/projects/p1/chat/c1');
+    const box = await screen.findByPlaceholderText(/ask about your data/i);
+    fireEvent.change(box, { target: { value: 'top talkers by bytes' } });
+    fireEvent.keyDown(box, { key: 'Enter' });
+
+    expect(sendMessage).toHaveBeenCalledWith(
+      'top talkers by bytes',
+      expect.objectContaining({ feature: 'project_chat', projectId: 'p1', conversationMode: true }),
+    );
+  });
+
   describe('renaming from the list', () => {
     it('renames a conversation and shows the new name', async () => {
       vi.mocked(listConversations)

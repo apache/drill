@@ -156,29 +156,12 @@ public class ProspectorResources {
     @JsonProperty
     public String projectId;
 
-    /** True when the user is working in the notebook tab. */
+    /**
+     * True when the call comes from a project conversation, where the answer is built
+     * with tools and appears on the canvas beside the chat.
+     */
     @JsonProperty
-    public boolean notebookMode;
-
-    /** Name of the DataFrame variable available in the notebook. */
-    @JsonProperty
-    public String notebookDfName;
-
-    /** DataFrame shape, e.g. "10 rows x 3 cols". */
-    @JsonProperty
-    public String notebookDfShape;
-
-    /** Column names available on the notebook DataFrame. */
-    @JsonProperty
-    public List<String> notebookColumns;
-
-    /** Code in the cell the user is currently working on. */
-    @JsonProperty
-    public String notebookCellCode;
-
-    /** Error from the last cell execution, if any. */
-    @JsonProperty
-    public String notebookCellError;
+    public boolean conversationMode;
 
     @JsonProperty
     public String currentSql;
@@ -769,6 +752,39 @@ public class ProspectorResources {
       + "If you need a function you are unsure about, call get_available_functions rather than\n"
       + "assuming a MySQL or Postgres equivalent exists.\n\n";
 
+  /**
+   * Replaces the "only when explicitly asked" rule on the conversation surface, where the
+   * user has a canvas beside the chat and the point is that Prospector builds things. Every
+   * statement about a tool here has to stay true to that tool as built: create_workflow takes
+   * its query as sql and always creates a paused workflow, and write_wiki_page defaults
+   * includeTranscript to false. The wiki rule that follows in the shared tail covers
+   * includeTranscript and pageId.
+   */
+  static final String CONVERSATION_MODE_NOTES =
+      "\nThis is a CONVERSATION in a project. Beside this chat the user has a canvas that shows\n"
+      + "the work you build: query results, charts, dashboards, saved queries, workflows and wiki\n"
+      + "pages open there as you create them, each with a card in the thread. You build things\n"
+      + "with your tools. You do not hand back SQL for the user to paste somewhere else.\n"
+      + "- To answer a data question, run the query with execute_sql. The SQL and the rows appear\n"
+      + "  on the canvas. Do not answer with a SQL code block for the user to copy and run. Show\n"
+      + "  SQL in your reply only to explain one specific part of it, or when the user asks to see it.\n"
+      + "- Do not describe what you would build or what you could do next. Build it, then say in a\n"
+      + "  sentence or two what you made and what it shows. Do not end a turn by offering to run a\n"
+      + "  query you could have run.\n"
+      + "- Make a chart with create_visualization, a dashboard with create_dashboard, and a saved\n"
+      + "  query with save_query when the user asks for one or asks for something that is one\n"
+      + "  (\"chart that\", \"build me a dashboard of these\", \"save this\"). Do not chart or save\n"
+      + "  every result unasked.\n"
+      + "- A scheduled workflow needs the user's agreement first: propose the schedule and the\n"
+      + "  actions, then call create_workflow once they agree. Pass the query as sql. Do NOT call\n"
+      + "  save_query first: create_workflow saves the query into the project itself, and a query\n"
+      + "  saved with save_query is not in the project, so passing it as savedQueryId is rejected.\n"
+      + "  A workflow is always created paused. You cannot activate it, so never say it is running\n"
+      + "  or scheduled. Tell the user it is ready for them to review and activate, and point them\n"
+      + "  to the viewPath in the tool result. Call create_workflow once per workflow.\n"
+      + "- A written report is a wiki page. Save it with write_wiki_page once the user agrees, as\n"
+      + "  described below.\n";
+
   List<ChatMessage> buildMessages(LlmConfig config, ChatRequest request, String username) {
     List<ChatMessage> messages = new ArrayList<>();
 
@@ -813,28 +829,6 @@ public class ProspectorResources {
           systemPrompt.append(buildProjectBlock(project,
               loadSavedQueries(project.getSavedQueryIds(), username)));
           systemPrompt.append(buildSchemaCacheBlock(project, loadSchemaCache()));
-        }
-      }
-
-      if (ctx.notebookMode) {
-        systemPrompt.append("\nYou are also assisting inside the notebook tab, where the user ");
-        systemPrompt.append("works with a pandas-like DataFrame.\n");
-        if (ctx.notebookDfName != null && !ctx.notebookDfName.isEmpty()) {
-          systemPrompt.append("DataFrame variable: ").append(ctx.notebookDfName).append("\n");
-        }
-        if (ctx.notebookDfShape != null && !ctx.notebookDfShape.isEmpty()) {
-          systemPrompt.append("Shape: ").append(ctx.notebookDfShape).append("\n");
-        }
-        if (ctx.notebookColumns != null && !ctx.notebookColumns.isEmpty()) {
-          systemPrompt.append("Columns: ")
-              .append(String.join(", ", ctx.notebookColumns)).append("\n");
-        }
-        if (ctx.notebookCellCode != null && !ctx.notebookCellCode.isEmpty()) {
-          systemPrompt.append("Current cell code:\n```python\n")
-              .append(ctx.notebookCellCode).append("\n```\n");
-        }
-        if (ctx.notebookCellError != null && !ctx.notebookCellError.isEmpty()) {
-          systemPrompt.append("Last cell error: ").append(ctx.notebookCellError).append("\n");
         }
       }
 
@@ -1005,16 +999,22 @@ public class ProspectorResources {
     // Scoped out of the "MUST use proactively" list above: that instruction is for the
     // read-only discovery tools. Listing the authoring tools under it read as standing
     // permission, and the model charted every result unasked.
-    systemPrompt.append("\nYou can also create visualizations, dashboards, and save queries, ");
-    systemPrompt.append("but ONLY when the user explicitly asks. Answering a data question ");
-    systemPrompt.append("means reporting the result — do not create a chart, dashboard, or ");
-    systemPrompt.append("saved query unless it was requested.\n");
+    if (request.context != null && request.context.conversationMode) {
+      systemPrompt.append(CONVERSATION_MODE_NOTES);
+    } else {
+      systemPrompt.append("\nYou can also create visualizations, dashboards, and save queries, ");
+      systemPrompt.append("but ONLY when the user explicitly asks. Answering a data question ");
+      systemPrompt.append("means reporting the result — do not create a chart, dashboard, or ");
+      systemPrompt.append("saved query unless it was requested.\n");
+    }
     systemPrompt.append("\nWhen you have produced a full report — a titled document with ");
     systemPrompt.append("sections, tables or a summary rather than a short answer — offer to ");
     systemPrompt.append("save it to the project wiki. If the user agrees, call write_wiki_page ");
     systemPrompt.append("with the complete markdown and includeTranscript true, so the queries ");
     systemPrompt.append("behind it are attached. To revise a page you already wrote, call ");
     systemPrompt.append("write_wiki_page again with its pageId instead of creating a second one. ");
+    systemPrompt.append("To revise a page you did not write, find its pageId with ");
+    systemPrompt.append("get_project_docs. ");
     systemPrompt.append("Do not call write_wiki_page without being asked or agreed to.\n");
 
     // Append custom system prompt if configured

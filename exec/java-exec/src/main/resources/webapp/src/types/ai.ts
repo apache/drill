@@ -56,6 +56,16 @@ export interface ChatContext {
   availableSchemas?: string[];
   error?: string;
   resultSummary?: ResultSummary;
+  /**
+   * True for a project conversation: the server then tells the model to build artifacts with
+   * its tools, which appear on the canvas beside the chat, instead of handing back SQL.
+   */
+  conversationMode?: boolean;
+  /**
+   * The notebook* fields below drive the client-side quick actions only. The server no longer
+   * reads them (it ignores unknown fields), so the notebook tab's context never reaches the
+   * model. They go away with the SQL Lab dock.
+   */
   /** Whether the user is currently in the notebook tab */
   notebookMode?: boolean;
   /** Name of the DataFrame variable available in the notebook */

@@ -176,24 +176,21 @@ public class ProspectorEventTest {
   }
 
   /**
-   * The notebook tab sends these six fields. The server had no matching fields, so a
-   * chat from the notebook tab failed outright.
+   * The notebook tab's context fields were removed from the server, but a browser running
+   * an older build still sends them. ChatContext ignores unknown fields, so a chat from
+   * that browser must still deserialize rather than fail.
    */
   @Test
-  public void testChatContextCarriesNotebookFields() throws Exception {
+  public void testChatContextIgnoresRetiredNotebookFields() throws Exception {
     com.fasterxml.jackson.databind.ObjectMapper mapper =
         new com.fasterxml.jackson.databind.ObjectMapper();
     ProspectorResources.ChatContext ctx = mapper.readValue(
-        "{\"feature\":\"sql_lab_chat\",\"notebookMode\":true,\"notebookDfName\":\"df\","
-        + "\"notebookDfShape\":\"10 rows x 3 cols\",\"notebookColumns\":[\"a\",\"b\"],"
-        + "\"notebookCellCode\":\"df.head()\",\"notebookCellError\":\"KeyError: 'z'\"}",
+        "{\"feature\":\"sql_lab_chat\",\"projectId\":\"proj-42\",\"notebookMode\":true,"
+        + "\"notebookDfName\":\"df\",\"notebookDfShape\":\"10 rows x 3 cols\","
+        + "\"notebookColumns\":[\"a\",\"b\"],\"notebookCellCode\":\"df.head()\","
+        + "\"notebookCellError\":\"KeyError: 'z'\"}",
         ProspectorResources.ChatContext.class);
-    assertTrue(ctx.notebookMode);
-    assertEquals("df", ctx.notebookDfName);
-    assertEquals("10 rows x 3 cols", ctx.notebookDfShape);
-    assertEquals(java.util.List.of("a", "b"), ctx.notebookColumns);
-    assertEquals("df.head()", ctx.notebookCellCode);
-    assertEquals("KeyError: 'z'", ctx.notebookCellError);
+    assertEquals("proj-42", ctx.projectId);
   }
 
   @Test

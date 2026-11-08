@@ -128,7 +128,7 @@ function ConversationView({ projectId, conversationId, record, onNew }: Conversa
   const liveArtifact = onCanvas && onCanvas.kind !== 'results' ? { kind: onCanvas.kind, id: onCanvas.id } : null;
 
   const context: ChatContext = useMemo(
-    () => ({ feature: 'project_chat', projectId }),
+    () => ({ feature: 'project_chat', projectId, conversationMode: true }),
     [projectId],
   );
 
