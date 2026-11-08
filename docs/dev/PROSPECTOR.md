@@ -1,4 +1,4 @@
-# Prospector - AI Assistant for Apache Drill SQL Lab
+# Prospector - AI Assistant for Apache Drill
 
 ## Overview
 

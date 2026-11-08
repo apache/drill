@@ -62,7 +62,7 @@ On the **Definition** tab:
 4. **Add actions** with **Add action**. For each action, set **Run when** and fill in its settings. See [Actions](#actions) and [Conditions](#conditions).
 5. **Click Dry run** to see what would happen. The query runs for real, but nothing is sent or written. See [Testing](#testing-dry-run-and-run-now).
 6. **Click Save.** Save stays disabled while there are errors, and every error is shown next to its field or in a list above the tabs.
-7. **Turn on the Enabled switch.** New workflows are always saved paused, so nothing runs until you enable it.
+7. **Turn on the Enabled switch.** New workflows are always saved paused, so nothing runs on its schedule until you enable it. (**Run now** works on a paused workflow and executes its actions for real.)
 
 ## Schedules
 
