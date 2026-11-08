@@ -24,6 +24,10 @@ import { executeQuery } from '../api/queries';
 import { getSchemas, getTables, getColumns, searchFunctions } from '../api/metadata';
 import { createVisualization } from '../api/visualizations';
 import { getConversation, putConversation } from '../api/tabs';
+import {
+  getConversation as getServerConversation,
+  saveConversationMessages,
+} from '../api/conversations';
 import type { StoredChatMessage } from '../api/tabs';
 import { addVisualization, addDashboard, getProject, createWikiPage } from '../api/projects';
 import { createDashboard } from '../api/dashboards';
@@ -228,6 +232,62 @@ function saveChat(key: string, messages: ChatMessage[]): void {
   }
 }
 
+/**
+ * Where a server-primary conversation stands with the server. 'idle' means everything
+ * on screen is saved; the rest are the ways it is not:
+ *  - 'saving':    a write is in flight.
+ *  - 'too-large': the server refused the write for size. Hard stop, see sendMessage.
+ *  - 'conflict':  another device wrote first. The unsaved turns are kept, not replaced.
+ *  - 'error':     the write (or the initial load) failed on the network. Retried.
+ */
+export type SaveStatus = 'idle' | 'saving' | 'too-large' | 'conflict' | 'error';
+
+const SERVER_SAVE_DEBOUNCE_MS = 2000;
+
+/**
+ * Offline buffer for a server-primary conversation: the messages on screen and the
+ * server version they were built on. It exists only because the server is primary, so a
+ * rejected write is a lost turn, not a lost sync. On the next load, a buffer that still
+ * differs from the server is unsaved work: replayed if the version matches, surfaced as
+ * a conflict if the server has moved on. It is removed as soon as the server holds the
+ * same messages.
+ */
+interface ConversationBuffer {
+  baseVersion: number;
+  messages: ChatMessage[];
+}
+
+const conversationBufferKey = (projectId: string, cid: string) =>
+  `prospector_conversation_buffer_${projectId}_${cid}`;
+
+function readConversationBuffer(key: string): ConversationBuffer | null {
+  try {
+    const raw = localStorage.getItem(key);
+    const parsed = raw ? JSON.parse(raw) : null;
+    return parsed && Array.isArray(parsed.messages) && typeof parsed.baseVersion === 'number'
+      ? parsed
+      : null;
+  } catch {
+    return null;
+  }
+}
+
+function writeConversationBuffer(key: string, buffer: ConversationBuffer): void {
+  try {
+    localStorage.setItem(key, JSON.stringify(buffer));
+  } catch {
+    // Ignore storage errors (quota, private mode); the in-memory copy is still live.
+  }
+}
+
+function removeConversationBuffer(key: string): void {
+  try {
+    localStorage.removeItem(key);
+  } catch {
+    // Ignore storage errors
+  }
+}
+
 export interface UseProspectorReturn {
   messages: ChatMessage[];
   isStreaming: boolean;
@@ -244,6 +304,13 @@ export interface UseProspectorReturn {
   /** The tab this conversation belongs to, or null when unset. Recorded as provenance
    *  when a report from this conversation is saved. */
   tabId: string | null;
+  /** The server-side conversation this hook is bound to, or null when it is not. */
+  conversationId: string | null;
+  /** Sync state of a server-primary conversation; always 'idle' without a conversationId. */
+  saveStatus: SaveStatus;
+  /** Discards unsaved local turns and takes the server's copy. The way out of a 'conflict'
+   *  (or a failed load); always an explicit user action, never automatic. */
+  reloadConversation: () => void;
 }
 
 /**
@@ -304,12 +371,23 @@ export function useProspector(
   maxToolRounds?: number,
   // When set (e.g. per project), chat history is loaded from and saved to
   // localStorage under this key, so it survives navigation and unmounts.
-  storageKey?: string | null,
-  // When set, the conversation is also mirrored to the server so it follows the tab
-  // across devices and can be recovered from the project tree. localStorage stays the
-  // write-through buffer: a failed server write costs sync, never the conversation.
-  tabId?: string | null,
+  storageKeyArg?: string | null,
+  // LEGACY (tab-scoped) path: the conversation is also mirrored to the server so it
+  // follows the tab across devices. localStorage stays the write-through buffer there:
+  // a failed server write costs sync, never the conversation.
+  tabIdArg?: string | null,
+  // SERVER-PRIMARY path (needs projectId too). The server owns this conversation: it is
+  // loaded from there and every change is saved there. This INVERTS the legacy rule
+  // above. localStorage is only an offline buffer, so a write the server refuses or a
+  // network that drops mid-save leaves a turn that exists nowhere else. Every status
+  // other than 'idle' must therefore reach the user and none may discard a turn.
+  // When set, storageKeyArg and tabIdArg are ignored.
+  conversationId?: string | null,
+  projectId?: string | null,
 ): UseProspectorReturn {
+  const serverMode = !!conversationId && !!projectId;
+  const storageKey = serverMode ? null : storageKeyArg;
+  const tabId = serverMode ? null : tabIdArg;
   const effectiveMaxToolRounds = maxToolRounds && maxToolRounds > 0 ? maxToolRounds : DEFAULT_MAX_TOOL_ROUNDS;
   const [messages, setMessages] = useState<ChatMessage[]>(() => loadChat(storageKey));
   const [isStreaming, setIsStreaming] = useState(false);
@@ -317,6 +395,29 @@ export function useProspector(
   const [usage, setUsage] = useState<UsageEvent | null>(null);
   const abortRef = useRef<AbortController | null>(null);
   const toolRoundsRef = useRef(0);
+
+  // Server-primary bookkeeping. Refs, because the save pipeline reads them from timers
+  // and promise callbacks that must see the latest value, not the render they closed over.
+  const [saveStatus, setSaveStatusState] = useState<SaveStatus>('idle');
+  const saveStatusRef = useRef<SaveStatus>('idle');
+  const setSaveStatus = useCallback((status: SaveStatus) => {
+    saveStatusRef.current = status;
+    setSaveStatusState(status);
+  }, []);
+  const activeConversationRef = useRef<string | null>(null);
+  activeConversationRef.current = serverMode ? (conversationId ?? null) : null;
+  // The conversation whose messages are in state now; null while loading or after a failed load.
+  const loadedForRef = useRef<string | null>(null);
+  // Last server version known per conversation. Read when a save RUNS, not when it is
+  // scheduled, so turns batched by the debounce never send a stale version.
+  const versionsRef = useRef<Record<string, number>>({});
+  // The array last known to match the server; messages equal to it have nothing to save.
+  const lastSyncedRef = useRef<ChatMessage[] | null>(null);
+  const loadTokenRef = useRef(0);
+  // Every save runs through this chain, one at a time: a second write started before the
+  // first returns would carry the same version and 409 against ourselves.
+  const saveChainRef = useRef<Promise<void>>(Promise.resolve());
+  const pendingSaveRef = useRef<{ pid: string; cid: string; messages: ChatMessage[] } | null>(null);
 
   // Read inside executeToolCall, which must not re-create itself on every token.
   const messagesRef = useRef<ChatMessage[]>(messages);
@@ -346,7 +447,11 @@ export function useProspector(
     setMessages([]);
     setUsage(null);
     toolRoundsRef.current = 0;
-  }, [stopStreaming]);
+    // Clearing makes room, so a conversation stopped at the size cap can be written again.
+    if (saveStatusRef.current === 'too-large') {
+      setSaveStatus('idle');
+    }
+  }, [stopStreaming, setSaveStatus]);
 
   // Swap in the stored history when the project (storageKey) changes.
   const prevKeyRef = useRef(storageKey);
@@ -431,6 +536,204 @@ export function useProspector(
       }
     };
   }, [messages, tabId, isStreaming]);
+
+  // ---- Server-primary persistence (see the conversationId parameter) ----
+
+  const enqueueSave = useCallback((pid: string, cid: string, saving: ChatMessage[]) => {
+    saveChainRef.current = saveChainRef.current.then(async () => {
+      const version = versionsRef.current[cid];
+      if (version === undefined) {
+        return;
+      }
+      // The conversation can change under a save in flight. The write still goes to the
+      // conversation it was made for, but only the active one may touch hook state.
+      const isActive = () => activeConversationRef.current === cid;
+      if (isActive()) {
+        setSaveStatus('saving');
+      }
+      const key = conversationBufferKey(pid, cid);
+      try {
+        const result = await saveConversationMessages(pid, cid, saving, version);
+        if (result.status === 'ok') {
+          const saved = result.version as number;
+          versionsRef.current[cid] = saved;
+          if (!isActive() || messagesRef.current === saving) {
+            removeConversationBuffer(key);
+          } else {
+            // The user kept going while this write was in flight: the buffer still holds
+            // unsaved turns, now on top of the version this write produced.
+            const buffer = readConversationBuffer(key);
+            if (buffer) {
+              writeConversationBuffer(key, { ...buffer, baseVersion: saved });
+            }
+          }
+          if (isActive()) {
+            lastSyncedRef.current = saving;
+            setSaveStatus('idle');
+          }
+        } else if (isActive()) {
+          // Not retried: the same write would be refused again. The turns stay on screen
+          // and in the buffer until the user acts.
+          setSaveStatus(result.status);
+        }
+      } catch (err) {
+        console.error('Saving conversation failed; keeping it in the local buffer', err);
+        if (isActive()) {
+          setSaveStatus('error');
+        }
+      }
+    });
+  }, [setSaveStatus]);
+
+  const loadConversation = useCallback((pid: string, cid: string) => {
+    const token = ++loadTokenRef.current;
+    loadedForRef.current = null;
+    setSaveStatus('idle');
+    const key = conversationBufferKey(pid, cid);
+    getServerConversation(pid, cid).then(({ record, messages: serverMessages }) => {
+      if (token !== loadTokenRef.current) {
+        return;
+      }
+      versionsRef.current[cid] = record.version;
+      lastSyncedRef.current = serverMessages;
+      let shown = serverMessages;
+      const buffer = readConversationBuffer(key);
+      if (buffer && JSON.stringify(buffer.messages) !== JSON.stringify(serverMessages)) {
+        // Unsaved turns from an earlier session. They are never dropped here: shown as
+        // they were, and either replayed (the save effect picks them up) or, when the
+        // server has moved on since, held back as a conflict for the user to resolve.
+        shown = buffer.messages;
+        if (buffer.baseVersion !== record.version) {
+          // Keep the buffer rooted at the version it was built on; saves are paused, and
+          // rebasing it onto the server's version would make the next load overwrite.
+          versionsRef.current[cid] = buffer.baseVersion;
+          setSaveStatus('conflict');
+        }
+      } else if (buffer) {
+        removeConversationBuffer(key);
+      }
+      loadedForRef.current = cid;
+      setMessages(shown);
+      setUsage(null);
+      toolRoundsRef.current = 0;
+    }).catch((err) => {
+      if (token !== loadTokenRef.current) {
+        return;
+      }
+      console.error('Loading conversation failed', err);
+      // Show whatever the buffer holds so nothing looks lost, but stay unloaded: with no
+      // known version nothing can be saved, and sendMessage refuses until a reload works.
+      setMessages(readConversationBuffer(key)?.messages ?? []);
+      setSaveStatus('error');
+    });
+  }, [setSaveStatus]);
+
+  const reloadConversation = useCallback(() => {
+    if (!conversationId || !projectId) {
+      return;
+    }
+    if (serverSaveTimerRef.current) {
+      clearTimeout(serverSaveTimerRef.current);
+    }
+    pendingSaveRef.current = null;
+    removeConversationBuffer(conversationBufferKey(projectId, conversationId));
+    loadConversation(projectId, conversationId);
+  }, [conversationId, projectId, loadConversation]);
+
+  // Load on mount and whenever the conversation changes. The previous conversation's
+  // stream is stopped first so its late deltas cannot land in the new thread.
+  useEffect(() => {
+    if (!conversationId || !projectId) {
+      return;
+    }
+    stopStreaming();
+    setMessages([]);
+    toolRoundsRef.current = 0;
+    loadConversation(projectId, conversationId);
+    return () => {
+      loadTokenRef.current += 1;
+    };
+  }, [conversationId, projectId, loadConversation, stopStreaming]);
+
+  // Switching away (or unmounting) inside the debounce window would otherwise drop the
+  // pending write. Flush it to the conversation it belongs to.
+  useEffect(() => {
+    if (!conversationId || !projectId) {
+      return;
+    }
+    return () => {
+      const pending = pendingSaveRef.current;
+      if (pending && pending.cid === conversationId) {
+        pendingSaveRef.current = null;
+        if (serverSaveTimerRef.current) {
+          clearTimeout(serverSaveTimerRef.current);
+        }
+        enqueueSave(pending.pid, pending.cid, pending.messages);
+      }
+    };
+  }, [conversationId, projectId, enqueueSave]);
+
+  // Keep the offline buffer equal to what is on screen until the server holds it too.
+  useEffect(() => {
+    if (!conversationId || !projectId || loadedForRef.current !== conversationId) {
+      return;
+    }
+    const key = conversationBufferKey(projectId, conversationId);
+    if (messages === lastSyncedRef.current) {
+      removeConversationBuffer(key);
+    } else {
+      writeConversationBuffer(key, {
+        baseVersion: versionsRef.current[conversationId] ?? 0,
+        messages,
+      });
+    }
+  }, [messages, conversationId, projectId]);
+
+  // Debounced write, never while streaming (a half-finished tool round is not worth
+  // storing) and not once the server has refused: too-large and conflict wait for the user.
+  useEffect(() => {
+    if (!conversationId || !projectId) {
+      return;
+    }
+    if (loadedForRef.current !== conversationId || messages === lastSyncedRef.current) {
+      return;
+    }
+    if (isStreaming) {
+      // The buffer covers this turn; a snapshot scheduled before the stream began is stale.
+      pendingSaveRef.current = null;
+      return;
+    }
+    if (saveStatusRef.current === 'too-large' || saveStatusRef.current === 'conflict') {
+      return;
+    }
+    const pending = { pid: projectId, cid: conversationId, messages };
+    pendingSaveRef.current = pending;
+    const timer = setTimeout(() => {
+      pendingSaveRef.current = null;
+      enqueueSave(pending.pid, pending.cid, pending.messages);
+    }, SERVER_SAVE_DEBOUNCE_MS);
+    serverSaveTimerRef.current = timer;
+    return () => clearTimeout(timer);
+  }, [messages, conversationId, projectId, isStreaming, enqueueSave]);
+
+  // Replay after a network failure as soon as the browser is back online.
+  useEffect(() => {
+    if (!conversationId || !projectId) {
+      return;
+    }
+    const onOnline = () => {
+      if (saveStatusRef.current !== 'error') {
+        return;
+      }
+      if (loadedForRef.current === conversationId) {
+        enqueueSave(projectId, conversationId, messagesRef.current);
+      } else {
+        loadConversation(projectId, conversationId);
+      }
+    };
+    window.addEventListener('online', onOnline);
+    return () => window.removeEventListener('online', onOnline);
+  }, [conversationId, projectId, enqueueSave, loadConversation]);
 
   const executeToolCall = useCallback(async (toolCall: ToolCall, context?: ChatContext): Promise<string> => {
     try {
@@ -779,6 +1082,39 @@ export function useProspector(
       return;
     }
 
+    if (serverMode) {
+      // ponytail: at the cap (TabConversationStore.MAX_CONVERSATION_BYTES, 512 KB of
+      // serialized messages; tool results carrying sample rows fill it in a long session)
+      // a conversation HARD-STOPS. The server refuses the write, the turns already sent
+      // stay on screen and in the offline buffer, and no further turn is accepted into a
+      // thread that cannot hold it. Chosen over summarizing (lossy, and needs an extra LLM
+      // round trip) and spilling to a continuation record (needs a backend pointer and a
+      // multi-record load) because it is the only one of the three that cannot lose or
+      // rewrite a turn. Upgrade path: spill to a continuation record once the stop is
+      // hit often enough to hurt; summarizing older turns is the cheaper alternative.
+      const status = saveStatusRef.current;
+      if (loadedForRef.current !== conversationId) {
+        message.warning('This conversation has not finished loading, so it cannot take a message yet.');
+        return;
+      }
+      if (status === 'too-large') {
+        message.warning(
+          'This conversation has reached its size limit and cannot take more messages. '
+          + 'Start a new conversation to continue.',
+          8,
+        );
+        return;
+      }
+      if (status === 'conflict') {
+        message.warning(
+          'This conversation was changed on another device. Reload it to continue; '
+          + 'your unsaved messages are kept until you do.',
+          8,
+        );
+        return;
+      }
+    }
+
     const userMsg: ChatMessage = {
       role: 'user',
       content: text,
@@ -790,7 +1126,7 @@ export function useProspector(
     toolRoundsRef.current = 0;
 
     doStreamRound(updatedMessages, context);
-  }, [messages, isStreaming, doStreamRound]);
+  }, [messages, isStreaming, doStreamRound, serverMode, conversationId]);
 
   return {
     messages,
@@ -803,5 +1139,8 @@ export function useProspector(
     executeToolCall,
     storageKey: storageKey ?? null,
     tabId: tabId ?? null,
+    conversationId: serverMode ? (conversationId ?? null) : null,
+    saveStatus,
+    reloadConversation,
   };
 }
