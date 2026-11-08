@@ -19,7 +19,7 @@ import { useCallback, useEffect, useMemo, useRef, useState } from 'react';
 import { Navigate, useLocation, useNavigate, useParams } from 'react-router-dom';
 import { useQuery, useQueryClient } from '@tanstack/react-query';
 import { Alert, Button, Empty, Spin, message } from 'antd';
-import { PlusOutlined } from '@ant-design/icons';
+import { ExpandOutlined, PlusOutlined } from '@ant-design/icons';
 import { useProjectContext } from '../contexts/ProjectContext';
 import { useProspector, conversationBufferKey } from '../hooks/useProspector';
 import {
@@ -33,6 +33,7 @@ import ConversationList from '../components/conversation/ConversationList';
 import CanvasHost from '../components/conversation/CanvasHost';
 import { useOpenArtifact } from '../components/conversation/ArtifactCanvas';
 import type { ArtifactKind } from '../components/conversation/ArtifactCanvas';
+import { useCanvasHidden } from '../components/conversation/canvasLayout';
 import { artifactsOfLastTurn, nextCanvasTarget } from '../components/conversation/autoFollow';
 import type { CanvasTarget } from '../components/conversation/CanvasHost';
 import type { ChatContext, ConversationRecord, ConversationSeed } from '../types/ai';
@@ -95,6 +96,7 @@ function ConversationView({ projectId, conversationId, record, onNew }: Conversa
   );
   const { messages, isStreaming, isLoaded, saveStatus, reloadConversation } = prospector;
   const openArtifact = useOpenArtifact(projectId);
+  const canvasHidden = useCanvasHidden();
 
   // At the end of a turn the canvas settles on the last artifact the turn created. Only on
   // streaming going from true to false: a conversation loaded from the server was not just
@@ -124,14 +126,24 @@ function ConversationView({ projectId, conversationId, record, onNew }: Conversa
 
   // A card the user clicks is an explicit request, so it takes over a pinned canvas: the pin
   // guards against Prospector moving the view, not against the user.
+  //
+  // When the layout hides the canvas there is nowhere to show it, so the click goes to the
+  // artifact's own page, the same hand-off as the canvas's full screen.
   const handleOpenCard = useCallback((kind: ArtifactKind, id: string) => {
+    if (canvasHidden) {
+      void openArtifact(kind, id);
+      return;
+    }
     setCanvasTarget({ kind, id });
     setPinned(false);
-  }, []);
+  }, [canvasHidden, openArtifact]);
 
-  // The artifact on screen now, for the card that shows it as live.
+  // The artifact on screen now, for the card that shows it as live. Nothing is on screen
+  // while the canvas is hidden, and a card must not claim otherwise.
   const onCanvas = pinned ? frozenTarget : canvasTarget;
-  const liveArtifact = onCanvas && onCanvas.kind !== 'results' ? { kind: onCanvas.kind, id: onCanvas.id } : null;
+  const liveArtifact = !canvasHidden && onCanvas && onCanvas.kind !== 'results'
+    ? { kind: onCanvas.kind, id: onCanvas.id }
+    : null;
 
   const context: ChatContext = useMemo(
     () => ({ feature: 'project_chat', projectId, conversationMode: true }),
@@ -180,6 +192,16 @@ function ConversationView({ projectId, conversationId, record, onNew }: Conversa
   return (
     <>
       <div className="conversations-chat" style={{ flex: 1, display: 'flex', flexDirection: 'column', minHeight: 0 }}>
+        {canvasHidden && canvasTarget && !fullScreen && (
+          // The canvas is not beside the chat in a window this narrow, so this is the way to
+          // it. A button rather than opening by itself: a result lands mid-turn, and a dialog
+          // that appeared then would take the user's place in the conversation.
+          <div style={{ padding: '6px 12px', borderBottom: '1px solid var(--color-border-secondary)' }}>
+            <Button size="small" aria-label="Open canvas" icon={<ExpandOutlined />} onClick={() => setFullScreen(true)}>
+              Open canvas
+            </Button>
+          </div>
+        )}
         {saveStatus === 'too-large' && (
           <Alert
             type="warning"

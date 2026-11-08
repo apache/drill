@@ -16,7 +16,7 @@
  * limitations under the License.
  */
 import { useEffect, useReducer, useState } from 'react';
-import { describe, it, expect, vi, beforeAll, beforeEach } from 'vitest';
+import { describe, it, expect, vi, beforeAll, beforeEach, afterEach } from 'vitest';
 import { render, screen, waitFor, fireEvent, within, act } from '@testing-library/react';
 import { MemoryRouter, useLocation } from 'react-router-dom';
 import { QueryClient, QueryClientProvider } from '@tanstack/react-query';
@@ -33,6 +33,7 @@ import type { ChatMessage, ConversationRecord } from '../types/ai';
 import type { QueryResult } from '../types';
 import type { ResultsGridProps } from '../components/results/ResultsGrid';
 import { getSavedQuery } from '../api/savedQueries';
+import { CANVAS_HIDDEN_QUERY } from '../components/conversation/canvasLayout';
 import type { SavedQuery } from '../types';
 import { AxiosError } from 'axios';
 import type { AxiosResponse } from 'axios';
@@ -709,6 +710,96 @@ describe('ConversationsPage', () => {
       fireEvent.click(await screen.findByRole('button', { name: 'Full screen' }));
       fireEvent.click(screen.getByRole('button', { name: 'Exit full screen' }));
       expect(screen.getByRole('button', { name: 'Full screen' })).toBeInTheDocument();
+    });
+
+    describe('when the layout hides the canvas', () => {
+      const asked = 'Save the churn queries for me';
+      const saved: ChatMessage[] = [
+        { role: 'assistant', content: null, toolCalls: [{ id: 't1', name: 'save_query', arguments: '{}' }] },
+        { role: 'tool', toolCallId: 't1', name: 'save_query', content: JSON.stringify({ id: 'q1', name: 'Churn by month' }) },
+      ];
+      const user: ChatMessage = { role: 'user', content: asked };
+      const done: ChatMessage = { role: 'assistant', content: 'Done.' };
+      const cards = () => screen.queryAllByRole('button', { name: /^saved query/i });
+      const original = window.matchMedia;
+
+      // jsdom has no matchMedia. Answer yes only to the canvas query, as a narrow window would.
+      const setNarrow = (narrow: boolean) => {
+        window.matchMedia = ((query: string) => ({
+          matches: narrow && query === CANVAS_HIDDEN_QUERY,
+          media: query,
+          addEventListener: vi.fn(),
+          removeEventListener: vi.fn(),
+        })) as unknown as typeof window.matchMedia;
+      };
+      afterEach(() => {
+        window.matchMedia = original;
+      });
+
+      beforeEach(() => {
+        vi.mocked(getSavedQuery).mockImplementation(async (id) => ({
+          id, name: `Name of ${id}`, sql: `SELECT '${id}' AS which`, owner: 'me',
+          createdAt: '', updatedAt: '', isPublic: false,
+        }));
+      });
+
+      it('sends a clicked card to the artifact\'s own page instead of a canvas nobody can see', async () => {
+        setNarrow(true);
+        hookState.messages = [user, ...saved, done];
+        renderAt('/projects/p1/chat/c1');
+        await screen.findByText(/nothing on the canvas yet/i);
+
+        fireEvent.click(cards()[0]);
+
+        await waitFor(() => expect(currentLocation.pathname).toBe('/projects/p1/query'));
+      });
+
+      it('keeps a clicked card on the canvas when the canvas is shown', async () => {
+        setNarrow(false);
+        hookState.messages = [user, ...saved, done];
+        renderAt('/projects/p1/chat/c1');
+        await screen.findByText(/nothing on the canvas yet/i);
+
+        fireEvent.click(cards()[0]);
+
+        expect(await screen.findByText("SELECT 'q1' AS which")).toBeInTheDocument();
+        expect(currentLocation.pathname).toBe('/projects/p1/chat/c1');
+      });
+
+      it('does not mark a card Live, since it is not on a canvas the user can see', async () => {
+        setNarrow(true);
+        renderAt('/projects/p1/chat/c1');
+        await screen.findByText(/nothing on the canvas yet/i);
+        setHook({ isStreaming: true, messages: [user] });
+        setHook({ isStreaming: false, messages: [user, ...saved, done] });
+
+        // The turn's artifact is the canvas target now, which in a wide window makes it live.
+        await waitFor(() => expect(cards()).toHaveLength(1));
+        expect(cards()[0]).not.toHaveAttribute('aria-current');
+        expect(screen.queryByText('Live')).not.toBeInTheDocument();
+      });
+
+      it('offers a control that opens the canvas full screen once there is something on it', async () => {
+        setNarrow(true);
+        renderAt('/projects/p1/chat/c1');
+        await screen.findByText(/nothing on the canvas yet/i);
+        expect(screen.queryByRole('button', { name: 'Open canvas' })).not.toBeInTheDocument();
+
+        queryResultEmitter('c1')('SELECT 1', [{ n: 1 }]);
+        fireEvent.click(await screen.findByRole('button', { name: 'Open canvas' }));
+
+        expect(await screen.findByRole('button', { name: 'Exit full screen' })).toBeInTheDocument();
+        expect(screen.getByTestId('grid')).toHaveTextContent('{"n":1}');
+      });
+
+      it('shows no such control when the canvas is already beside the chat', async () => {
+        setNarrow(false);
+        renderAt('/projects/p1/chat/c1');
+        await screen.findByText(/nothing on the canvas yet/i);
+        queryResultEmitter('c1')('SELECT 1', [{ n: 1 }]);
+        await screen.findByTestId('grid');
+        expect(screen.queryByRole('button', { name: 'Open canvas' })).not.toBeInTheDocument();
+      });
     });
 
     describe('artifact cards and following', () => {

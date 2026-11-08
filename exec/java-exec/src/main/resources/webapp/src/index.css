@@ -7796,8 +7796,9 @@ html.dark .ant-btn:not(.ant-btn-primary):not(.ant-btn-text):not(.ant-btn-link):n
   flex-shrink: 0;
 }
 
-/* Too narrow for a canvas beside the chat, so it is not shown. Anything it would hold is
-   still in the thread; a wider window brings the canvas back. */
+/* Too narrow for a canvas beside the chat, so it is not shown. The page knows this too
+   (CANVAS_HIDDEN_QUERY in canvasLayout.ts, the same number): a card opens its artifact's own
+   page, no card claims to be live, and an Open canvas button shows the canvas full screen. */
 @media (max-width: 1100px) {
   .conversations-canvas {
     /* The canvas sets display inline, which only !important outranks. */
