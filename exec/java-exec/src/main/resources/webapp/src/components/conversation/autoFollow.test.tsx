@@ -61,6 +61,7 @@ describe('createdArtifact', () => {
     ['save_query', 'query', { id: 'q1', name: 'Active users' }, 'Active users'],
     // A wiki page, which the tool names `title`.
     ['write_wiki_page', 'wiki', { id: 'pg1', title: 'Q3 report' }, 'Q3 report'],
+    ['create_workflow', 'workflow', { id: 'wf1', name: 'Nightly check', savedQueryId: 'q1' }, 'Nightly check'],
     // Retired tool name; conversations stored before the rename still contain it.
     ['save_report', 'wiki', { id: 'pg1', title: 'Q3 report' }, 'Q3 report'],
   ])('reads the id and name %s returns', (toolName, kind, body, name) => {

@@ -23,6 +23,7 @@ import type { ChatMessage } from '../../types/ai';
 import ToolCallDisplay from './ToolCallDisplay';
 import { looksLikeReport } from '../../utils/report';
 import ArtifactCard from '../conversation/ArtifactCard';
+import WorkflowActivationCard from '../conversation/WorkflowActivationCard';
 import { createdArtifact } from '../conversation/autoFollow';
 import type { ArtifactKind } from '../conversation/ArtifactCanvas';
 
@@ -149,14 +150,20 @@ export default function ChatMessageBubble({
         {onOpenArtifact && message.toolCalls?.map((tc) => {
           const artifact = createdArtifact(tc, toolResults.find((r) => r.toolCallId === tc.id));
           return artifact && (
-            <ArtifactCard
-              key={tc.id}
-              kind={artifact.kind}
-              id={artifact.id}
-              name={artifact.name}
-              live={liveArtifact?.kind === artifact.kind && liveArtifact.id === artifact.id}
-              onOpen={() => onOpenArtifact(artifact.kind, artifact.id)}
-            />
+            <div key={tc.id}>
+              <ArtifactCard
+                kind={artifact.kind}
+                id={artifact.id}
+                name={artifact.name}
+                live={liveArtifact?.kind === artifact.kind && liveArtifact.id === artifact.id}
+                onOpen={() => onOpenArtifact(artifact.kind, artifact.id)}
+              />
+              {/* A workflow is created paused. This is where the user turns it on, so the
+                  card and its Activate control read as one thing rather than two. */}
+              {artifact.kind === 'workflow' && (
+                <WorkflowActivationCard workflowId={artifact.id} name={artifact.name} />
+              )}
+            </div>
           );
         })}
         {message.toolCalls && message.toolCalls.length > 0 && (

@@ -99,6 +99,7 @@ Prospector has access to the following tools:
 | `create_visualization` | Create chart visualizations |
 | `create_dashboard` | Create dashboards |
 | `save_query` | Save SQL queries |
+| `create_workflow` | Create a scheduled workflow (query, schedule, actions). Always created paused; the user activates it from the Activate control under the workflow's card in the thread. The query is given as `sql` (saved into the project by the tool) or `savedQueryId` |
 | `write_wiki_page` | Create a project wiki page (default folder `Reports`), or replace one by `pageId`. Optional `includeTranscript` appends the SQL run in the conversation; the Prospector provenance footer is always written |
 | `get_available_functions` | Look up Drill SQL functions by name or description, with signatures |
 

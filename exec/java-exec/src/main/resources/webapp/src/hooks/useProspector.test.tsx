@@ -27,8 +27,11 @@ import {
 import { createVisualization } from '../api/visualizations';
 import { createDashboard } from '../api/dashboards';
 import {
-  addVisualization, addDashboard, getProject, createWikiPage, updateWikiPage,
+  addVisualization, addDashboard, addSavedQuery, getProject, createWikiPage, updateWikiPage,
 } from '../api/projects';
+import { createSavedQuery } from '../api/savedQueries';
+import { createWorkflow, setWorkflowEnabled } from '../api/workflows';
+import prospectorSource from './useProspector.ts?raw';
 import { executeQuery } from '../api/queries';
 import { getSchemas } from '../api/metadata';
 import { getAiStatus, streamChat } from '../api/ai';
@@ -49,7 +52,7 @@ function Wrapper({ children }: { children: React.ReactNode }) {
 
 vi.mock('../api/visualizations', () => ({ createVisualization: vi.fn() }));
 vi.mock('../api/projects', () => ({
-  addVisualization: vi.fn(), addDashboard: vi.fn(), getProject: vi.fn(),
+  addVisualization: vi.fn(), addDashboard: vi.fn(), addSavedQuery: vi.fn(), getProject: vi.fn(),
   createWikiPage: vi.fn(), updateWikiPage: vi.fn(),
 }));
 vi.mock('../api/ai', () => ({ streamChat: vi.fn(), getAiStatus: vi.fn() }));
@@ -59,6 +62,10 @@ vi.mock('../api/metadata', () => ({
 }));
 vi.mock('../api/dashboards', () => ({ createDashboard: vi.fn() }));
 vi.mock('../api/savedQueries', () => ({ createSavedQuery: vi.fn() }));
+vi.mock('../api/workflows', async (importOriginal) => ({
+  ...(await importOriginal<typeof import('../api/workflows')>()),
+  createWorkflow: vi.fn(), setWorkflowEnabled: vi.fn(),
+}));
 vi.mock('../api/conversations', () => ({
   getConversation: vi.fn(), saveConversationMessages: vi.fn(),
 }));
@@ -458,6 +465,158 @@ describe('write_wiki_page tool', () => {
  * tests here hand executeToolCall a ready-made '{}', so only a test that drives the
  * stream the way the server does catches this.
  */
+describe('create_workflow tool', () => {
+  let errorLog: ReturnType<typeof vi.spyOn>;
+  afterEach(() => errorLog.mockRestore());
+
+  const SQL = 'SELECT COUNT(*) AS n FROM dfs.logs.`errors.json`';
+  const wfCall = (args: Record<string, unknown>): ToolCall => ({
+    id: 'call-wf', name: 'create_workflow', arguments: JSON.stringify(args),
+  });
+  const args = (over: Record<string, unknown> = {}) => ({
+    name: 'Nightly error check',
+    sql: SQL,
+    frequency: 'daily',
+    timeOfDay: '06:30',
+    actions: [{
+      id: 'notify', type: 'email', when: 'rowCount > 0',
+      config: { to: ['oncall@example.com'], subject: 'Errors: {{rowCount}}', body: 'See the run.' },
+    }],
+    ...over,
+  });
+  const sent = () => vi.mocked(createWorkflow).mock.calls[0][0];
+  const run = async (a: Record<string, unknown>, project: string | null = 'proj-42') => {
+    const { result } = renderHook(() => useProspector(), { wrapper: Wrapper });
+    return JSON.parse(await result.current.executeToolCall(wfCall(a), ctx(project ?? undefined)));
+  };
+  const axios422 = (errors: { path: string; message: string }[]) =>
+    ({ isAxiosError: true, response: { status: 422, data: { errors } } });
+
+  beforeEach(() => {
+    vi.clearAllMocks();
+    // The failure paths log through console.error by design; keep the test output clean.
+    errorLog = vi.spyOn(console, 'error').mockImplementation(() => {});
+    vi.mocked(createSavedQuery).mockResolvedValue({ id: 'sq-1', name: 'Nightly error check' } as never);
+    vi.mocked(addSavedQuery).mockResolvedValue({} as never);
+    vi.mocked(createWorkflow).mockImplementation(async (wf) => (
+      { ...wf, id: 'wf-1', status: 'paused', schedule: { ...wf.schedule, enabled: false } }));
+  });
+
+  it('is offered to the model, with sql and the schedule as the way in', () => {
+    const def = TOOL_DEFINITIONS.find((t) => t.name === 'create_workflow');
+    expect(def).toBeDefined();
+    expect(def!.parameters.required).toEqual(expect.arrayContaining(['name', 'frequency', 'actions']));
+    expect(Object.keys(def!.parameters.properties)).toEqual(
+      expect.arrayContaining(['sql', 'savedQueryId', 'timeOfDay', 'dayOfWeek', 'dayOfMonth']));
+  });
+
+  it('saves the sql as a query in the project, then creates the workflow from it', async () => {
+    const out = await run(args());
+
+    expect(createSavedQuery).toHaveBeenCalledWith({
+      name: 'Nightly error check', description: undefined, sql: SQL,
+    });
+    // The server refuses a saved query that is not in the workflow's project.
+    expect(addSavedQuery).toHaveBeenCalledWith('proj-42', 'sq-1');
+    expect(sent()).toMatchObject({
+      projectId: 'proj-42',
+      name: 'Nightly error check',
+      savedQueryId: 'sq-1',
+      schedule: { frequency: 'daily', timeOfDay: '06:30', enabled: false },
+    });
+    expect(sent().actions).toEqual([{
+      id: 'notify', type: 'email', condition: { expr: 'rowCount > 0' },
+      config: { to: ['oncall@example.com'], subject: 'Errors: {{rowCount}}', body: 'See the run.' },
+    }]);
+    // The shape the artifact card reader relies on, and a plain statement of the state.
+    expect(out).toMatchObject({ id: 'wf-1', name: 'Nightly error check', savedQueryId: 'sq-1', status: 'paused' });
+    expect(out.message).toMatch(/not running/i);
+  });
+
+  it('uses an existing saved query when given its id, and saves nothing new', async () => {
+    const out = await run(args({ sql: undefined, savedQueryId: 'sq-7' }));
+    expect(createSavedQuery).not.toHaveBeenCalled();
+    expect(sent().savedQueryId).toBe('sq-7');
+    expect(out.id).toBe('wf-1');
+  });
+
+  it('runs an action unconditionally when it gives no condition', async () => {
+    await run(args({ actions: [{ id: 'a', type: 'record_alert', config: { message: 'x' } }] }));
+    expect(sent().actions[0].condition).toEqual({ always: true });
+  });
+
+  it('passes weekly and monthly day fields through for the server to check', async () => {
+    await run(args({ frequency: 'weekly', dayOfWeek: 1 }));
+    expect(sent().schedule).toMatchObject({ frequency: 'weekly', dayOfWeek: 1 });
+  });
+
+  it('sends the workflow disabled and never asks for it to be enabled, whatever the model passes', async () => {
+    // Regression guard only: the server pins every created workflow paused. What keeps the
+    // tool out of the gate is that nothing here calls setWorkflowEnabled.
+    await run(args({ enabled: true, schedule: { enabled: true }, status: 'active' }));
+    expect(sent().schedule.enabled).toBe(false);
+    expect(setWorkflowEnabled).not.toHaveBeenCalled();
+  });
+
+  it('cannot reach setWorkflowEnabled at all', () => {
+    // Activation is a user action behind a confirm dialog (WorkflowActivationCard). The hook
+    // that runs model-issued tools must never grow a path to it.
+    expect(prospectorSource).not.toMatch(/setWorkflowEnabled/);
+    expect(prospectorSource).not.toMatch(/updateWorkflow|runWorkflowNow/);
+  });
+
+  it('is refused with no active project, before anything is saved', async () => {
+    const out = await run(args(), null);
+    expect(out.error).toMatch(/project/i);
+    expect(createSavedQuery).not.toHaveBeenCalled();
+    expect(createWorkflow).not.toHaveBeenCalled();
+  });
+
+  it('asks for sql or a saved query id when it has neither', async () => {
+    const out = await run(args({ sql: undefined }));
+    expect(out.error).toMatch(/sql or savedQueryId/);
+    expect(createWorkflow).not.toHaveBeenCalled();
+  });
+
+  it('hands the server field errors back so the model can fix them, and keeps the saved query id for the retry', async () => {
+    vi.mocked(createWorkflow).mockRejectedValue(axios422([
+      { path: 'schedule.dayOfWeek', message: 'Required for weekly schedules' },
+      { path: 'actions[0].config.to', message: 'At least 1 required' },
+    ]));
+    const out = await run(args({ frequency: 'weekly' }));
+
+    expect(out.error).toContain('schedule.dayOfWeek: Required for weekly schedules');
+    expect(out.error).toContain('actions[0].config.to: At least 1 required');
+    // The query was saved before validation could run. Retrying with sql would save it twice.
+    expect(out.savedQueryId).toBe('sq-1');
+    expect(out.error).toMatch(/savedQueryId "sq-1"/);
+  });
+
+  it('does not tell the model to swap sql for an id it supplied itself', async () => {
+    vi.mocked(createWorkflow).mockRejectedValue(axios422([
+      { path: 'savedQueryId', message: 'Saved query is not in this project' },
+    ]));
+    const out = await run(args({ sql: undefined, savedQueryId: 'sq-7' }));
+    expect(out.error).toContain('savedQueryId: Saved query is not in this project');
+    expect(out.error).not.toMatch(/instead of sql/);
+  });
+
+  it('reports a non-validation failure from the server as it is', async () => {
+    vi.mocked(createWorkflow).mockRejectedValue(new Error('Network Error'));
+    const out = await run(args());
+    expect(out.error).toContain('Network Error');
+    expect(out.savedQueryId).toBe('sq-1');
+  });
+
+  it('stops, naming the saved query, when it cannot be added to the project', async () => {
+    vi.mocked(addSavedQuery).mockRejectedValue(new Error('403'));
+    const out = await run(args());
+    expect(createWorkflow).not.toHaveBeenCalled();
+    expect(out.error).toMatch(/could not be added to the project/);
+    expect(out.savedQueryId).toBe('sq-1');
+  });
+});
+
 describe('tool calls that take no arguments', () => {
   beforeEach(() => {
     vi.clearAllMocks();

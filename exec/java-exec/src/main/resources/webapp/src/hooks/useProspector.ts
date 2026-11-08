@@ -30,10 +30,11 @@ import {
 } from '../api/conversations';
 import type { StoredChatMessage } from '../api/tabs';
 import {
-  addVisualization, addDashboard, getProject, createWikiPage, updateWikiPage,
+  addVisualization, addDashboard, addSavedQuery, getProject, createWikiPage, updateWikiPage,
 } from '../api/projects';
 import { createDashboard } from '../api/dashboards';
 import { createSavedQuery } from '../api/savedQueries';
+import { createWorkflow, validationErrors } from '../api/workflows';
 import { buildReportMarkdown, REPORTS_FOLDER } from '../utils/report';
 import { sanitizeTabTitle } from '../utils/sql';
 import type {
@@ -154,6 +155,82 @@ export const TOOL_DEFINITIONS: ToolDefinition[] = [
         sql: { type: 'string' },
       },
       required: ['name', 'sql'],
+    },
+  },
+  {
+    name: 'create_workflow',
+    description: 'Create a scheduled workflow in the current project: a SQL query that runs on a '
+      + 'schedule, followed by actions such as an email or an alert. The workflow is always '
+      + 'created PAUSED and does nothing until the user activates it with the Activate button '
+      + 'that appears under it in the conversation. You cannot activate it, so never tell the '
+      + 'user it is running; tell them it is ready for them to review and activate. Only call '
+      + 'this after the user has agreed to the schedule and the actions. Give the query as sql '
+      + '(it is saved into the project for you, so do not call save_query first), or as '
+      + 'savedQueryId to reuse a query you already saved with this tool. Do not call '
+      + 'create_workflow again for a workflow that was created: it makes a second one. '
+      + 'Actions run in order after the query. Action types and their config: '
+      + 'email {to: string[] of addresses, subject: string, body: string}; '
+      + 'record_alert {message: string}; '
+      + 'save_to_table {location: "workspace" such as "dfs.tmp" (optional), format: '
+      + '"parquet" | "json" | "csv" (optional), mode: "overwrite" | "append" | "newTablePerRun" '
+      + '(optional)}. Text fields may use {{field}} templates: rowCount, rowCountDelta, '
+      + 'deltaPercent, status, error, durationMs, and {{actions.<earlierActionId>.<output>}} '
+      + '(email has no outputs, record_alert outputs message, save_to_table outputs path). '
+      + 'Each action may carry a "when" condition over the same fields, for example '
+      + '"rowCount > 0" or "status == \'error\' || deltaPercent > 20"; leave it out to run '
+      + 'the action every time. If the server rejects the workflow the error lists each '
+      + 'field to fix; call again with the same query passed as savedQueryId.',
+    parameters: {
+      type: 'object',
+      properties: {
+        name: { type: 'string', description: 'Workflow name' },
+        description: { type: 'string' },
+        sql: {
+          type: 'string',
+          description: 'The SQL the workflow runs each time. Saved into the project for you.',
+        },
+        savedQueryId: {
+          type: 'string',
+          description: 'Id of a saved query already in this project, instead of sql.',
+        },
+        frequency: { type: 'string', enum: ['hourly', 'daily', 'weekly', 'monthly'] },
+        timeOfDay: {
+          type: 'string',
+          description: '24-hour HH:mm, for example "06:30". Defaults to "08:00". An hourly '
+            + 'workflow ignores it.',
+        },
+        dayOfWeek: {
+          type: 'number',
+          description: 'Required when frequency is weekly: 0 (Sunday) to 6 (Saturday).',
+        },
+        dayOfMonth: {
+          type: 'number',
+          description: 'Required when frequency is monthly: 1 to 28.',
+        },
+        actions: {
+          type: 'array',
+          description: 'What to do after the query runs, in order.',
+          items: {
+            type: 'object',
+            properties: {
+              id: {
+                type: 'string',
+                description: 'Letters, digits and underscores, starting with a letter, unique '
+                  + 'in the workflow. Defaults to the type and position.',
+              },
+              type: { type: 'string', enum: ['email', 'record_alert', 'save_to_table'] },
+              when: {
+                type: 'string',
+                description: 'Condition for running this action, e.g. "rowCount > 0". Omit to '
+                  + 'always run it.',
+              },
+              config: { type: 'object', description: 'Settings for the action type.' },
+            },
+            required: ['type', 'config'],
+          },
+        },
+      },
+      required: ['name', 'frequency', 'actions'],
     },
   },
   {
@@ -970,6 +1047,87 @@ export function useProspector(
             sql: args.sql,
           });
           return JSON.stringify({ id: saved.id, name: saved.name, message: 'Query saved successfully' });
+        }
+
+        case 'create_workflow': {
+          if (!context?.projectId) {
+            return JSON.stringify({ error: 'No active project — a workflow can only be '
+              + 'created inside a project. Ask the user to open one.' });
+          }
+          const projectId = context.projectId;
+          const hasSql = typeof args.sql === 'string' && args.sql.trim() !== '';
+          if (!hasSql && !args.savedQueryId) {
+            return JSON.stringify({ error: 'create_workflow needs the query to run: pass sql or '
+              + 'savedQueryId.' });
+          }
+          // The server only accepts a saved query that is in the workflow's project, and
+          // save_query does not put one there, so a query given as sql is saved and added here.
+          let savedQueryId: string | undefined = args.savedQueryId;
+          if (hasSql) {
+            const saved = await createSavedQuery({
+              name: args.name,
+              description: args.description,
+              sql: args.sql,
+            });
+            savedQueryId = saved.id;
+            try {
+              await addSavedQuery(projectId, saved.id);
+            } catch (err) {
+              console.error('Failed to add saved query to project', err);
+              return JSON.stringify({
+                error: `The query was saved but could not be added to the project, so no workflow was created. Call create_workflow again with savedQueryId "${saved.id}" instead of sql.`,
+                savedQueryId,
+              });
+            }
+          }
+          try {
+            const created = await createWorkflow({
+              projectId,
+              name: args.name,
+              description: args.description,
+              savedQueryId: savedQueryId as string,
+              schedule: {
+                frequency: args.frequency,
+                timeOfDay: args.timeOfDay || '08:00',
+                dayOfWeek: args.dayOfWeek ?? null,
+                dayOfMonth: args.dayOfMonth ?? null,
+                timeoutSeconds: 300,
+                enabled: false,
+              },
+              actions: (Array.isArray(args.actions) ? args.actions : []).map(
+                (a: Record<string, unknown>, i: number) => ({
+                  id: (a.id as string) || `${a.type}_${i + 1}`,
+                  type: a.type as string,
+                  condition: typeof a.when === 'string' && a.when.trim()
+                    ? { expr: a.when }
+                    : { always: true },
+                  config: (a.config ?? {}) as Record<string, unknown>,
+                })),
+              retentionCount: 30,
+            });
+            await queryClient.invalidateQueries({ queryKey: ['project', projectId] });
+            await queryClient.invalidateQueries({ queryKey: ['workflows'] });
+            return JSON.stringify({
+              id: created.id,
+              name: created.name,
+              savedQueryId,
+              status: created.status,
+              message: `Workflow "${created.name}" was created paused. It is not running and will not run until the user activates it with the Activate button under this message.`,
+              viewPath: `/projects/${projectId}/workflows/${created.id}`,
+            });
+          } catch (err) {
+            // Handled here rather than by the outer catch so the saved query's id survives
+            // for the retry: calling again with sql would save the same query twice.
+            const fields = validationErrors(err);
+            const reason = fields
+              ? fields.map((e) => `${e.path}: ${e.message}`).join('; ')
+              : (err instanceof Error ? err.message : 'create_workflow failed');
+            console.error('Tool "create_workflow" failed', err);
+            return JSON.stringify({
+              error: `Workflow not created. ${reason}. Fix this and call create_workflow again${hasSql ? ` with savedQueryId "${savedQueryId}" instead of sql` : ''}.`,
+              savedQueryId,
+            });
+          }
         }
 
         case 'write_wiki_page': {

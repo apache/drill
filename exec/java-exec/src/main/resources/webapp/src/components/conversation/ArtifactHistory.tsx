@@ -33,6 +33,7 @@ const ACTION_LABELS: Record<string, string> = {
   create_visualization: 'Created chart',
   create_dashboard: 'Created dashboard',
   save_query: 'Saved query',
+  create_workflow: 'Created workflow',
   write_wiki_page: 'Wrote wiki page',
   // Retired name, still present in conversations stored before write_wiki_page.
   save_report: 'Saved report',

@@ -94,7 +94,13 @@ Inside, it manages:
 - An accumulating `contentBuffer` and a `tool calls Map`.
 - A `doStreamRound()` function that calls `streamChat`, accumulates deltas, executes any tool calls when `finish_reason === 'tool_calls'`, and recurses up to `maxToolRounds`.
 
-Tool definitions are hardcoded in `TOOL_DEFINITIONS` at the top of the file: `execute_sql`, `list_schemas`, `get_schema_info`, `create_visualization`, `create_dashboard`, `save_query`, `write_wiki_page`, `get_available_functions`, `get_project_docs`. Each maps to a backend or local API call invoked by `executeToolCall()`.
+Tool definitions are hardcoded in `TOOL_DEFINITIONS` at the top of the file: `execute_sql`, `list_schemas`, `get_schema_info`, `create_visualization`, `create_dashboard`, `save_query`, `create_workflow`, `write_wiki_page`, `get_available_functions`, `get_project_docs`. Each maps to a backend or local API call invoked by `executeToolCall()`.
+
+### create_workflow and activation
+
+`create_workflow` builds a full workflow (schedule, actions, optional per-action `when` condition) and creates it through `createWorkflow`. A workflow cannot exist without a saved query that is in the project and owned by the creator, and `save_query` does not add its query to a project, so the tool takes the query as `sql`, saves it, adds it to the project and then creates the workflow. `savedQueryId` is accepted for a retry: when the server rejects the workflow with field errors (422), the tool returns them with the saved query's id so the model calls again without saving the query twice.
+
+The tool cannot turn a workflow on. `WorkflowResources` pins every created workflow to `status: paused` and `schedule.enabled: false`, and `WorkflowRunner` never runs a disabled one; the client adds nothing to that. What the client owns is not calling `setWorkflowEnabled` from the tool path. `components/conversation/WorkflowActivationCard.tsx` renders under the workflow's artifact card in the thread, reads the workflow from the server, and offers Activate only while it is paused. Pressing it opens a confirm dialog built from the server's copy of the workflow (name, schedule, each action with its recipients or target, and its condition); `setWorkflowEnabled(id, true)` runs only from that dialog's confirm. A server refusal (expired, owner lost access) is shown under the card and the workflow stays paused. `useProspector.test.tsx` asserts the hook's source never mentions `setWorkflowEnabled`.
 
 ### Reports
 

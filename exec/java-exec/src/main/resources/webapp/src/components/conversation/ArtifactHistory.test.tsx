@@ -92,4 +92,13 @@ describe('turnsTouching', () => {
     ], 'dfs');
     expect(turns[0].actions).toEqual(['refresh data source']);
   });
+
+  it('labels the call that created a workflow', () => {
+    const turns = turnsTouching([
+      { role: 'user', content: 'check errors nightly' },
+      call('t1', 'create_workflow', { name: 'Nightly check' }),
+      result('t1', { id: 'wf-1', name: 'Nightly check' }),
+    ], 'wf-1');
+    expect(turns[0].actions).toEqual(['Created workflow']);
+  });
 });
