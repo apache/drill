@@ -15,7 +15,7 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
-import { useEffect, useState } from 'react';
+import { useEffect, useReducer, useState } from 'react';
 import { describe, it, expect, vi, beforeAll, beforeEach } from 'vitest';
 import { render, screen, waitFor, fireEvent, within, act } from '@testing-library/react';
 import { MemoryRouter } from 'react-router-dom';
@@ -32,6 +32,10 @@ import {
 import type { ChatMessage, ConversationRecord } from '../types/ai';
 import type { QueryResult } from '../types';
 import type { ResultsGridProps } from '../components/results/ResultsGrid';
+import { getSavedQuery } from '../api/savedQueries';
+import type { SavedQuery } from '../types';
+import { AxiosError } from 'axios';
+import type { AxiosResponse } from 'axios';
 
 vi.mock('../hooks/useProspector', () => ({ useProspector: vi.fn() }));
 vi.mock('../api/conversations', () => ({
@@ -39,6 +43,12 @@ vi.mock('../api/conversations', () => ({
   createConversation: vi.fn(),
   renameConversation: vi.fn(),
   deleteConversation: vi.fn(),
+}));
+// The canvas viewers fetch the artifact they show. Only the saved query is faked here, which
+// is enough to drive a real artifact onto the canvas; the rest of the module stays real.
+vi.mock('../api/savedQueries', async (importOriginal) => ({
+  ...(await importOriginal<typeof import('../api/savedQueries')>()),
+  getSavedQuery: vi.fn(),
 }));
 vi.mock('../api/projects', () => ({
   getProject: vi.fn(async () => ({ id: 'p1', name: 'Project One' })),
@@ -72,7 +82,17 @@ function record(over: Partial<ConversationRecord> & { id: string }): Conversatio
 const reloadConversation = vi.fn();
 const clearChat = vi.fn();
 const sendMessage = vi.fn();
-let hookState: { messages: ChatMessage[]; saveStatus: SaveStatus };
+let hookState: { messages: ChatMessage[]; saveStatus: SaveStatus; isStreaming: boolean };
+// Pages that render the mocked hook, so a test can change what it returns mid-test.
+const hookSubscribers = new Set<() => void>();
+
+/** Change what the mocked hook returns and re-render the page, as a real stream would. */
+function setHook(patch: Partial<typeof hookState>) {
+  act(() => {
+    Object.assign(hookState, patch);
+    hookSubscribers.forEach((rerender) => rerender());
+  });
+}
 
 function renderAt(
   path: string,
@@ -119,12 +139,21 @@ describe('ConversationsPage', () => {
     vi.clearAllMocks();
     // jsdom has no layout; the message list scrolls itself into view on every render.
     Element.prototype.scrollIntoView = vi.fn();
-    hookState = { messages: [], saveStatus: 'idle' };
+    hookState = { messages: [], saveStatus: 'idle', isStreaming: false };
+    hookSubscribers.clear();
     vi.mocked(useProspector).mockImplementation(
-      (_a, _b, _c, _d, _e, conversationId) =>
-        ({
+      (_a, _b, _c, _d, _e, conversationId) => {
+        // A stand-in for the real hook, so it may use hooks: it is called once per render.
+        const [, rerender] = useReducer((n: number) => n + 1, 0);
+        useEffect(() => {
+          hookSubscribers.add(rerender);
+          return () => {
+            hookSubscribers.delete(rerender);
+          };
+        }, []);
+        return {
           messages: hookState.messages,
-          isStreaming: false,
+          isStreaming: hookState.isStreaming,
           streamingContent: '',
           usage: null,
           sendMessage,
@@ -136,7 +165,8 @@ describe('ConversationsPage', () => {
           conversationId: conversationId ?? null,
           saveStatus: hookState.saveStatus,
           reloadConversation,
-        }) as UseProspectorReturn,
+        } as UseProspectorReturn;
+      },
     );
     vi.mocked(renameConversation).mockResolvedValue(record({ id: 'c1' }));
     vi.mocked(deleteConversation).mockResolvedValue(undefined);
@@ -554,6 +584,153 @@ describe('ConversationsPage', () => {
       fireEvent.click(await screen.findByRole('button', { name: 'Full screen' }));
       fireEvent.click(screen.getByRole('button', { name: 'Exit full screen' }));
       expect(screen.getByRole('button', { name: 'Full screen' })).toBeInTheDocument();
+    });
+
+    describe('artifact cards and following', () => {
+      const asked = 'Save the churn queries for me';
+      const saved = (callId: string, id: string, name: string): ChatMessage[] => [
+        { role: 'assistant', content: null, toolCalls: [{ id: callId, name: 'save_query', arguments: '{}' }] },
+        { role: 'tool', toolCallId: callId, name: 'save_query', content: JSON.stringify({ id, name }) },
+      ];
+      const ranSql = (callId: string): ChatMessage[] => [
+        { role: 'assistant', content: null, toolCalls: [{ id: callId, name: 'execute_sql', arguments: '{"sql":"SELECT 1"}' }] },
+        { role: 'tool', toolCallId: callId, name: 'execute_sql', content: JSON.stringify({ columns: ['n'], rowCount: 1 }) },
+      ];
+      const user: ChatMessage = { role: 'user', content: asked };
+      const done: ChatMessage = { role: 'assistant', content: 'Done.' };
+
+      const savedQuery = (id: string): SavedQuery => ({
+        id, name: `Name of ${id}`, sql: `SELECT '${id}' AS which`, owner: 'me',
+        createdAt: '', updatedAt: '', isPublic: false,
+      });
+
+      beforeEach(() => {
+        vi.mocked(getSavedQuery).mockImplementation(async (id) => savedQuery(id));
+      });
+
+      const openConversation = async () => {
+        renderAt('/projects/p1/chat/c1');
+        await screen.findByText(/nothing on the canvas yet/i);
+      };
+      const cards = () => screen.queryAllByRole('button', { name: /^saved query/i });
+
+      it('follows the artifact a finished turn created, and its History tab names the turn', async () => {
+        await openConversation();
+        setHook({ isStreaming: true, messages: [user] });
+        setHook({ isStreaming: false, messages: [user, ...saved('t1', 'q1', 'Churn by month'), done] });
+
+        expect(await screen.findByText("SELECT 'q1' AS which")).toBeInTheDocument();
+        expect(screen.getByRole('button', { name: /^saved query.*churn by month/i })).toHaveAttribute('aria-current', 'true');
+
+        fireEvent.click(screen.getByRole('tab', { name: 'History' }));
+        // The prompt is also in the thread, so look in the canvas for it.
+        const canvas = within(screen.getByRole('complementary', { name: 'Canvas' }));
+        expect(await canvas.findByText(asked)).toBeInTheDocument();
+        expect(canvas.getByText('Saved query')).toBeInTheDocument();
+      });
+
+      it('settles once at the end of a turn on the last artifact, never stepping through the others', async () => {
+        await openConversation();
+        const first = saved('t1', 'q1', 'First');
+        setHook({ isStreaming: true, messages: [user, ...first] });
+        // The first is already built, but the turn is not over: the canvas stays where it was.
+        expect(cards()).toHaveLength(1);
+        expect(screen.getByText(/nothing on the canvas yet/i)).toBeInTheDocument();
+
+        setHook({ isStreaming: false, messages: [user, ...first, ...saved('t2', 'q2', 'Second'), done] });
+        expect(await screen.findByText("SELECT 'q2' AS which")).toBeInTheDocument();
+        expect(vi.mocked(getSavedQuery).mock.calls.map((c) => c[0])).not.toContain('q1');
+        expect(cards()).toHaveLength(2);
+      });
+
+      it('does not follow a conversation that was only loaded, but still shows its cards', async () => {
+        hookState.messages = [user, ...saved('t1', 'q1', 'Churn by month'), done];
+        await openConversation();
+        expect(cards()).toHaveLength(1);
+        expect(screen.getByText(/nothing on the canvas yet/i)).toBeInTheDocument();
+        expect(getSavedQuery).not.toHaveBeenCalled();
+
+        fireEvent.click(cards()[0]);
+        expect(await screen.findByText("SELECT 'q1' AS which")).toBeInTheDocument();
+        expect(cards()[0]).toHaveAttribute('aria-current', 'true');
+      });
+
+      it('keeps a pinned canvas where it is when a turn creates something', async () => {
+        await openConversation();
+        queryResultEmitter('c1')('SELECT 1', [{ n: 1 }]);
+        fireEvent.click(await screen.findByRole('button', { name: 'Pin canvas' }));
+
+        setHook({ isStreaming: true, messages: [user] });
+        setHook({ isStreaming: false, messages: [user, ...saved('t1', 'q1', 'Churn by month'), done] });
+
+        expect(screen.getByTestId('grid')).toHaveTextContent('{"n":1}');
+        expect(getSavedQuery).not.toHaveBeenCalled();
+        // The card is in the thread all the same, and is not live: it is not what is shown.
+        expect(cards()).toHaveLength(1);
+        expect(cards()[0]).not.toHaveAttribute('aria-current');
+
+        // The pin held the follow rule too, not only the view: unpinning does not jump to
+        // something the pinned canvas was never going to follow.
+        fireEvent.click(screen.getByRole('button', { name: 'Unpin canvas' }));
+        expect(screen.getByTestId('grid')).toHaveTextContent('{"n":1}');
+        expect(getSavedQuery).not.toHaveBeenCalled();
+      });
+
+      it('keeps the card of the pinned artifact live while a query result arrives behind it', async () => {
+        hookState.messages = [user, ...saved('t1', 'q1', 'Churn by month'), done];
+        await openConversation();
+        fireEvent.click(cards()[0]);
+        fireEvent.click(await screen.findByRole('button', { name: 'Pin canvas' }));
+
+        queryResultEmitter('c1')('SELECT 2', [{ n: 2 }]);
+        expect(screen.getByText("SELECT 'q1' AS which")).toBeInTheDocument();
+        expect(cards()[0]).toHaveAttribute('aria-current', 'true');
+      });
+
+      it('lets a card the user clicks take over a pinned canvas', async () => {
+        hookState.messages = [user, ...saved('t1', 'q1', 'Churn by month'), done];
+        await openConversation();
+        queryResultEmitter('c1')('SELECT 1', [{ n: 1 }]);
+        fireEvent.click(await screen.findByRole('button', { name: 'Pin canvas' }));
+
+        fireEvent.click(cards()[0]);
+        expect(await screen.findByText("SELECT 'q1' AS which")).toBeInTheDocument();
+        expect(screen.getByRole('button', { name: 'Pin canvas' })).toBeInTheDocument();
+      });
+
+      it('puts a bare execute_sql on the canvas and drops no card for it', async () => {
+        await openConversation();
+        setHook({ isStreaming: true, messages: [user] });
+        queryResultEmitter('c1')('SELECT 1', [{ n: 1 }]);
+        setHook({ isStreaming: false, messages: [user, ...ranSql('t1'), done] });
+
+        expect(screen.getByTestId('grid')).toHaveTextContent('{"n":1}');
+        expect(cards()).toHaveLength(0);
+      });
+
+      it('carries only the saved query into the thread when a turn also ran SQL', async () => {
+        await openConversation();
+        setHook({ isStreaming: true, messages: [user] });
+        queryResultEmitter('c1')('SELECT 1', [{ n: 1 }]);
+        setHook({
+          isStreaming: false,
+          messages: [user, ...ranSql('t1'), ...saved('t2', 'q1', 'Churn by month'), done],
+        });
+        expect(await screen.findByText("SELECT 'q1' AS which")).toBeInTheDocument();
+        expect(cards()).toHaveLength(1);
+      });
+
+      it('keeps the card of an artifact deleted since, and the canvas says so', async () => {
+        vi.mocked(getSavedQuery).mockRejectedValue(
+          new AxiosError('gone', '404', undefined, undefined, { status: 404 } as AxiosResponse),
+        );
+        hookState.messages = [user, ...saved('t1', 'q1', 'Churn by month'), done];
+        await openConversation();
+
+        fireEvent.click(cards()[0]);
+        expect(await screen.findByText('This artifact was deleted')).toBeInTheDocument();
+        expect(cards()[0]).toHaveTextContent('Churn by month');
+      });
     });
   });
 });

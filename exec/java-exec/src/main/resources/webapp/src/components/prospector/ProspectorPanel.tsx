@@ -25,6 +25,7 @@ import SaveReportModal from './SaveReportModal';
 import type { UseProspectorReturn } from '../../hooks/useProspector';
 import type { ChatContext } from '../../types/ai';
 import type { AiFeature } from '../../constants/aiFeatures';
+import type { ArtifactKind } from '../conversation/ArtifactCanvas';
 
 interface ProspectorPanelProps {
   prospector: UseProspectorReturn;
@@ -35,6 +36,10 @@ interface ProspectorPanelProps {
   clearLabel?: string;
   /** Icon of the header's clear button. Defaults to a trash can. */
   clearIcon?: ReactNode;
+  /** Show a card for each artifact Prospector creates, opened through this. Omitted: no cards. */
+  onOpenArtifact?: (kind: ArtifactKind, id: string) => void;
+  /** The artifact on the canvas now, so its card can show as live. */
+  liveArtifact?: { kind: ArtifactKind; id: string } | null;
 }
 
 export default function ProspectorPanel({
@@ -43,6 +48,8 @@ export default function ProspectorPanel({
   onInsertCell,
   clearLabel = 'Clear chat',
   clearIcon = <DeleteOutlined />,
+  onOpenArtifact,
+  liveArtifact,
 }: ProspectorPanelProps) {
   const {
     messages,
@@ -120,6 +127,8 @@ export default function ProspectorPanel({
         onInsertCell={isNotebook ? onInsertCell : undefined}
         onSaveReport={handleSaveReport}
         storageKey={storageKey}
+        onOpenArtifact={onOpenArtifact}
+        liveArtifact={liveArtifact}
       />
       <div className="prospector-panel-footer">
         {usage && (usage.totalTokens || usage.costUsd !== undefined) && (

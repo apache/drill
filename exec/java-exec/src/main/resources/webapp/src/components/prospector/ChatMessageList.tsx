@@ -19,6 +19,7 @@ import { useEffect, useRef, useState } from 'react';
 import ChatMessageBubble from './ChatMessageBubble';
 import type { ChatMessage } from '../../types/ai';
 import { messageKey } from '../../utils/report';
+import type { ArtifactKind } from '../conversation/ArtifactCanvas';
 
 interface ChatMessageListProps {
   messages: ChatMessage[];
@@ -37,6 +38,10 @@ interface ChatMessageListProps {
    * are not persisted when this is null.
    */
   storageKey?: string | null;
+  /** Cards for the artifacts a message's tool calls created, opened through this. */
+  onOpenArtifact?: (kind: ArtifactKind, id: string) => void;
+  /** The artifact on the canvas now, so its card can show as live. */
+  liveArtifact?: { kind: ArtifactKind; id: string } | null;
 }
 
 // Dismissed report suggestions are keyed by a hash of the message's content
@@ -84,6 +89,8 @@ export default function ChatMessageList({
   onInsertCell,
   onSaveReport,
   storageKey,
+  onOpenArtifact,
+  liveArtifact,
 }: ChatMessageListProps) {
   const bottomRef = useRef<HTMLDivElement>(null);
   const [dismissedReports, setDismissedReports] = useState<Set<string>>(() => loadDismissed(storageKey));
@@ -139,6 +146,8 @@ export default function ChatMessageList({
             messageIndex={index}
             dismissed={dismissedReports.has(key)}
             onDismissReport={() => setDismissedReports((prev) => new Set(prev).add(key))}
+            onOpenArtifact={onOpenArtifact}
+            liveArtifact={liveArtifact}
           />
         );
       })}

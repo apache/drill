@@ -32,6 +32,8 @@ import { ProspectorPanel } from '../components/prospector';
 import ConversationList from '../components/conversation/ConversationList';
 import CanvasHost from '../components/conversation/CanvasHost';
 import { useOpenArtifact } from '../components/conversation/ArtifactCanvas';
+import type { ArtifactKind } from '../components/conversation/ArtifactCanvas';
+import { artifactsOfLastTurn, nextCanvasTarget } from '../components/conversation/autoFollow';
 import type { CanvasTarget } from '../components/conversation/CanvasHost';
 import type { ChatContext, ConversationRecord } from '../types/ai';
 import type { QueryResult } from '../types';
@@ -73,6 +75,9 @@ function ConversationView({ projectId, conversationId, record, onNew }: Conversa
   // has moved on reports to an unmounted component and lands nowhere.
   const [canvasTarget, setCanvasTarget] = useState<CanvasTarget | null>(null);
   const [pinned, setPinned] = useState(false);
+  // What the canvas was showing when it was pinned. A pinned canvas holds this while
+  // canvasTarget goes on moving (a query result still lands there, so unpinning catches up).
+  const [frozenTarget, setFrozenTarget] = useState<CanvasTarget | null>(null);
   const [fullScreen, setFullScreen] = useState(false);
   const handleQueryResult = useCallback(
     (sql: string, result: QueryResult) => setCanvasTarget({ kind: 'results', sql, result }),
@@ -81,8 +86,40 @@ function ConversationView({ projectId, conversationId, record, onNew }: Conversa
   const prospector = useProspector(
     undefined, undefined, undefined, null, null, conversationId, projectId, handleQueryResult,
   );
-  const { messages, saveStatus, reloadConversation } = prospector;
+  const { messages, isStreaming, saveStatus, reloadConversation } = prospector;
   const openArtifact = useOpenArtifact(projectId);
+
+  // At the end of a turn the canvas settles on the last artifact the turn created. Only on
+  // streaming going from true to false: a conversation loaded from the server was not just
+  // built, so it must not pull the canvas to its last artifact, and nothing steps through
+  // the artifacts of a turn while it runs. isStreaming stays true across the whole tool
+  // phase of a turn, so this is once per turn however many rounds it took.
+  const wasStreaming = useRef(false);
+  useEffect(() => {
+    if (wasStreaming.current && !isStreaming) {
+      const turn = artifactsOfLastTurn(messages).map(({ kind, id }): CanvasTarget => ({ kind, id }));
+      setCanvasTarget((current) => nextCanvasTarget(turn, pinned, current));
+    }
+    wasStreaming.current = isStreaming;
+  }, [isStreaming, messages, pinned]);
+
+  const handleTogglePin = () => {
+    if (!pinned) {
+      setFrozenTarget(canvasTarget);
+    }
+    setPinned(!pinned);
+  };
+
+  // A card the user clicks is an explicit request, so it takes over a pinned canvas: the pin
+  // guards against Prospector moving the view, not against the user.
+  const handleOpenCard = useCallback((kind: ArtifactKind, id: string) => {
+    setCanvasTarget({ kind, id });
+    setPinned(false);
+  }, []);
+
+  // The artifact on screen now, for the card that shows it as live.
+  const onCanvas = pinned ? frozenTarget : canvasTarget;
+  const liveArtifact = onCanvas && onCanvas.kind !== 'results' ? { kind: onCanvas.kind, id: onCanvas.id } : null;
 
   const context: ChatContext = useMemo(
     () => ({ feature: 'project_chat', projectId }),
@@ -147,13 +184,15 @@ function ConversationView({ projectId, conversationId, record, onNew }: Conversa
             context={context}
             clearLabel="New conversation"
             clearIcon={<PlusOutlined />}
+            onOpenArtifact={handleOpenCard}
+            liveArtifact={liveArtifact}
           />
         </div>
       </div>
       <CanvasHost
         target={canvasTarget}
         pinned={pinned}
-        onTogglePin={() => setPinned((p) => !p)}
+        onTogglePin={handleTogglePin}
         onFullScreen={() => setFullScreen((f) => !f)}
         onOpenArtifact={openArtifact}
         messages={messages}

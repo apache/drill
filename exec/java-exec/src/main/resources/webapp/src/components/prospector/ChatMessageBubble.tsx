@@ -22,6 +22,9 @@ import { UserOutlined, RobotOutlined, PlusSquareOutlined } from '@ant-design/ico
 import type { ChatMessage } from '../../types/ai';
 import ToolCallDisplay from './ToolCallDisplay';
 import { looksLikeReport } from '../../utils/report';
+import ArtifactCard from '../conversation/ArtifactCard';
+import { createdArtifact } from '../conversation/autoFollow';
+import type { ArtifactKind } from '../conversation/ArtifactCanvas';
 
 interface ChatMessageBubbleProps {
   message: ChatMessage;
@@ -41,6 +44,13 @@ interface ChatMessageBubbleProps {
   dismissed?: boolean;
   /** Called when the user dismisses the report-save suggestion for this message. */
   onDismissReport?: () => void;
+  /**
+   * Drop a card under the message for each durable artifact its tool calls created, and open
+   * one on click. Omitted where there is no canvas to open it on, which shows no cards.
+   */
+  onOpenArtifact?: (kind: ArtifactKind, id: string) => void;
+  /** The artifact on the canvas now; its card renders as live. */
+  liveArtifact?: { kind: ArtifactKind; id: string } | null;
 }
 
 export default function ChatMessageBubble({
@@ -52,6 +62,8 @@ export default function ChatMessageBubble({
   messageIndex,
   dismissed,
   onDismissReport,
+  onOpenArtifact,
+  liveArtifact,
 }: ChatMessageBubbleProps) {
   const isUser = message.role === 'user';
   const isError = message.content?.startsWith('Error:');
@@ -134,6 +146,19 @@ export default function ChatMessageBubble({
             </Button>
           </div>
         )}
+        {onOpenArtifact && message.toolCalls?.map((tc) => {
+          const artifact = createdArtifact(tc, toolResults.find((r) => r.toolCallId === tc.id));
+          return artifact && (
+            <ArtifactCard
+              key={tc.id}
+              kind={artifact.kind}
+              id={artifact.id}
+              name={artifact.name}
+              live={liveArtifact?.kind === artifact.kind && liveArtifact.id === artifact.id}
+              onOpen={() => onOpenArtifact(artifact.kind, artifact.id)}
+            />
+          );
+        })}
         {message.toolCalls && message.toolCalls.length > 0 && (
           <ToolCallDisplay
             toolCalls={message.toolCalls}
