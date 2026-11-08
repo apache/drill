@@ -104,10 +104,16 @@ public class ConversationPromptTest {
   public void conversationModeDescribesCreateWorkflowAsBuilt() {
     String prompt = conversationPrompt();
 
-    // create_workflow takes sql directly; save_query first 422s (the saved query is not in the
-    // project, and WorkflowResources.validate rejects a savedQueryId that is not).
+    // create_workflow takes sql directly. A savedQueryId is accepted only if the query is in the
+    // project (WorkflowResources.validate), which save_query achieves for the owner but not for
+    // other members, so the prompt must give that reason and not claim save_query never does it.
     assertTrue(prompt.contains("Pass the query as sql"));
     assertTrue(prompt.contains("Do NOT call save_query first"));
+    assertTrue(prompt.contains("only if the query is in the project"));
+    assertTrue(prompt.contains("for the project owner but not for other members"));
+    assertTrue(prompt.contains("addedToProject is true, pass its id as savedQueryId"));
+    assertFalse(prompt.contains("is not in the project, so passing it"),
+        "save_query now adds the query to the project for the owner");
 
     // Always paused, and the model cannot activate it.
     assertTrue(prompt.contains("always created paused"));

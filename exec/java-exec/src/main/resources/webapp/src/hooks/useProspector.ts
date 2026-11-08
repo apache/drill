@@ -1304,7 +1304,7 @@ export function useProspector(
     }
 
     if (serverMode) {
-      // ponytail: at the cap (TabConversationStore.MAX_CONVERSATION_BYTES, 512 KB of
+      // ponytail: at the cap (ConversationStore.MAX_CONVERSATION_BYTES, 512 KB of
       // serialized messages; tool results carrying sample rows fill it in a long session)
       // a conversation HARD-STOPS. The server refuses the write, the turns already sent
       // stay on screen and in the offline buffer, and no further turn is accepted into a

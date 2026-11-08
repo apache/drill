@@ -56,7 +56,8 @@ export default function AppShell({ children }: AppShellProps) {
   const isFirstLocation = useRef(true);
   // The inspector holds only what a page registers; with nothing registered there is
   // nothing to open, whatever the persisted open flag says.
-  const inspectorVisible = inspectorOpen && (chrome.inspectorTabs?.length ?? 0) > 0;
+  const hasInspectorTabs = (chrome.inspectorTabs?.length ?? 0) > 0;
+  const inspectorVisible = inspectorOpen && hasInspectorTabs;
 
   // Auto-collapse the left rail on narrow viewports so it doesn't crowd the
   // editor. The hook stays a no-op on wide screens.
@@ -103,8 +104,9 @@ export default function AppShell({ children }: AppShellProps) {
         e.preventDefault();
         toggleSidebar();
       }
-      // ⌘⌥0 toggles inspector
-      if (e.key === '0' && e.altKey && !e.shiftKey) {
+      // ⌘⌥0 toggles inspector, but only when a page registered tabs for it: with none, flipping
+      // the persisted flag would have a later page's tabs open already "open".
+      if (e.key === '0' && e.altKey && !e.shiftKey && hasInspectorTabs) {
         e.preventDefault();
         toggleInspector();
       }
@@ -116,7 +118,7 @@ export default function AppShell({ children }: AppShellProps) {
     };
     window.addEventListener('keydown', onKeyDown);
     return () => window.removeEventListener('keydown', onKeyDown);
-  }, [toggleSidebar, toggleInspector, handleBrowseShortcut]);
+  }, [toggleSidebar, toggleInspector, handleBrowseShortcut, hasInspectorTabs]);
 
   // On mobile, auto-close the sidebar/inspector overlays on navigation so
   // the user can see the page content. Skip the very first render.

@@ -49,7 +49,7 @@ export async function createConversation(
   return response.data;
 }
 
-/** Unlike tabs.getConversation, errors propagate: the server is the source of truth here. */
+/** Errors propagate rather than degrading to an empty list: the server is the source of truth. */
 export async function getConversation(projectId: string, cid: string): Promise<ConversationDetail> {
   const response = await apiClient.get<ConversationDetail>(`${projectBase(projectId)}/${cid}`);
   return response.data;

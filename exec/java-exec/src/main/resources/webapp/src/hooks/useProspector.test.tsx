@@ -451,15 +451,6 @@ describe('write_wiki_page tool', () => {
   });
 });
 
-/**
- * A tool invoked with no arguments (get_available_functions, or get_project_docs
- * listing page titles) streams no argument deltas at all, so the assembled argument
- * string stays blank. Blank is not valid JSON: it throws in executeToolCall, and the
- * backend serializes it to a null tool_use.input, which the Anthropic API rejects
- * with "messages.N.content.N.tool_use.input: Input should be an object". The other
- * tests here hand executeToolCall a ready-made '{}', so only a test that drives the
- * stream the way the server does catches this.
- */
 describe('save_query tool', () => {
   let errorLog: ReturnType<typeof vi.spyOn>;
   afterEach(() => errorLog.mockRestore());
@@ -712,6 +703,15 @@ describe('create_workflow tool', () => {
   });
 });
 
+/**
+ * A tool invoked with no arguments (get_available_functions, or get_project_docs
+ * listing page titles) streams no argument deltas at all, so the assembled argument
+ * string stays blank. Blank is not valid JSON: it throws in executeToolCall, and the
+ * backend serializes it to a null tool_use.input, which the Anthropic API rejects
+ * with "messages.N.content.N.tool_use.input: Input should be an object". The other
+ * tests here hand executeToolCall a ready-made '{}', so only a test that drives the
+ * stream the way the server does catches this.
+ */
 describe('tool calls that take no arguments', () => {
   beforeEach(() => {
     vi.clearAllMocks();

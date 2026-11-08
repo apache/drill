@@ -756,7 +756,7 @@ public class ProspectorResources {
    * Replaces the "only when explicitly asked" rule on the conversation surface, where the
    * user has a canvas beside the chat and the point is that Prospector builds things. Every
    * statement about a tool here has to stay true to that tool as built: create_workflow takes
-   * its query as sql and always creates a paused workflow, and write_wiki_page defaults
+   * its query as sql (or the id of a saved query that is in the project) and always creates a paused workflow, and write_wiki_page defaults
    * includeTranscript to false. The wiki rule that follows in the shared tail covers
    * includeTranscript and pageId.
    */
@@ -779,8 +779,11 @@ public class ProspectorResources {
       + "  every result unasked.\n"
       + "- A scheduled workflow needs the user's agreement first: propose the schedule and the\n"
       + "  actions, then call create_workflow once they agree. Pass the query as sql. Do NOT call\n"
-      + "  save_query first: create_workflow saves the query into the project itself, and a query\n"
-      + "  saved with save_query is not in the project, so passing it as savedQueryId is rejected.\n"
+      + "  save_query first: create_workflow saves the query into the project itself. A saved\n"
+      + "  query's id is accepted as savedQueryId only if the query is in the project, which\n"
+      + "  save_query achieves for the project owner but not for other members. If you already\n"
+      + "  saved the query and the save_query result says addedToProject is true, pass its id as\n"
+      + "  savedQueryId instead of sql, so the query is not saved twice.\n"
       + "  A workflow is always created paused. You cannot activate it, so never say it is running\n"
       + "  or scheduled. Tell the user it is ready for them to review and activate, and point them\n"
       + "  to the viewPath in the tool result. Do not call create_workflow again for a workflow\n"
