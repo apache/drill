@@ -91,7 +91,7 @@ function ConversationView({ projectId, conversationId, record, onNew }: Conversa
     [],
   );
   const prospector = useProspector(
-    undefined, undefined, undefined, null, null, conversationId, projectId, handleQueryResult,
+    undefined, undefined, undefined, conversationId, projectId, handleQueryResult,
   );
   const { messages, isStreaming, isLoaded, saveStatus, reloadConversation } = prospector;
   const openArtifact = useOpenArtifact(projectId);

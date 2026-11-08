@@ -16,7 +16,7 @@
  * limitations under the License.
  */
 import { Modal, Typography } from 'antd';
-import { BarChartOutlined, ApiOutlined, MessageOutlined } from '@ant-design/icons';
+import { BarChartOutlined, ApiOutlined } from '@ant-design/icons';
 
 const { Text } = Typography;
 
@@ -24,8 +24,6 @@ export interface DeleteTabTarget {
   id: string;
   name: string;
   vizIds?: string[];
-  /** Prospector messages belonging to this tab. */
-  conversationLength?: number;
 }
 
 export interface PublishedApiRef {
@@ -50,9 +48,8 @@ interface DeleteTabModalProps {
  * would leave tabs that can never be removed. Locked tabs are the one hard stop, and
  * that is enforced server-side with a 409 rather than here.
  *
- * The three dependants say deliberately different things. Visualizations lose their
- * source and the conversation is destroyed, but a published API is **not** broken by
- * this — it holds its own copy of the SQL and keeps serving. That line exists because
+ * The two dependants say deliberately different things. Visualizations lose their
+ * source, but a published API is **not** broken by this — it holds its own copy of the SQL and keeps serving. That line exists because
  * a user can be wrong in either direction: believing they have broken production, or
  * believing they have revoked an endpoint they meant to take down.
  *
@@ -67,8 +64,7 @@ export default function DeleteTabModal({
   onCancel,
 }: DeleteTabModalProps) {
   const vizIds = tab.vizIds ?? [];
-  const hasConversation = (tab.conversationLength ?? 0) > 0;
-  const hasDependants = vizIds.length > 0 || hasConversation || publishedApis.length > 0;
+  const hasDependants = vizIds.length > 0 || publishedApis.length > 0;
 
   return (
     <Modal
@@ -92,14 +88,6 @@ export default function DeleteTabModal({
               <Text strong>
                 {vizIds.map((id) => vizNames[id] ?? id).join(', ')}
               </Text>
-            </li>
-          )}
-
-          {hasConversation && (
-            <li>
-              <MessageOutlined />{' '}
-              The Prospector conversation for this tab ({tab.conversationLength} messages)
-              is deleted with it.
             </li>
           )}
 

@@ -34,18 +34,6 @@ describe('DeleteTabModal', () => {
     expect(screen.getByText(/Trend/)).toBeInTheDocument();
   });
 
-  it('warns that the Prospector conversation goes too', () => {
-    render(<DeleteTabModal open tab={{ id: 'a', name: 'Sales', conversationLength: 12 }}
-      vizNames={{}} publishedApis={[]} onConfirm={vi.fn()} onCancel={vi.fn()} />);
-    expect(screen.getByText(/conversation/i)).toBeInTheDocument();
-  });
-
-  it('says nothing about a conversation when there is none', () => {
-    render(<DeleteTabModal open tab={{ id: 'a', name: 'Sales', conversationLength: 0 }}
-      vizNames={{}} publishedApis={[]} onConfirm={vi.fn()} onCancel={vi.fn()} />);
-    expect(screen.queryByText(/conversation/i)).not.toBeInTheDocument();
-  });
-
   /**
    * A published API holds its own copy of the SQL and keeps serving after the tab is
    * gone, so this line must not read as a breakage warning. The user can be wrong in

@@ -209,15 +209,17 @@ export default function Toolbar({ onOpenCommand, onBrowseData }: ToolbarProps) {
             </Tooltip>
           )}
 
-          <Tooltip title={inspectorOpen ? 'Hide Inspector (⌘⌥0)' : 'Show Inspector (⌘⌥0)'}>
-            <Button
-              type="text"
-              size="small"
-              icon={<MenuUnfoldOutlined />}
-              onClick={toggleInspector}
-              className={`shell-toolbar-icon-btn${inspectorOpen ? ' is-active' : ''}`}
-            />
-          </Tooltip>
+          {(chrome.inspectorTabs?.length ?? 0) > 0 && (
+            <Tooltip title={inspectorOpen ? 'Hide Inspector (⌘⌥0)' : 'Show Inspector (⌘⌥0)'}>
+              <Button
+                type="text"
+                size="small"
+                icon={<MenuUnfoldOutlined />}
+                onClick={toggleInspector}
+                className={`shell-toolbar-icon-btn${inspectorOpen ? ' is-active' : ''}`}
+              />
+            </Tooltip>
+          )}
         </Space>
       </div>
 

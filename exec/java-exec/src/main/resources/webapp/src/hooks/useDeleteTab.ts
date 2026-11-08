@@ -21,14 +21,12 @@ import { useQueryClient } from '@tanstack/react-query';
 import type { AppDispatch } from '../store';
 import { deleteTab as deleteTabAction } from '../store/querySlice';
 import { deleteTab as deleteServerTab } from '../api/tabs';
-import { prospectorChatKey } from './useProspector';
 
 /**
  * Deletes a tab everywhere it exists.
  *
- * A tab has four homes — Redux, the server, its Prospector conversation in
- * localStorage, and the sidebar's cached tab list — and a delete that misses any of
- * them looks broken. Deleting only the server record is the worst case: the tab stays
+ * A tab has three homes — Redux, the server, and the sidebar's cached tab list — and
+ * a delete that misses any of them looks broken. Deleting only the server record is the worst case: the tab stays
  * open in the strip, and the next sync tick promotes it straight back, so the row
  * reappears in the tree a second later.
  *
@@ -44,15 +42,6 @@ export function useDeleteTab(projectId?: string) {
     // seeing it as something to promote. Deleting a tab belonging to another project
     // is a no-op here, which is correct: Redux only holds the open project's tabs.
     dispatch(deleteTabAction(tabId));
-
-    const chatKey = prospectorChatKey(projectId, tabId);
-    if (chatKey) {
-      try {
-        localStorage.removeItem(chatKey);
-      } catch {
-        // Storage unavailable; an orphaned conversation is harmless.
-      }
-    }
 
     try {
       await deleteServerTab(tabId);

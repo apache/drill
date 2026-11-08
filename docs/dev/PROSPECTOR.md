@@ -98,35 +98,18 @@ Prospector has access to the following tools:
 | `get_schema_info` | Browse schemas, tables, and columns |
 | `create_visualization` | Create chart visualizations |
 | `create_dashboard` | Create dashboards |
-| `save_query` | Save SQL queries |
+| `save_query` | Save SQL queries. Inside a project the tool also adds the saved query to the project so it shows in the Saved Queries tab; only the project owner can, so a member's result carries `addedToProject: false` and a `projectError` that tells the model not to retry |
 | `create_workflow` | Create a scheduled workflow (query, schedule, actions). Always created paused; the user activates it from the Workflows page, or from the Activate control under the workflow's card on surfaces that render artifact cards (only the Conversations page today). The tool result points the model at the Workflows page, which exists everywhere. The query is given as `sql` (saved into the project by the tool) or `savedQueryId` |
 | `write_wiki_page` | Create a project wiki page (default folder `Reports`), or replace one by `pageId`. Optional `includeTranscript` appends the SQL run in the conversation; the Prospector provenance footer is always written |
 | `get_available_functions` | Look up Drill SQL functions by name or description, with signatures |
 
-#### Conversations are per tab
+#### Conversations are project artifacts, not tab state
 
-Each query tab has its own Prospector conversation. The `localStorage` key comes from
-`prospectorChatKey(projectId, tabId)` in `useProspector.ts`; switching tabs swaps the
-history, and a duplicated tab starts empty because it gets a new UUID.
-
-Conversations follow their tab to the server on the same two tiers as tabs:
-
-| Endpoint | Purpose |
-|---|---|
-| `GET /api/v1/tabs/{id}/conversation` | Chat history for one tab; empty list, not 404, for a tab never talked to |
-| `PUT /api/v1/tabs/{id}/conversation` | Replaces it; **413 over 512 KB** |
-
-Deleting a tab deletes its conversation, both server-side (cascade in
-`QueryTabResources.deleteTab`) and locally.
-
-> The 512 KB cap is not arbitrary. `PersistentStore` defaults to
-> `ZookeeperPersistentStoreProvider` (`drill-module.conf:241`), whose write path is
-> `client.put(key, bytes)` into a znode, and ZooKeeper's default `jute.maxbuffer` is
-> 1 MB. Conversations live in their own store (`drill.sqllab.tab_conversations`) rather
-> than on the tab record, because the project tree reads the tab listing on every
-> expand.
-
-See [`TabPersistence.md`](TabPersistence.md).
+A Prospector conversation belongs to a project and is stored server-side (see the
+Conversations page doc, `ui/pages/conversations.md`). It is not tied to a SQL Lab tab: the
+per-tab conversation, its `/api/v1/tabs/{id}/conversation` endpoints and its
+`drill.sqllab.tab_conversations` store were removed. Existing tab conversations were
+dropped, not migrated; see [`TabPersistence.md`](TabPersistence.md).
 
 #### Function lookup and descriptions
 

@@ -16,8 +16,8 @@
  * limitations under the License.
  */
 import { useCallback, useState, type ReactNode } from 'react';
-import { Button, Tooltip, Tag } from 'antd';
-import { DeleteOutlined, RobotOutlined, ExperimentOutlined } from '@ant-design/icons';
+import { Button, Tooltip } from 'antd';
+import { DeleteOutlined, RobotOutlined } from '@ant-design/icons';
 import ChatMessageList from './ChatMessageList';
 import ChatInput from './ChatInput';
 import QuickActionBar from './QuickActionBar';
@@ -30,8 +30,6 @@ import type { ArtifactKind } from '../conversation/ArtifactCanvas';
 interface ProspectorPanelProps {
   prospector: UseProspectorReturn;
   context: ChatContext;
-  /** Callback to insert Python code as a new notebook cell */
-  onInsertCell?: (code: string) => void;
   /** Tooltip and accessible name of the header's clear button. Defaults to "Clear chat". */
   clearLabel?: string;
   /** Icon of the header's clear button. Defaults to a trash can. */
@@ -45,7 +43,6 @@ interface ProspectorPanelProps {
 export default function ProspectorPanel({
   prospector,
   context,
-  onInsertCell,
   clearLabel = 'Clear chat',
   clearIcon = <DeleteOutlined />,
   onOpenArtifact,
@@ -59,8 +56,7 @@ export default function ProspectorPanel({
     sendMessage,
     stopStreaming,
     clearChat,
-    storageKey,
-    tabId,
+    conversationId,
   } = prospector;
 
   const [reportContent, setReportContent] = useState<string | null>(null);
@@ -92,23 +88,12 @@ export default function ProspectorPanel({
     [sendMessage, context],
   );
 
-  const isNotebook = !!context.notebookMode;
-
   return (
     <div className="prospector-panel">
       <div className="prospector-panel-header">
         <span className="prospector-panel-title">
           <RobotOutlined style={{ marginRight: 8 }} />
           Prospector
-          {isNotebook && (
-            <Tag
-              color="purple"
-              icon={<ExperimentOutlined />}
-              style={{ marginLeft: 8, fontSize: 10 }}
-            >
-              Notebook
-            </Tag>
-          )}
         </span>
         <Tooltip title={clearLabel}>
           <Button
@@ -124,9 +109,7 @@ export default function ProspectorPanel({
         messages={messages}
         streamingContent={streamingContent}
         isStreaming={isStreaming}
-        onInsertCell={isNotebook ? onInsertCell : undefined}
         onSaveReport={handleSaveReport}
-        storageKey={storageKey}
         onOpenArtifact={onOpenArtifact}
         liveArtifact={liveArtifact}
       />
@@ -158,18 +141,11 @@ export default function ProspectorPanel({
           hasResults={!!context.resultSummary && context.resultSummary.rowCount > 0}
           hasSql={!!context.currentSql && context.currentSql.trim().length > 0}
           disabled={isStreaming}
-          notebookMode={isNotebook}
-          notebookCellError={!!context.notebookCellError}
-          notebookDfName={context.notebookDfName}
         />
         <ChatInput
           onSend={handleSend}
           onStop={stopStreaming}
           isStreaming={isStreaming}
-          placeholder={isNotebook
-            ? 'Ask about your data, request analysis code, or get help with Python...'
-            : undefined
-          }
         />
       </div>
       <SaveReportModal
@@ -177,7 +153,7 @@ export default function ProspectorPanel({
         content={reportContent ?? ''}
         messages={reportMessageIndex >= 0 ? messages.slice(0, reportMessageIndex + 1) : messages}
         defaultProjectId={context.projectId}
-        conversationId={tabId ?? undefined}
+        conversationId={conversationId ?? undefined}
         onClose={closeReportModal}
       />
     </div>

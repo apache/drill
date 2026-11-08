@@ -406,64 +406,6 @@ describe('NotebookPanel', () => {
     });
   });
 
-  // ==================== NotebookPanelHandle ====================
-
-  describe('handle', () => {
-    it('provides handle to parent via onHandle callback', () => {
-      const handleFn = vi.fn();
-      render(
-        <NotebookPanel results={defaultResults} onHandle={handleFn} tabName="test" />
-      );
-
-      expect(handleFn).toHaveBeenCalledWith(
-        expect.objectContaining({
-          addCell: expect.any(Function),
-          getLastCellCode: expect.any(Function),
-          getLastCellError: expect.any(Function),
-        })
-      );
-    });
-
-    it('handle.getLastCellCode returns the last cell code', () => {
-      const handleFn = vi.fn();
-      render(
-        <NotebookPanel results={defaultResults} onHandle={handleFn} tabName="test" />
-      );
-
-      const handle = handleFn.mock.calls[handleFn.mock.calls.length - 1][0];
-      if (handle) {
-        const code = handle.getLastCellCode();
-        expect(typeof code).toBe('string');
-        expect(code.length).toBeGreaterThan(0);
-      }
-    });
-
-    it('handle.getLastCellError returns null when no errors', () => {
-      const handleFn = vi.fn();
-      render(
-        <NotebookPanel results={defaultResults} onHandle={handleFn} tabName="test" />
-      );
-
-      const handle = handleFn.mock.calls[handleFn.mock.calls.length - 1][0];
-      if (handle) {
-        expect(handle.getLastCellError()).toBeNull();
-      }
-    });
-
-    it('cleans up handle on unmount', () => {
-      const handleFn = vi.fn();
-      const { unmount } = render(
-        <NotebookPanel results={defaultResults} onHandle={handleFn} tabName="test" />
-      );
-
-      unmount();
-
-      // Last call should be with null (cleanup)
-      const lastCall = handleFn.mock.calls[handleFn.mock.calls.length - 1][0];
-      expect(lastCall).toBeNull();
-    });
-  });
-
   // ==================== Packages Modal ====================
 
   describe('packages', () => {

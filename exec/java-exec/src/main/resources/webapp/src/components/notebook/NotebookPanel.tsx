@@ -87,12 +87,6 @@ interface NotebookCell {
   outputCollapsed: boolean;  // collapse output
 }
 
-export interface NotebookPanelHandle {
-  addCell: (code: string) => void;
-  getLastCellCode: () => string;
-  getLastCellError: () => string | null;
-}
-
 interface NotebookPanelProps {
   /** Query tab ID — notebook state is scoped per tab */
   tabId?: string;
@@ -100,7 +94,6 @@ interface NotebookPanelProps {
   maxNotebookRows?: number;
   onMaxNotebookRowsChange?: (rows: number) => void;
   tabName?: string;
-  onHandle?: (handle: NotebookPanelHandle | null) => void;
 }
 
 // ─── Persistence Types ──────────────────────────────────────────────
@@ -412,7 +405,6 @@ export default function NotebookPanel({
   maxNotebookRows = 50000,
   onMaxNotebookRowsChange,
   tabName = 'df',
-  onHandle,
 }: NotebookPanelProps) {
   const dfName = useMemo(() => {
     const sanitized = tabName.replace(/\s+/g, '_').replace(/[^a-zA-Z0-9_]/g, '').replace(/^[0-9]/, '_$&');
@@ -571,28 +563,6 @@ export default function NotebookPanel({
       }
     }, 100);
   }, []);
-
-  // Expose handle to parent
-  useEffect(() => {
-    if (onHandle) {
-      onHandle({
-        addCell: (code: string) => addCell(undefined, code),
-        getLastCellCode: () => {
-          const last = cells[cells.length - 1];
-          return last?.code || '';
-        },
-        getLastCellError: () => {
-          for (let i = cells.length - 1; i >= 0; i--) {
-            if (cells[i].output?.error && cells[i].output?.stderr) {
-              return cells[i].output!.stderr;
-            }
-          }
-          return null;
-        },
-      });
-      return () => onHandle(null);
-    }
-  }, [onHandle, addCell, cells]);
 
   const deleteCell = useCallback((id: string) => {
     setCells((prev) => prev.length <= 1 ? prev : prev.filter((c) => c.id !== id));

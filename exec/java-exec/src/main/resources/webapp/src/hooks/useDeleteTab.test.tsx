@@ -24,7 +24,6 @@ import type { ReactNode } from 'react';
 import queryReducer, { addTab, setSql } from '../store/querySlice';
 import uiReducer from '../store/uiSlice';
 import { useDeleteTab } from './useDeleteTab';
-import { prospectorChatKey } from './useProspector';
 import { deleteTab as deleteServerTab } from '../api/tabs';
 
 vi.mock('../api/tabs', () => ({
@@ -72,17 +71,6 @@ describe('useDeleteTab', () => {
 
     expect(store.getState().query.tabs.find((t) => t.id === id)).toBeUndefined();
     expect(deleteServerTab).toHaveBeenCalledWith(id);
-  });
-
-  it('clears the tab conversation', async () => {
-    store.dispatch(addTab(undefined));
-    const id = store.getState().query.tabs[store.getState().query.tabs.length - 1].id;
-    localStorage.setItem(prospectorChatKey('p1', id)!, JSON.stringify([{ role: 'user' }]));
-
-    const { result } = renderHook(() => useDeleteTab('p1'), { wrapper });
-    await act(async () => { await result.current(id); });
-
-    expect(localStorage.getItem(prospectorChatKey('p1', id)!)).toBeNull();
   });
 
   it('refreshes the sidebar list', async () => {

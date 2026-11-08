@@ -15,10 +15,9 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
-import { useCallback } from 'react';
 import MarkdownView from '../MarkdownView';
-import { Button, Tooltip } from 'antd';
-import { UserOutlined, RobotOutlined, PlusSquareOutlined } from '@ant-design/icons';
+import { Button } from 'antd';
+import { UserOutlined, RobotOutlined } from '@ant-design/icons';
 import type { ChatMessage } from '../../types/ai';
 import ToolCallDisplay from './ToolCallDisplay';
 import { looksLikeReport } from '../../utils/report';
@@ -31,7 +30,6 @@ interface ChatMessageBubbleProps {
   message: ChatMessage;
   toolResults: ChatMessage[];
   isStreaming?: boolean;
-  onInsertCell?: (code: string) => void;
   /**
    * Offer to save this message as a report. Called with the message's content and its
    * index within the full (unfiltered) messages array, so the caller can slice the
@@ -58,7 +56,6 @@ export default function ChatMessageBubble({
   message,
   toolResults,
   isStreaming,
-  onInsertCell,
   onSaveReport,
   messageIndex,
   dismissed,
@@ -68,10 +65,6 @@ export default function ChatMessageBubble({
 }: ChatMessageBubbleProps) {
   const isUser = message.role === 'user';
   const isError = message.content?.startsWith('Error:');
-
-  const handleInsertCode = useCallback((code: string) => {
-    onInsertCell?.(code);
-  }, [onInsertCell]);
 
   return (
     <div className={`prospector-message ${isUser ? 'prospector-message-user' : 'prospector-message-assistant'}`}>
@@ -86,45 +79,7 @@ export default function ChatMessageBubble({
             {isUser ? (
               <span>{message.content}</span>
             ) : (
-              <MarkdownView
-                components={onInsertCell ? {
-                  code({ className, children, ref: _ref, ...props }) {
-                    const match = /language-(\w+)/.exec(className || '');
-                    const lang = match?.[1];
-                    const codeStr = String(children).replace(/\n$/, '');
-                    const isBlock = lang || codeStr.includes('\n');
-
-                    if (isBlock && (!lang || lang === 'python' || lang === 'py')) {
-                      return (
-                        <div style={{ position: 'relative' }}>
-                          <code className={className} {...props}>{children}</code>
-                          <Tooltip title="Insert as notebook cell">
-                            <Button
-                              size="small"
-                              type="link"
-                              icon={<PlusSquareOutlined />}
-                              onClick={() => handleInsertCode(codeStr)}
-                              style={{
-                                position: 'absolute',
-                                top: 2,
-                                right: 2,
-                                fontSize: 12,
-                                opacity: 0.7,
-                              }}
-                            >
-                              Insert Cell
-                            </Button>
-                          </Tooltip>
-                        </div>
-                      );
-                    }
-                    return <code className={className} {...props}>{children}</code>;
-                  },
-                  pre({ children, ...props }) {
-                    return <pre {...props} style={{ position: 'relative' }}>{children}</pre>;
-                  },
-                } : undefined}
-              >
+              <MarkdownView>
                 {message.content}
               </MarkdownView>
             )}

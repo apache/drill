@@ -33,7 +33,6 @@ import { cacheResults, getCachedResults } from '../utils/resultsCache';
 import { listTabs, createTab, updateTab } from '../api/tabs';
 import { reconcileTabs } from '../utils/tabReconcile';
 import { shouldPromote } from '../utils/tabPromotion';
-import { conversationLengthFor } from './useProspector';
 import { getCacheRows, getCacheMetadata } from '../api/resultCache';
 import type { QueryResult } from '../types';
 
@@ -367,7 +366,6 @@ export function useWorkspacePersistence(projectId?: string) {
           // has left the tab strip, so the project tree is the only way back to it.
           isClosing: !!tab.hidden,
           sql: tab.sql,
-          conversationLength: conversationLengthFor(projectId, tab.id),
           alreadyPromoted,
         });
 

@@ -1,6 +1,6 @@
 # App Shell
 
-Covers the components in `src/components/shell/` that own the global UI chrome: AppShell, Sidebar, Toolbar, LeftRail, RightInspector, PreferencesModal, BrowseDataDrawer, TrashBody, WorkspaceRecoveryBody, GlobalProspectorTab.
+Covers the components in `src/components/shell/` that own the global UI chrome: AppShell, Sidebar, Toolbar, LeftRail, RightInspector, PreferencesModal, BrowseDataDrawer, TrashBody, WorkspaceRecoveryBody.
 
 The shell renders once in `App.tsx` and stays mounted across navigations; pages render inside it. Pages do not own chrome — they register what they need via [`usePageChrome`](../contexts.md), and the shell renders whatever is currently registered.
 
@@ -110,11 +110,11 @@ Optional second column between the Sidebar and the main page content. Used today
 
 **File:** `src/components/shell/RightInspector.tsx`
 
-Optional tabbed panel on the right. Always carries the global Prospector tab; pages can register additional tabs.
+Optional tabbed panel on the right. It has no built-in tabs: it shows only what pages register through `usePageChrome`, and renders nothing (and the toolbar toggle is hidden) when none are registered. No page registers any today. Prospector lives on the Conversations page, not here.
 
 - Width: 360px default, resizable 280–720px. Persisted to `drill-shell-inspector-width`.
 - Open state persisted to `drill-shell-inspector-open`.
-- Tabs rendered: `[GlobalProspectorTab, ...pageChrome.inspectorTabs]`.
+- Tabs rendered: `pageChrome.inspectorTabs`.
 - Active tab persisted to `drill-shell-active-inspector-tab`.
 
 ### `InspectorTab` shape
@@ -129,14 +129,6 @@ interface InspectorTab {
 ```
 
 Tabs are simple — there's no per-tab state management built into the inspector. Tab `content` is rendered when the tab is active and unmounted when it isn't, so each tab is responsible for its own state preservation if needed.
-
----
-
-## GlobalProspectorTab
-
-**File:** `src/components/shell/GlobalProspectorTab.tsx`
-
-The always-available Prospector chat tab in the right inspector. Instantiates `useProspector()` with empty `ChatContext` and renders `ProspectorPanel`. See [`prospector.md`](prospector.md).
 
 ---
 

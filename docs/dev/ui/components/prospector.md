@@ -1,6 +1,6 @@
 # Prospector (frontend)
 
-Prospector is Drill's chat-based AI assistant — embedded in SQL Lab, Logs, and the global right inspector. This doc covers the frontend architecture. For backend (LLM provider registry, REST endpoints, persistent store) see [`../../PROSPECTOR.md`](../../PROSPECTOR.md). For the SQL transpiler used by the "Optimize" flow, see [`../../TRANSPILER.md`](../../TRANSPILER.md).
+Prospector is Drill's chat-based AI assistant — used on the project Conversations page (SQL Lab and Logs hand off to it through Ask Prospector). This doc covers the frontend architecture. For backend (LLM provider registry, REST endpoints, persistent store) see [`../../PROSPECTOR.md`](../../PROSPECTOR.md). For the SQL transpiler used by the "Optimize" flow, see [`../../TRANSPILER.md`](../../TRANSPILER.md).
 
 ## Architecture overview
 
@@ -34,7 +34,7 @@ Pages instantiate `useProspector()`, pass its return value plus a `ChatContext` 
 
 ### ProspectorPanel
 
-**Entry component.** Props: prospector state (from `useProspector()`), `ChatContext`, optional `onInsertCell` (for notebook integration), optional `clearLabel` / `clearIcon` (the header button defaults to a trash can labelled "Clear chat"; the [Conversations page](../pages/conversations.md) relabels it "New conversation" and wires it to create one).
+**Entry component.** Props: prospector state (from `useProspector()`), `ChatContext`, optional `clearLabel` / `clearIcon` (the header button defaults to a trash can labelled "Clear chat"; the [Conversations page](../pages/conversations.md) relabels it "New conversation" and wires it to create one).
 
 Renders four child elements:
 
@@ -45,7 +45,7 @@ Renders four child elements:
 
 ### ChatMessageBubble
 
-Renders one message. User messages: plain text. Assistant messages: `react-markdown` with code-block rendering. In notebook mode, code blocks get an "Insert Cell" button that calls `onInsertCell`. Delegates tool-call display to `ToolCallDisplay`.
+Renders one message. User messages: plain text. Assistant messages: `react-markdown` with code-block rendering. Delegates tool-call display to `ToolCallDisplay`.
 
 ### ToolCallDisplay
 
@@ -67,9 +67,9 @@ Admin configuration: provider (OpenAI, Anthropic, Ollama, ...), endpoint, model,
 
 **File:** `src/hooks/useProspector.ts`
 
-The orchestrator. Accepts optional `onSqlGenerated`, `onVisualizationCreated`, `maxToolRounds` (default `DEFAULT_MAX_TOOL_ROUNDS = 15`), and `storageKey`.
+The orchestrator. Accepts optional `onSqlGenerated`, `onVisualizationCreated`, `maxToolRounds` (default `DEFAULT_MAX_TOOL_ROUNDS = 15`), `conversationId` and `projectId`, and `onQueryResult`.
 
-When `storageKey` is set, the chat history is loaded from and saved to `localStorage` under that key, so it survives navigation and component unmounts. Inside a project both the SQL Lab page instance and the global inspector instance pass `prospector_chat_${projectId}`, so the conversation is per-project and continuous as the user moves between project pages (only one instance is live at a time). Changing the key (switching projects) swaps in that project's stored history; `clearChat` writes an empty history back. Outside a project the key is `null` and nothing is persisted.
+The hook is server-primary: with a `conversationId` and `projectId` the server owns the conversation, it is loaded from there and every change is saved there, and `localStorage` is only an offline buffer. The old tab-scoped path (`storageKey`, `tabId`, `prospectorChatKey`, `conversationLengthFor`, and the mirror to `/api/v1/tabs/{id}/conversation`) was removed. Without a conversation the hook keeps messages in memory only. `serverSaveTimerRef` is the one save-debounce timer; with the legacy mirror gone, the server-primary save path is its only user.
 
 `onSqlGenerated` (SQL Lab) routes a suggested query to a new tab unless the active tab is empty, in which case it reuses that tab — see `handleProspectorSql` in `SqlLabPage.tsx`.
 
@@ -98,9 +98,9 @@ Tool definitions are hardcoded in `TOOL_DEFINITIONS` at the top of the file: `ex
 
 ### create_workflow and activation
 
-`create_workflow` builds a full workflow (schedule, actions, optional per-action `when` condition) and creates it through `createWorkflow`. A workflow cannot exist without a saved query that is in the project and owned by the creator, and `save_query` does not add its query to a project, so the tool takes the query as `sql`, saves it, adds it to the project and then creates the workflow. `savedQueryId` is accepted for a retry: when the server rejects the workflow with field errors (422), the tool returns them with the saved query's id so the model calls again without saving the query twice.
+`create_workflow` builds a full workflow (schedule, actions, optional per-action `when` condition) and creates it through `createWorkflow`. A workflow cannot exist without a saved query that is in the project and owned by the creator, so the tool takes the query as `sql`, saves it, adds it to the project and then creates the workflow. (`save_query` also adds its query to the project, but a failure there is not fatal the way it is here: the query exists either way, so the result reports `addedToProject: false` with a `projectError` and the card still renders.) `savedQueryId` is accepted for a retry: when the server rejects the workflow with field errors (422), the tool returns them with the saved query's id so the model calls again without saving the query twice.
 
-The tool cannot turn a workflow on. `WorkflowResources` pins every created workflow to `status: paused` and `schedule.enabled: false`, and `WorkflowRunner` never runs a disabled one; the client adds nothing to that. What the client owns is not calling `setWorkflowEnabled` from the tool path. `components/conversation/WorkflowActivationCard.tsx` renders under the workflow's artifact card in the thread, reads the workflow from the server, and offers Activate only while it is paused. Pressing it opens a confirm dialog built from the server's copy of the workflow (name, schedule, each action with its recipients or target, and its condition); `setWorkflowEnabled(id, true)` runs only from that dialog's confirm. A server refusal (expired, owner lost access) is shown under the card and the workflow stays paused. The dialog focuses Cancel by default, shows destination config (`url`, `webhook`, `endpoint`, `to`) for action types it does not recognise, and a failed load that is not a 404 shows a Retry button rather than "no longer exists". Only the Conversations page passes `onOpenArtifact`, so the card (and its Activate control) does not render in SQL Lab, Logs or the global tab; the `create_workflow` result therefore names the workflow's Workflows page path, never a button. A non-owner project member cannot use the `sql` route: `addSavedQuery` is owner-only, and the tool returns a stop message naming the owner as the remedy instead of a retry. `useProspector.test.tsx` asserts the hook's source never mentions `setWorkflowEnabled`.
+The tool cannot turn a workflow on. `WorkflowResources` pins every created workflow to `status: paused` and `schedule.enabled: false`, and `WorkflowRunner` never runs a disabled one; the client adds nothing to that. What the client owns is not calling `setWorkflowEnabled` from the tool path. `components/conversation/WorkflowActivationCard.tsx` renders under the workflow's artifact card in the thread, reads the workflow from the server, and offers Activate only while it is paused. Pressing it opens a confirm dialog built from the server's copy of the workflow (name, schedule, each action with its recipients or target, and its condition); `setWorkflowEnabled(id, true)` runs only from that dialog's confirm. A server refusal (expired, owner lost access) is shown under the card and the workflow stays paused. The dialog focuses Cancel by default, shows destination config (`url`, `webhook`, `endpoint`, `to`) for action types it does not recognise, and a failed load that is not a 404 shows a Retry button rather than "no longer exists". Only the Conversations page passes `onOpenArtifact`, so the card (and its Activate control) does not render anywhere else; the `create_workflow` result therefore names the workflow's Workflows page path, never a button. A non-owner project member cannot use the `sql` route: `addSavedQuery` is owner-only, and the tool returns a stop message naming the owner as the remedy instead of a retry. `useProspector.test.tsx` asserts the hook's source never mentions `setWorkflowEnabled`.
 
 ### Reports
 
@@ -146,7 +146,7 @@ Other AI endpoints in this module:
 
 - `ChatRequest` — `{ messages, tools, context }`
 - `ChatMessage` — `{ role: 'user'|'assistant'|'system'|'tool', content, toolCalls?, toolCallId?, name? }`
-- `ChatContext` — page / mode signals: `currentSql`, `schema`, `errorMessage`, `conversationMode` (set by the Conversations page; the server then builds the conversation-mode prompt), `notebookMode` (client-side quick actions only; the server ignores it), `logAnalysisMode`, `projectDatasets`, …
+- `ChatContext` — page / mode signals: `currentSql`, `schema`, `errorMessage`, `conversationMode` (set by the Conversations page; the server then builds the conversation-mode prompt), `logAnalysisMode`, `projectDatasets`, …
 - `DeltaEvent` — discriminated union for streamed content / tool calls
 - `DoneEvent` — `{ finish_reason }`
 - `UsageEvent` — `{ promptTokens?, responseTokens?, totalTokens?, costUsd?, currency? }`
@@ -164,9 +164,7 @@ ChatContext (the per-message payload) lives in `types/ai.ts` and is constructed 
 
 `useProspector` is currently instantiated in:
 
-1. **`GlobalProspectorTab`** — always-available right-inspector tab; empty `ChatContext`.
-2. **SQL Lab** (via `ProspectorPanel` inside the page) — passes `onSqlGenerated` to update the editor and `onVisualizationCreated` to track new charts.
-3. **Logs** — passes `logAnalysisMode: true` in the context so quick actions surface log-analysis prompts.
+`useProspector` is instantiated by the Conversations page, the only chat surface. SQL Lab and Logs no longer mount a panel; they link into a Scratch project conversation through Ask Prospector.
 
 `AiModalProvider` wraps the whole app in `App.tsx`, so `useAiModal()` works anywhere; it's used by the Toolbar AI menu.
 

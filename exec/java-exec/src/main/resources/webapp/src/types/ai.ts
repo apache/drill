@@ -61,23 +61,6 @@ export interface ChatContext {
    * its tools, which appear on the canvas beside the chat, instead of handing back SQL.
    */
   conversationMode?: boolean;
-  /**
-   * The notebook* fields below drive the client-side quick actions only. The server no longer
-   * reads them (it ignores unknown fields), so the notebook tab's context never reaches the
-   * model. They go away with the SQL Lab dock.
-   */
-  /** Whether the user is currently in the notebook tab */
-  notebookMode?: boolean;
-  /** Name of the DataFrame variable available in the notebook */
-  notebookDfName?: string;
-  /** DataFrame shape info (rows x columns) */
-  notebookDfShape?: string;
-  /** Column names and types from the DataFrame */
-  notebookColumns?: string[];
-  /** Current cell code the user is working on */
-  notebookCellCode?: string;
-  /** Error from the last cell execution */
-  notebookCellError?: string;
   /** Whether the user is on the logs page */
   logAnalysisMode?: boolean;
   /** Name of the log file being analyzed */

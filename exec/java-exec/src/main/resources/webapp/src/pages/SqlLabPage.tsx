@@ -49,7 +49,6 @@ import { useSchemas } from '../hooks/useMetadata';
 import { useTabPersistence, useRestoreTabs } from '../hooks/useTabPersistence';
 import { useSendDataToAi } from '../hooks/useSendDataToAi';
 import { useMonacoCompletion } from '../hooks/useMonacoCompletion';
-import { conversationLengthFor } from '../hooks/useProspector';
 import { useAskProspector } from '../hooks/useAskProspector';
 import { getAiStatus, streamChat, transpileSql, convertDataType } from '../api/ai';
 import { getSchemaTree } from '../api/metadata';
@@ -1445,7 +1444,6 @@ export default function SqlLabPage({ datasetFilter, headerContent, projectId, sa
             id: deleteTarget,
             name: tabs.find((t) => t.id === deleteTarget)?.name ?? 'this tab',
             vizIds: tabs.find((t) => t.id === deleteTarget)?.vizIds,
-            conversationLength: conversationLengthFor(projectId, deleteTarget),
           }}
           vizNames={Object.fromEntries(
             (allVisualizations ?? []).map((v) => [v.id, v.name])

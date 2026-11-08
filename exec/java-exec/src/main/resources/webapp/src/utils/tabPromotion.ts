@@ -23,8 +23,6 @@ export interface PromotionInput {
   /** The tab is being closed right now. */
   isClosing: boolean;
   sql: string;
-  /** Prospector messages belonging to this tab. */
-  conversationLength: number;
   /** The tab already has a server-side record. */
   alreadyPromoted: boolean;
 }
@@ -45,9 +43,6 @@ export interface PromotionInput {
  *    running would leave content in localStorage that the tree does not list and
  *    the user cannot reach.
  *
- * Content means SQL *or* a Prospector conversation. Checking only the editor would
- * silently discard a tab whose work happened entirely in the assistant panel.
- *
  * A tab closed with nothing in it promotes nothing, so a stray "New Query" click
  * does not leave a permanent `Query 7` in the tree.
  *
@@ -60,6 +55,6 @@ export function shouldPromote(input: PromotionInput): boolean {
   if (input.hasExecuted) {
     return true;
   }
-  const hasContent = input.sql.trim().length > 0 || input.conversationLength > 0;
+  const hasContent = input.sql.trim().length > 0;
   return input.isClosing && hasContent;
 }

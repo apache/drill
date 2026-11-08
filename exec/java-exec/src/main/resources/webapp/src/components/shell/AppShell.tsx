@@ -54,6 +54,9 @@ export default function AppShell({ children }: AppShellProps) {
   const [shortcutsOpen, setShortcutsOpen] = useState(false);
   const [browseOpen, setBrowseOpen] = useState(false);
   const isFirstLocation = useRef(true);
+  // The inspector holds only what a page registers; with nothing registered there is
+  // nothing to open, whatever the persisted open flag says.
+  const inspectorVisible = inspectorOpen && (chrome.inspectorTabs?.length ?? 0) > 0;
 
   // Auto-collapse the left rail on narrow viewports so it doesn't crowd the
   // editor. The hook stays a no-op on wide screens.
@@ -130,7 +133,7 @@ export default function AppShell({ children }: AppShellProps) {
 
   // Translucent backdrop that appears on mobile when an overlay is up.
   // Tapping it closes both panels.
-  const showBackdrop = !sidebarCollapsed || inspectorOpen;
+  const showBackdrop = !sidebarCollapsed || inspectorVisible;
   const handleBackdropClick = () => {
     setSidebarCollapsed(true);
     setInspectorOpen(false);
@@ -141,7 +144,7 @@ export default function AppShell({ children }: AppShellProps) {
       className={[
         'shell-root',
         sidebarCollapsed ? 'is-sidebar-collapsed' : '',
-        inspectorOpen ? 'is-inspector-open' : '',
+        inspectorVisible ? 'is-inspector-open' : '',
         hasLeftRail ? 'has-left-rail' : '',
         hasLeftRail && leftRailCollapsed ? 'is-left-rail-collapsed' : '',
       ].filter(Boolean).join(' ')}

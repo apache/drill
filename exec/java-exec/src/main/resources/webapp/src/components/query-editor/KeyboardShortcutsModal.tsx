@@ -38,7 +38,6 @@ const SHORTCUT_GROUPS: ShortcutGroup[] = [
     items: [
       { keys: [`${mod}K`], action: 'Open Spotlight' },
       { keys: [`${mod}0`], action: 'Toggle sidebar' },
-      { keys: [`${mod}${opt}0`], action: 'Toggle inspector' },
       { keys: [`${mod},`], action: 'Open Preferences' },
       { keys: ['?'], action: 'Show this help' },
     ],

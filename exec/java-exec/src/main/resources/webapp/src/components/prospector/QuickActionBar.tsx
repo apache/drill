@@ -22,8 +22,6 @@ import {
   BugOutlined,
   BarChartOutlined,
   ExperimentOutlined,
-  LineChartOutlined,
-  ThunderboltOutlined,
   FileTextOutlined,
 } from '@ant-design/icons';
 import type { AiFeature } from '../../constants/aiFeatures';
@@ -34,9 +32,6 @@ interface QuickActionBarProps {
   hasResults: boolean;
   hasSql: boolean;
   disabled: boolean;
-  notebookMode?: boolean;
-  notebookCellError?: boolean;
-  notebookDfName?: string;
   logAnalysisMode?: boolean;
 }
 
@@ -46,9 +41,6 @@ export default function QuickActionBar({
   hasResults,
   hasSql,
   disabled,
-  notebookMode,
-  notebookCellError,
-  notebookDfName = 'df',
   logAnalysisMode,
 }: QuickActionBarProps) {
   if (logAnalysisMode) {
@@ -87,50 +79,6 @@ export default function QuickActionBar({
           >
             Suggest SQL
           </Button>
-        </Space>
-      </div>
-    );
-  }
-
-  if (notebookMode) {
-    return (
-      <div className="prospector-quick-actions">
-        <Space size={[4, 4]} wrap>
-          <Button
-            size="small"
-            icon={<ExperimentOutlined />}
-            onClick={() => onAction(`Write Python code to analyze the DataFrame '${notebookDfName}'. Suggest interesting patterns, statistics, or insights to explore. Return the code in a single python code block.`)}
-            disabled={disabled}
-          >
-            Analyze Data
-          </Button>
-          <Button
-            size="small"
-            icon={<LineChartOutlined />}
-            onClick={() => onAction(`Write Python code using matplotlib to create a meaningful visualization of the DataFrame '${notebookDfName}'. Choose the best chart type for the data. Return the code in a single python code block.`)}
-            disabled={disabled}
-          >
-            Suggest Plot
-          </Button>
-          <Button
-            size="small"
-            icon={<ThunderboltOutlined />}
-            onClick={() => onAction(`Write Python code to build a machine learning model using scikit-learn on the DataFrame '${notebookDfName}'. Choose an appropriate model based on the data types and suggest preprocessing steps. Return the code in a single python code block.`)}
-            disabled={disabled}
-          >
-            Build Model
-          </Button>
-          {notebookCellError && (
-            <Button
-              size="small"
-              icon={<BugOutlined />}
-              onClick={() => onAction('Fix the error in my notebook cell. Explain what went wrong and provide corrected code in a single python code block.')}
-              disabled={disabled}
-              danger
-            >
-              Fix Cell Error
-            </Button>
-          )}
         </Space>
       </div>
     );

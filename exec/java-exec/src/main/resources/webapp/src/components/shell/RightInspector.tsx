@@ -17,11 +17,9 @@
  */
 import { useCallback, useEffect, useMemo, useRef, useState } from 'react';
 import { Tooltip } from 'antd';
-import { CloseOutlined, RobotOutlined } from '@ant-design/icons';
+import { CloseOutlined } from '@ant-design/icons';
 import { useAppChrome, type InspectorTab } from '../../contexts/AppChromeContext';
-import GlobalProspectorTab from './GlobalProspectorTab';
 
-const PROSPECTOR_TAB_KEY = 'prospector';
 const WIDTH_KEY = 'drill-shell-inspector-width';
 const MIN_WIDTH = 280;
 const MAX_WIDTH = 720;
@@ -85,26 +83,10 @@ export default function RightInspector() {
     document.addEventListener('mouseup', onMouseUp);
   }, []);
 
-  // Always include the global Prospector tab so the inspector is meaningful
-  // even on pages that don't register their own tabs. Pages can register
-  // their own Prospector replacement (with richer context) by using the
-  // same key, and it will take precedence.
-  const tabs = useMemo<InspectorTab[]>(() => {
-    const pageTabs = chrome.inspectorTabs ?? [];
-    const hasProspector = pageTabs.some((t) => t.key === PROSPECTOR_TAB_KEY);
-    if (hasProspector) {
-      return pageTabs;
-    }
-    return [
-      ...pageTabs,
-      {
-        key: PROSPECTOR_TAB_KEY,
-        title: 'Prospector',
-        icon: <RobotOutlined />,
-        content: <GlobalProspectorTab />,
-      },
-    ];
-  }, [chrome.inspectorTabs]);
+  // The inspector shows only what a page registers through usePageChrome. It has no
+  // built-in tabs: Prospector lives on its own conversation page, so there is exactly
+  // one place to talk to it. With nothing registered the inspector renders nothing.
+  const tabs = useMemo<InspectorTab[]>(() => chrome.inspectorTabs ?? [], [chrome.inspectorTabs]);
 
   // Pick a default active tab when tabs change
   useEffect(() => {
@@ -119,7 +101,7 @@ export default function RightInspector() {
     }
   }, [tabs, inspectorActiveTab, setInspectorActiveTab]);
 
-  if (!inspectorOpen) {
+  if (!inspectorOpen || tabs.length === 0) {
     return null;
   }
 

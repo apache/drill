@@ -29,7 +29,6 @@ import uiReducer from '../store/uiSlice';
 import { useWorkspacePersistence } from './useWorkspacePersistence';
 import { listTabs, createTab, updateTab } from '../api/tabs';
 import { nextTabCounter } from '../utils/workspacePersistence';
-import { prospectorChatKey } from './useProspector';
 
 vi.mock('../api/tabs', () => ({
   listTabs: vi.fn(() => Promise.resolve([])),
@@ -183,25 +182,6 @@ describe('useWorkspacePersistence server tier', () => {
 
     await new Promise((resolve) => setTimeout(resolve, 2000));
     expect(createTab).not.toHaveBeenCalledWith(expect.objectContaining({ id }));
-  });
-
-  /**
-   * The scenario the conversation clause exists for: a tab whose work happened
-   * entirely in the assistant panel. Without this, closing it saves nothing and the
-   * conversation becomes unreachable.
-   */
-  it('promotes a tab closed with only a conversation and no SQL', async () => {
-    renderHook(() => useWorkspacePersistence('p1'), { wrapper });
-    const id = activeTab().id;
-    localStorage.setItem(prospectorChatKey('p1', id)!,
-      JSON.stringify([{ role: 'user', content: 'explain this data' }]));
-
-    act(() => {
-      store.dispatch(hideTab(id));
-    });
-
-    await waitFor(() =>
-      expect(createTab).toHaveBeenCalledWith(expect.objectContaining({ id })), SYNC_WAIT);
   });
 
   /**

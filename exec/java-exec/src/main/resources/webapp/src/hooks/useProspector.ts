@@ -23,12 +23,10 @@ import { useSendDataToAi } from './useSendDataToAi';
 import { executeQuery } from '../api/queries';
 import { getSchemas, getTables, getColumns, searchFunctions } from '../api/metadata';
 import { createVisualization } from '../api/visualizations';
-import { getConversation, putConversation } from '../api/tabs';
 import {
   getConversation as getServerConversation,
   saveConversationMessages,
 } from '../api/conversations';
-import type { StoredChatMessage } from '../api/tabs';
 import {
   addVisualization, addDashboard, addSavedQuery, getProject, createWikiPage, updateWikiPage,
 } from '../api/projects';
@@ -311,29 +309,6 @@ interface ToolCallInProgress {
   arguments: string;
 }
 
-// ponytail: chat history persisted to localStorage keyed by project. Fine for the
-// current single-user-per-browser model; move to a backend store if chats need to
-// follow the user across devices.
-function loadChat(key: string | null | undefined): ChatMessage[] {
-  if (!key) {
-    return [];
-  }
-  try {
-    const raw = localStorage.getItem(key);
-    return raw ? JSON.parse(raw) : [];
-  } catch {
-    return [];
-  }
-}
-
-function saveChat(key: string, messages: ChatMessage[]): void {
-  try {
-    localStorage.setItem(key, JSON.stringify(messages));
-  } catch {
-    // Ignore storage errors (quota, private mode)
-  }
-}
-
 /**
  * Where a server-primary conversation stands with the server. 'idle' means everything
  * on screen is saved; the rest are the ways it is not:
@@ -427,11 +402,6 @@ export interface UseProspectorReturn {
   clearChat: () => void;
   /** Runs a single tool call. Exposed so its behaviour can be asserted directly. */
   executeToolCall: (toolCall: ToolCall, context?: ChatContext) => Promise<string>;
-  /** The localStorage key this conversation is persisted under, or null when unset. */
-  storageKey: string | null;
-  /** The tab this conversation belongs to, or null when unset. Recorded as provenance
-   *  when a report from this conversation is saved. */
-  tabId: string | null;
   /** The server-side conversation this hook is bound to, or null when it is not. */
   conversationId: string | null;
   /** True once the bound conversation's messages are in state, so sendMessage will be accepted.
@@ -444,75 +414,15 @@ export interface UseProspectorReturn {
   reloadConversation: () => void;
 }
 
-/**
- * localStorage key for one tab's Prospector conversation.
- *
- * Conversations are per tab, not per project: a thread is about the query in front of
- * you, and carrying one across tabs made the assistant answer about the wrong SQL.
- * The schema cache already puts the project's tables in the system prompt
- * (ProspectorResources.buildSchemaCacheBlock), so a fresh conversation per tab does
- * not pay to rediscover the schema.
- *
- * Returns null without a tab id, so nothing is ever written under a shared key.
- *
- * See docs/dev/TabPersistence.md.
- */
-export function prospectorChatKey(
-  projectId: string | undefined,
-  tabId: string | undefined,
-): string | null {
-  if (!tabId) {
-    return null;
-  }
-  return `prospector_chat_${projectId ?? 'global'}_${tabId}`;
-}
-
-/**
- * How many Prospector messages a tab holds, read straight from storage.
- *
- * Deliberately not tied to the hook: the promotion rule has to know whether a tab
- * *being closed* has a conversation, and that is rarely the tab whose conversation is
- * loaded in the panel. Returns 0 for anything unreadable — an undercount only means a
- * tab is not promoted, which is recoverable, whereas throwing here would break the
- * save path.
- */
-export function conversationLengthFor(
-  projectId: string | undefined,
-  tabId: string | undefined,
-): number {
-  const key = prospectorChatKey(projectId, tabId);
-  if (!key) {
-    return 0;
-  }
-  try {
-    const raw = localStorage.getItem(key);
-    if (!raw) {
-      return 0;
-    }
-    const parsed = JSON.parse(raw);
-    return Array.isArray(parsed) ? parsed.length : 0;
-  } catch {
-    return 0;
-  }
-}
-
 export function useProspector(
   onSqlGenerated?: (sql: string, title?: string) => void,
   onVisualizationCreated?: (id: string, name: string) => void,
   maxToolRounds?: number,
-  // When set (e.g. per project), chat history is loaded from and saved to
-  // localStorage under this key, so it survives navigation and unmounts.
-  storageKeyArg?: string | null,
-  // LEGACY (tab-scoped) path: the conversation is also mirrored to the server so it
-  // follows the tab across devices. localStorage stays the write-through buffer there:
-  // a failed server write costs sync, never the conversation.
-  tabIdArg?: string | null,
-  // SERVER-PRIMARY path (needs projectId too). The server owns this conversation: it is
-  // loaded from there and every change is saved there. This INVERTS the legacy rule
-  // above. localStorage is only an offline buffer, so a write the server refuses or a
-  // network that drops mid-save leaves a turn that exists nowhere else. Every status
-  // other than 'idle' must therefore reach the user and none may discard a turn.
-  // When set, storageKeyArg and tabIdArg are ignored.
+  // The server-primary conversation this hook is bound to (needs projectId too). The
+  // server owns it: it is loaded from there and every change is saved there.
+  // localStorage is only an offline buffer, so a write the server refuses or a network
+  // that drops mid-save leaves a turn that exists nowhere else. Every status other than
+  // 'idle' must therefore reach the user and none may discard a turn.
   conversationId?: string | null,
   projectId?: string | null,
   // Called with the SQL and the FULL result of every execute_sql the model runs. The model
@@ -523,10 +433,8 @@ export function useProspector(
   onQueryResult?: (sql: string, result: QueryResult) => void,
 ): UseProspectorReturn {
   const serverMode = !!conversationId && !!projectId;
-  const storageKey = serverMode ? null : storageKeyArg;
-  const tabId = serverMode ? null : tabIdArg;
   const effectiveMaxToolRounds = maxToolRounds && maxToolRounds > 0 ? maxToolRounds : DEFAULT_MAX_TOOL_ROUNDS;
-  const [messages, setMessages] = useState<ChatMessage[]>(() => loadChat(storageKey));
+  const [messages, setMessages] = useState<ChatMessage[]>([]);
   const [isStreaming, setIsStreaming] = useState(false);
   const [streamingContent, setStreamingContent] = useState('');
   const [usage, setUsage] = useState<UsageEvent | null>(null);
@@ -603,89 +511,9 @@ export function useProspector(
     toolRoundsRef.current = 0;
   }, [stopStreaming, serverMode]);
 
-  // Swap in the stored history when the project (storageKey) changes.
-  const prevKeyRef = useRef(storageKey);
-  useEffect(() => {
-    if (prevKeyRef.current !== storageKey) {
-      prevKeyRef.current = storageKey;
-      setMessages(loadChat(storageKey));
-      setUsage(null);
-      toolRoundsRef.current = 0;
-    }
-  }, [storageKey]);
-
-  // Pull the server's copy for this tab. The local copy renders immediately; the
-  // server copy replaces it only when it holds more history, which is what makes a
-  // conversation started on another device show up here without ever discarding
-  // messages this device has that the server has not seen yet.
-  useEffect(() => {
-    if (!tabId || !storageKey) {
-      return;
-    }
-    let cancelled = false;
-    getConversation(tabId).then((serverMessages: StoredChatMessage[]) => {
-      if (cancelled || serverMessages.length === 0) {
-        return;
-      }
-      setMessages((current) => {
-        if (serverMessages.length <= current.length) {
-          return current;
-        }
-        const merged = serverMessages as unknown as ChatMessage[];
-        saveChat(storageKey, merged);
-        return merged;
-      });
-    });
-    return () => {
-      cancelled = true;
-    };
-  }, [tabId, storageKey]);
-
-  // Persist history for the active tab (including clears, which write []).
-  // Unconditional and immediate: this is the copy that must never be lost.
-  useEffect(() => {
-    if (storageKey) {
-      saveChat(storageKey, messages);
-    }
-  }, [messages, storageKey]);
-
-  // Mirror to the server on a slower beat than the local write, and never while a
-  // response is still streaming — a half-written assistant turn is not worth storing,
-  // and messages changes on every token.
+  // Every save timer below (the debounce, and the flush/reload paths that cancel it) uses
+  // this ref. Only the server-primary path writes conversations, so it is the sole owner.
   const serverSaveTimerRef = useRef<ReturnType<typeof setTimeout> | null>(null);
-  const oversizeReportedRef = useRef(false);
-  useEffect(() => {
-    if (!tabId || isStreaming) {
-      return;
-    }
-    if (serverSaveTimerRef.current) {
-      clearTimeout(serverSaveTimerRef.current);
-    }
-    serverSaveTimerRef.current = setTimeout(() => {
-      putConversation(tabId, messages as unknown as StoredChatMessage[]).then((result) => {
-        // Past the server's size cap this thread has quietly stopped syncing, which
-        // the user should hear about once — not on every subsequent keystroke.
-        if (result === 'too-large' && !oversizeReportedRef.current) {
-          oversizeReportedRef.current = true;
-          message.warning(
-            'This conversation is too long to save on the server. It stays on this '
-            + 'device, but will not follow you to another one. Start a new tab to '
-            + 'keep syncing.',
-            8,
-          );
-        }
-        if (result === 'ok') {
-          oversizeReportedRef.current = false;
-        }
-      });
-    }, 2000);
-
-    return () => {
-      if (serverSaveTimerRef.current) {
-        clearTimeout(serverSaveTimerRef.current);
-      }
-    };
-  }, [messages, tabId, isStreaming]);
 
   // ---- Server-primary persistence (see the conversationId parameter) ----
 
@@ -1053,7 +881,39 @@ export function useProspector(
             description: args.description,
             sql: args.sql,
           });
-          return JSON.stringify({ id: saved.id, name: saved.name, message: 'Query saved successfully' });
+
+          // Attach it to the active project, or it is created but missing from the project's
+          // Saved Queries tab, which filters on the project's own id list. That tab is how
+          // the user checks what Prospector built.
+          let addedToProject = false;
+          let projectError: string | undefined;
+          if (context?.projectId) {
+            try {
+              await addSavedQuery(context.projectId, saved.id);
+              addedToProject = true;
+            } catch (err) {
+              console.error('Failed to add saved query to project', err);
+              // The query itself exists, so this is not reported as a failure: its card and
+              // canvas need the id. Only the model's next move needs steering.
+              const status = (err as { response?: { status?: number } })?.response?.status;
+              projectError = status === 403
+                // Only a project's owner can add to it, while any member can save a query.
+                // Retrying fails the same way, so say so rather than invite a loop.
+                ? 'The query is saved but is not in the project: only the project owner can add a saved query to it. Do not retry. Tell the user the project owner has to add it to the project.'
+                : `The query is saved but could not be added to the project (${err instanceof Error ? err.message : 'unknown error'}). Do not call save_query again: that saves a duplicate. Tell the user.`;
+            }
+            if (addedToProject) {
+              await queryClient.invalidateQueries({ queryKey: ['project', context.projectId] });
+            }
+          }
+
+          return JSON.stringify({
+            id: saved.id,
+            name: saved.name,
+            addedToProject,
+            ...(projectError ? { projectError } : {}),
+            message: 'Query saved successfully',
+          });
         }
 
         case 'create_workflow': {
@@ -1067,8 +927,8 @@ export function useProspector(
             return JSON.stringify({ error: 'create_workflow needs the query to run: pass sql or '
               + 'savedQueryId.' });
           }
-          // The server only accepts a saved query that is in the workflow's project, and
-          // save_query does not put one there, so a query given as sql is saved and added here.
+          // The server only accepts a saved query that is in the workflow's project, so a query
+          // given as sql is saved and added here, and a failure to add it stops the call.
           let savedQueryId: string | undefined = args.savedQueryId;
           if (hasSql) {
             const saved = await createSavedQuery({
@@ -1162,14 +1022,14 @@ export function useProspector(
           const pageId = args.pageId as string | undefined;
           const folder = args.folder as string | undefined;
           // The footer is always written, so only the query appendix follows
-          // includeTranscript. In server mode there is no tab id, so the conversation id
-          // is the closed-over one: the conversation that issued this call.
+          // includeTranscript. The conversation id is the closed-over one: the conversation
+          // that issued this call.
           const markdown = buildReportMarkdown(
             args.content,
             messagesRef.current,
             {
               generatedAt: Date.now(),
-              conversationId: (serverMode ? conversationId : tabId) ?? undefined,
+              conversationId: (serverMode ? conversationId : null) ?? undefined,
             },
             { includeQueries: args.includeTranscript === true }
           );
@@ -1286,7 +1146,7 @@ export function useProspector(
       console.error(`Tool "${toolCall.name}" failed`, err);
       return JSON.stringify({ error: msg });
     }
-  }, [onSqlGenerated, onVisualizationCreated, sendDataToAiRef, tabId, serverMode, conversationId, queryClient]);
+  }, [onSqlGenerated, onVisualizationCreated, sendDataToAiRef, serverMode, conversationId, queryClient]);
 
   const doStreamRound = useCallback((
     allMessages: ChatMessage[],
@@ -1499,8 +1359,6 @@ export function useProspector(
     stopStreaming,
     clearChat,
     executeToolCall,
-    storageKey: storageKey ?? null,
-    tabId: tabId ?? null,
     conversationId: serverMode ? (conversationId ?? null) : null,
     isLoaded: serverMode && loadedId === conversationId,
     saveStatus,

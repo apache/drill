@@ -122,13 +122,13 @@ function renderAt(
 function boundConversation() {
   const calls = vi.mocked(useProspector).mock.calls;
   const last = calls[calls.length - 1];
-  return last ? { conversationId: last[5], projectId: last[6] } : undefined;
+  return last ? { conversationId: last[3], projectId: last[4] } : undefined;
 }
 
 /** What the page gave the hook to be told about query results, for one conversation. */
 function queryResultEmitter(conversationId: string) {
-  const calls = vi.mocked(useProspector).mock.calls.filter((c) => c[5] === conversationId);
-  const emit = calls[calls.length - 1]?.[7];
+  const calls = vi.mocked(useProspector).mock.calls.filter((c) => c[3] === conversationId);
+  const emit = calls[calls.length - 1]?.[5];
   if (!emit) {
     throw new Error(`The page passed no onQueryResult for ${conversationId}`);
   }
@@ -150,7 +150,7 @@ describe('ConversationsPage', () => {
     hookState = { messages: [], saveStatus: 'idle', isStreaming: false, isLoaded: true };
     hookSubscribers.clear();
     vi.mocked(useProspector).mockImplementation(
-      (_a, _b, _c, _d, _e, conversationId) => {
+      (_a, _b, _c, conversationId) => {
         // A stand-in for the real hook, so it may use hooks: it is called once per render.
         const [, rerender] = useReducer((n: number) => n + 1, 0);
         useEffect(() => {
@@ -168,8 +168,6 @@ describe('ConversationsPage', () => {
           stopStreaming: vi.fn(),
           clearChat,
           executeToolCall: vi.fn(),
-          storageKey: null,
-          tabId: null,
           conversationId: conversationId ?? null,
           isLoaded: hookState.isLoaded,
           saveStatus: hookState.saveStatus,
@@ -205,7 +203,7 @@ describe('ConversationsPage', () => {
     ]);
     renderAt('/projects/p1/chat/old');
     await waitFor(() => expect(boundConversation()?.conversationId).toBe('old'));
-    expect(vi.mocked(useProspector).mock.calls.every((c) => c[5] === 'old')).toBe(true);
+    expect(vi.mocked(useProspector).mock.calls.every((c) => c[3] === 'old')).toBe(true);
   });
 
   it('renders an empty state with a New conversation action when the project has none', async () => {
@@ -253,7 +251,7 @@ describe('ConversationsPage', () => {
       await waitFor(() => expect(sendMessage).toHaveBeenCalledTimes(1));
       expect(createConversation).toHaveBeenCalledWith('p1');
       expect(boundConversation()).toEqual({ conversationId: 'fresh', projectId: 'p1' });
-      expect(vi.mocked(useProspector).mock.calls.some((c) => c[5] === 'recent')).toBe(false);
+      expect(vi.mocked(useProspector).mock.calls.some((c) => c[3] === 'recent')).toBe(false);
       const [text, context] = sendMessage.mock.calls[0];
       expect(text).toBe(seed.prompt);
       expect(context).toMatchObject({
@@ -345,15 +343,15 @@ describe('ConversationsPage', () => {
         c1: [{ role: 'user', content: 'a question from the first thread' }],
         c2: [],
       };
-      vi.mocked(useProspector).mockImplementation(((_a, _b, _c, _d, _e, cid) => {
+      vi.mocked(useProspector).mockImplementation(((_a, _b, _c, cid) => {
         const [messages, setMessages] = useState<ChatMessage[]>([]);
         useEffect(() => {
           setMessages(serverMessages[cid as string]);
         }, [cid]);
         return {
           messages, isStreaming: false, streamingContent: '', usage: null, sendMessage,
-          stopStreaming: vi.fn(), clearChat, executeToolCall: vi.fn(), storageKey: null,
-          tabId: null, conversationId: cid ?? null, saveStatus: 'idle', reloadConversation,
+          stopStreaming: vi.fn(), clearChat, executeToolCall: vi.fn(),
+          conversationId: cid ?? null, saveStatus: 'idle', reloadConversation,
         } as UseProspectorReturn;
       }) as typeof useProspector);
       vi.mocked(listConversations).mockResolvedValue([
@@ -438,15 +436,13 @@ describe('ConversationsPage', () => {
     expect(clearChat).not.toHaveBeenCalled();
   });
 
-  it('binds the Prospector hook in server mode, not the legacy storage-key mode', async () => {
+  it('binds the Prospector hook to the open conversation and project', async () => {
     vi.mocked(listConversations).mockResolvedValue([record({ id: 'c1' })]);
     renderAt('/projects/p1/chat/c1');
     await waitFor(() => expect(boundConversation()).toBeDefined());
     const args = vi.mocked(useProspector).mock.calls[0];
-    expect(args[3]).toBeNull();
-    expect(args[4]).toBeNull();
-    expect(args[5]).toBe('c1');
-    expect(args[6]).toBe('p1');
+    expect(args[3]).toBe('c1');
+    expect(args[4]).toBe('p1');
   });
 
   it('tells the server a chat from this page is a conversation, so the prompt builds rather than narrates', async () => {
@@ -577,11 +573,11 @@ describe('ConversationsPage', () => {
       renderAt('/projects/p1/chat', client);
 
       await new Promise((resolve) => setTimeout(resolve, 100));
-      expect(vi.mocked(useProspector).mock.calls.some((c) => c[5] === 'gone')).toBe(false);
+      expect(vi.mocked(useProspector).mock.calls.some((c) => c[3] === 'gone')).toBe(false);
 
       answer([record({ id: 'kept', name: 'Still here', updatedAt: 100 })]);
       await waitFor(() => expect(boundConversation()?.conversationId).toBe('kept'));
-      expect(vi.mocked(useProspector).mock.calls.some((c) => c[5] === 'gone')).toBe(false);
+      expect(vi.mocked(useProspector).mock.calls.some((c) => c[3] === 'gone')).toBe(false);
     });
 
     it('falls back to the most recent conversation when the URL names one that no longer exists', async () => {

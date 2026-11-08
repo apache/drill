@@ -19,9 +19,10 @@ strip, and tabs do not follow a user between machines.
 A **tab** is a per-user scratch document belonging to a project. It is not shared with
 other members of the project.
 
-A tab has three content streams: **SQL**, a **Prospector conversation**, and
-**notebook cells**. (Notebooks are deliberately out of scope for the first
-implementation — see [Out of scope](#out-of-scope).)
+A tab has two content streams: **SQL** and **notebook cells**. (Notebooks are
+deliberately out of scope for the first implementation — see
+[Out of scope](#out-of-scope).) A tab used to carry a third, a Prospector
+conversation; see [Prospector](#prospector).
 
 Tabs are the scratch tier. **Saving promotes a tab into a saved query**, which is the
 curated tier. That boundary is what keeps the two concepts distinct: a tab is where
@@ -40,8 +41,7 @@ A tab is written locally immediately. It is **promoted** to the server when eith
 
 1. **A query is executed from it** — including a query that fails. A failed query is
    still work the user cares about and will want back in order to fix it.
-2. **It is closed while holding content** — non-empty SQL or a non-empty Prospector
-   conversation.
+2. **It is closed while holding content** — non-empty SQL.
 
 The second trigger exists to preserve this invariant:
 
@@ -51,10 +51,6 @@ The second trigger exists to preserve this invariant:
 Without it, a user could type SQL, never run it, close the tab, and have content that
 still exists in `localStorage` but has no path back to it — the tree lists only
 server-side tabs.
-
-Rule 2 must consider the Prospector conversation and not only the editor. A user can
-have a substantial conversation in a tab whose editor is empty; treating "empty" as
-"empty SQL" would silently discard it.
 
 Nothing is promoted for a tab closed with no content at all. That keeps a stray
 **New Query** click from leaving a permanent `Query 7` in the tree.
@@ -72,12 +68,11 @@ Rules:
 - **Locked tabs** (`isLocked`) can be hidden but never deleted. The check is enforced
   server-side; a client-side-only guard on a durable object is not a guard.
 - **Tabs with dependants warn before deletion.** The warning does not block —
-  blocking creates undeletable tabs. Three cases, which say different things:
+  blocking creates undeletable tabs. Two cases, which say different things:
 
   | Dependant | What actually happens | What the warning says |
   |---|---|---|
   | Visualizations (`vizIds`) | They lose their source tab | Names them; they will break |
-  | Prospector conversation | Deleted with the tab | It goes too |
   | Published API | **Nothing — the endpoint keeps serving** | Names the endpoint and says it stays live |
 
   The published-API case is not a broken dependency. `SharedQueryApi`
@@ -88,16 +83,22 @@ Rules:
 
 ### Prospector
 
-One conversation per tab, replacing today's one-per-project conversation. The
-conversation follows its tab through the same two-tier rule: local while the tab is
-local, promoted when the tab is promoted, deleted when the tab is deleted.
+Tabs no longer hold a Prospector conversation. Conversations are durable,
+project-scoped artifacts with their own page, and the tab-scoped model (one conversation
+per tab, mirrored to `drill.sqllab.tab_conversations`, with a dock beside the editor)
+was removed along with the dock.
 
-Per-tab conversations are affordable because `ProjectSchemaCache` already injects the
-project's schema into the system prompt (`ProspectorResources.buildSchemaCacheBlock`),
-so a fresh conversation does not pay to rediscover the schema through tool calls.
+**Existing tab conversations are dropped, not migrated.** They were per-tab chat
+scratch, superseded by project conversations, and keeping a dead read path to serve them
+would preserve exactly the model this work removes. What that means in practice:
 
-**Duplicating a tab does not copy its conversation.** Two threads claiming to describe
-the same query, immediately diverging, is worse than starting fresh.
+- `GET`/`PUT /api/v1/tabs/{id}/conversation` and `TabConversationStore` are gone.
+- Records already written to `drill.sqllab.tab_conversations` stay in the persistent
+  store as unreachable orphans, and deleting a tab no longer cleans one up. Nothing
+  reads them; an operator can drop the store.
+- Chat histories in browser `localStorage` (`prospector_chat_<projectId>_<tabId>`) are
+  never read again.
+- A tab holding only a conversation and no SQL is no longer promoted on close.
 
 ### Reconciliation
 
@@ -121,13 +122,6 @@ unconditional removes it.
 - **`PersistentStore` has no prefix scan** — `get`, `put`, `delete`, `putIfAbsent`,
   `getAll()`, `getRange(skip, take)`. Listing a user's tabs means `getAll()` plus a
   filter, which is the pattern `ProjectResources` already uses for projects.
-- **Prospector conversations are large.** Confirmed: `drill-module.conf:241` makes
-  `ZookeeperPersistentStoreProvider` the default, and its write path is
-  `client.put(key, bytes)` straight into a znode. ZooKeeper's default
-  `jute.maxbuffer` is 1 MB. Conversations therefore live in their own store,
-  `drill.sqllab.tab_conversations`, capped at 512 KB with a 413 — rejected rather
-  than truncated, since a conversation silently losing its earliest messages is worse
-  than a refused write the caller can report.
 - **Global (non-project) tabs exist** at `/query`, persisted under
   `tabsKey(undefined)`. They need a server-side home too: same store, null
   `projectId`, keyed by user.
@@ -159,14 +153,5 @@ decision. When picked up, note that:
 
 ## Open questions
 
-- **Existing project-level Prospector histories** in `localStorage` have no tab to
-  belong to once conversations go per-tab. They are stranded under the old
-  `prospector_chat_<projectId>` key: a visible one-time loss for anyone
-  mid-conversation, and not migrated.
-- **Conversations sync on the same two tiers as tabs.** `useProspector` writes
-  `localStorage` immediately and mirrors to the server on a 2s debounce, never mid-
-  stream. On load the server copy replaces the local one only when it holds *more*
-  messages, so a conversation continued on another device appears without discarding
-  anything this device has that the server has not seen. A 413 (over the 512 KB cap)
-  tells the user once that this thread has stopped syncing; the local copy is
-  unaffected.
+None open. The Prospector-conversation questions that lived here went with the tab-scoped
+conversation model; see [Prospector](#prospector).

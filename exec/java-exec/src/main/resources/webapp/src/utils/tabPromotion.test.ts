@@ -23,7 +23,6 @@ const base: PromotionInput = {
   hasExecuted: false,
   isClosing: false,
   sql: '',
-  conversationLength: 0,
   alreadyPromoted: false,
 };
 
@@ -47,11 +46,6 @@ describe('shouldPromote', () => {
 
   it('promotes on close when SQL is present', () => {
     expect(shouldPromote({ ...base, isClosing: true, sql: 'SELECT 1' })).toBe(true);
-  });
-
-  // The editor is only half a tab's content; a conversation alone is worth keeping.
-  it('promotes on close when only a conversation is present', () => {
-    expect(shouldPromote({ ...base, isClosing: true, conversationLength: 4 })).toBe(true);
   });
 
   it('treats whitespace-only SQL as empty', () => {

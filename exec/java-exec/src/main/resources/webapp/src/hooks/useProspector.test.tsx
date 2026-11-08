@@ -21,9 +21,7 @@ import { renderHook, waitFor, act } from '@testing-library/react';
 import { message } from 'antd';
 import { QueryClient, QueryClientProvider } from '@tanstack/react-query';
 
-import {
-  useProspector, prospectorChatKey, conversationLengthFor, TOOL_DEFINITIONS,
-} from './useProspector';
+import { useProspector, TOOL_DEFINITIONS } from './useProspector';
 import { createVisualization } from '../api/visualizations';
 import { createDashboard } from '../api/dashboards';
 import {
@@ -300,9 +298,14 @@ describe('write_wiki_page tool', () => {
   });
 
   it('appends the queries run only when includeTranscript is true', async () => {
-    localStorage.setItem('chat', JSON.stringify([sqlTurn('SELECT region FROM sales')]));
+    vi.mocked(getServerConversation).mockResolvedValue({
+      record: { id: 'conv-9', projectId: 'proj-42', version: 1 },
+      messages: [sqlTurn('SELECT region FROM sales')],
+    } as never);
     const { result } = renderHook(
-      () => useProspector(undefined, undefined, undefined, 'chat'), { wrapper: Wrapper });
+      () => useProspector(undefined, undefined, undefined, 'conv-9', 'proj-42'),
+      { wrapper: Wrapper });
+    await waitFor(() => expect(result.current.isLoaded).toBe(true));
 
     await result.current.executeToolCall(
       writeCall({ title: 'A', content: 'body' }), ctx('proj-42'));
@@ -329,21 +332,13 @@ describe('write_wiki_page tool', () => {
       record: { id: 'conv-9', projectId: 'p1', version: 1 }, messages: [],
     } as never);
     const { result } = renderHook(
-      () => useProspector(undefined, undefined, undefined, null, null, 'conv-9', 'p1'),
+      () => useProspector(undefined, undefined, undefined, 'conv-9', 'p1'),
       { wrapper: Wrapper });
     await waitFor(() => expect(getServerConversation).toHaveBeenCalled());
 
     await result.current.executeToolCall(
       writeCall({ title: 'A', content: 'body' }), ctx('p1'));
     expect(written()).toContain('Conversation `conv-9`');
-  });
-
-  it('still records the tab id for a legacy tab-scoped conversation', async () => {
-    const { result } = renderHook(
-      () => useProspector(undefined, undefined, undefined, null, 'tab-3'), { wrapper: Wrapper });
-    await result.current.executeToolCall(
-      writeCall({ title: 'A', content: 'body' }), ctx('proj-42'));
-    expect(written()).toContain('Conversation `tab-3`');
   });
 
   it('updates the named page instead of creating a duplicate', async () => {
@@ -465,6 +460,78 @@ describe('write_wiki_page tool', () => {
  * tests here hand executeToolCall a ready-made '{}', so only a test that drives the
  * stream the way the server does catches this.
  */
+describe('save_query tool', () => {
+  let errorLog: ReturnType<typeof vi.spyOn>;
+  afterEach(() => errorLog.mockRestore());
+
+  const SQL = 'SELECT region, SUM(amount) FROM sales GROUP BY region';
+  const sqCall = (): ToolCall => ({
+    id: 'call-sq', name: 'save_query',
+    arguments: JSON.stringify({ name: 'Sales by region', description: 'd', sql: SQL }),
+  });
+  const run = async (project?: string) => {
+    const { result } = renderHook(() => useProspector(), { wrapper: Wrapper });
+    return JSON.parse(await result.current.executeToolCall(sqCall(), ctx(project)));
+  };
+
+  beforeEach(() => {
+    vi.clearAllMocks();
+    errorLog = vi.spyOn(console, 'error').mockImplementation(() => {});
+    vi.mocked(createSavedQuery).mockResolvedValue({ id: 'sq-1', name: 'Sales by region' } as never);
+    vi.mocked(addSavedQuery).mockResolvedValue({} as never);
+  });
+
+  // The project's Saved Queries tab filters on the project's own id list, so a query that is
+  // only created never shows up there and cannot be checked from the normal tabs.
+  it('adds the saved query to the active project', async () => {
+    const out = await run('proj-42');
+    expect(addSavedQuery).toHaveBeenCalledWith('proj-42', 'sq-1');
+    expect(out).toMatchObject({ id: 'sq-1', name: 'Sales by region', addedToProject: true });
+  });
+
+  it('saves the query without a project when there is no active project', async () => {
+    const out = await run();
+    expect(createSavedQuery).toHaveBeenCalledOnce();
+    expect(addSavedQuery).not.toHaveBeenCalled();
+    expect(out.addedToProject).toBe(false);
+    expect(out).not.toHaveProperty('projectError');
+  });
+
+  it('refreshes the project cache that feeds the Saved Queries tab', async () => {
+    const client = new QueryClient();
+    const invalidate = vi.spyOn(client, 'invalidateQueries');
+    const { result } = renderHook(() => useProspector(), {
+      wrapper: ({ children }: { children: React.ReactNode }) =>
+        <QueryClientProvider client={client}>{children}</QueryClientProvider>,
+    });
+    await result.current.executeToolCall(sqCall(), ctx('proj-42'));
+    const keys = invalidate.mock.calls.map((c) => (c[0] as { queryKey: unknown[] }).queryKey);
+    expect(keys).toContainEqual(['project', 'proj-42']);
+  });
+
+  // Only a project's owner can add to it, while any member can save a query. The query
+  // exists either way, so this is not an error: the card and canvas still need its id.
+  it('reports a non-owner as saved but not in the project, and says not to retry', async () => {
+    vi.mocked(addSavedQuery).mockRejectedValue(
+      { isAxiosError: true, response: { status: 403, data: { message: 'Only the owner can modify this project' } } });
+    const out = await run('proj-42');
+    expect(out).toMatchObject({ id: 'sq-1', name: 'Sales by region', addedToProject: false });
+    expect(out).not.toHaveProperty('error');
+    expect(out.projectError).toMatch(/project owner/i);
+    expect(out.projectError).toMatch(/do not retry/i);
+    expect(createSavedQuery).toHaveBeenCalledOnce();
+  });
+
+  it('warns that calling again would save a duplicate when adding fails for another reason', async () => {
+    vi.mocked(addSavedQuery).mockRejectedValue(new Error('Network Error'));
+    const out = await run('proj-42');
+    expect(out).toMatchObject({ id: 'sq-1', addedToProject: false });
+    expect(out).not.toHaveProperty('error');
+    expect(out.projectError).toContain('Network Error');
+    expect(out.projectError).toMatch(/duplicate/i);
+  });
+});
+
 describe('create_workflow tool', () => {
   let errorLog: ReturnType<typeof vi.spyOn>;
   afterEach(() => errorLog.mockRestore());
@@ -784,7 +851,7 @@ describe('execute_sql hands the full result to onQueryResult', () => {
     vi.mocked(getAiStatus).mockResolvedValue(
       { enabled: true, configured: true, sendDataToAi } as never);
     const rendered = renderHook(
-      () => useProspector(undefined, undefined, undefined, null, null, null, null, onQueryResult),
+      () => useProspector(undefined, undefined, undefined, null, null, onQueryResult),
       { wrapper: Wrapper },
     );
     await waitFor(() => expect(getAiStatus).toHaveBeenCalled());
@@ -831,132 +898,6 @@ describe('execute_sql hands the full result to onQueryResult', () => {
   });
 });
 
-describe('prospectorChatKey', () => {
-  it('scopes a conversation to one tab within a project', () => {
-    expect(prospectorChatKey('p1', 'tab-a')).not.toBe(prospectorChatKey('p1', 'tab-b'));
-  });
-
-  it('scopes a conversation to one project for the same tab id', () => {
-    expect(prospectorChatKey('p1', 'tab-a')).not.toBe(prospectorChatKey('p2', 'tab-a'));
-  });
-
-  /** Tabs exist outside a project too, and their conversations should persist. */
-  it('still produces a key when there is no project', () => {
-    expect(prospectorChatKey(undefined, 'tab-a')).toBeTruthy();
-    expect(prospectorChatKey(undefined, 'tab-a')).not.toBe(prospectorChatKey('p1', 'tab-a'));
-  });
-
-  it('returns null without a tab, so nothing is stored under a shared key', () => {
-    expect(prospectorChatKey('p1', undefined)).toBeNull();
-  });
-
-  it('is stable for the same inputs', () => {
-    expect(prospectorChatKey('p1', 'tab-a')).toBe(prospectorChatKey('p1', 'tab-a'));
-  });
-});
-
-describe('conversationLengthFor', () => {
-  beforeEach(() => {
-    const store: Record<string, string> = {};
-    vi.stubGlobal('localStorage', {
-      getItem: (k: string) => store[k] ?? null,
-      setItem: (k: string, v: string) => { store[k] = v; },
-      removeItem: (k: string) => { delete store[k]; },
-      clear: () => { for (const k of Object.keys(store)) { delete store[k]; } },
-      get length() { return Object.keys(store).length; },
-    });
-  });
-
-  /**
-   * Readable for any tab, not just the open one: the promotion rule has to know
-   * whether a tab being closed has a conversation, and that tab is not the one whose
-   * conversation is currently loaded in the panel.
-   */
-  it('counts the messages stored for a tab', () => {
-    localStorage.setItem(prospectorChatKey('p1', 'tab-a')!,
-      JSON.stringify([{ role: 'user' }, { role: 'assistant' }]));
-    expect(conversationLengthFor('p1', 'tab-a')).toBe(2);
-  });
-
-  it('returns 0 for a tab that has never been talked to', () => {
-    expect(conversationLengthFor('p1', 'tab-none')).toBe(0);
-  });
-
-  it('returns 0 rather than throwing on unreadable storage', () => {
-    localStorage.setItem(prospectorChatKey('p1', 'tab-bad')!, 'not json');
-    expect(conversationLengthFor('p1', 'tab-bad')).toBe(0);
-  });
-
-  it('returns 0 without a tab id', () => {
-    expect(conversationLengthFor('p1', undefined)).toBe(0);
-  });
-});
-
-describe('per-project chat persistence', () => {
-  beforeEach(() => {
-    vi.clearAllMocks();
-    const store: Record<string, string> = {};
-    vi.stubGlobal('localStorage', {
-      getItem: (k: string) => store[k] ?? null,
-      setItem: (k: string, v: string) => { store[k] = v; },
-      removeItem: (k: string) => { delete store[k]; },
-      clear: () => { for (const k of Object.keys(store)) { delete store[k]; } },
-      get length() { return Object.keys(store).length; },
-    });
-  });
-
-  it('loads existing history for the project on mount', () => {
-    localStorage.setItem('prospector_chat_p1',
-      JSON.stringify([{ role: 'user', content: 'hi' }]));
-    const { result } = renderHook(() => useProspector(undefined, undefined, undefined, 'prospector_chat_p1'), { wrapper: Wrapper });
-    expect(result.current.messages).toEqual([{ role: 'user', content: 'hi' }]);
-  });
-
-  it('swaps history when the project (storageKey) changes', () => {
-    localStorage.setItem('prospector_chat_p1', JSON.stringify([{ role: 'user', content: 'in p1' }]));
-    localStorage.setItem('prospector_chat_p2', JSON.stringify([{ role: 'user', content: 'in p2' }]));
-    const { result, rerender } = renderHook(
-      ({ key }) => useProspector(undefined, undefined, undefined, key),
-      { initialProps: { key: 'prospector_chat_p1' }, wrapper: Wrapper },
-    );
-    expect(result.current.messages[0].content).toBe('in p1');
-    rerender({ key: 'prospector_chat_p2' });
-    expect(result.current.messages[0].content).toBe('in p2');
-  });
-
-  it('does not touch storage when no storageKey is given', () => {
-    const { result } = renderHook(() => useProspector(), { wrapper: Wrapper });
-    expect(result.current.messages).toEqual([]);
-    expect(localStorage.length).toBe(0);
-  });
-
-  /** Switching tabs must show that tab's conversation, not the previous one's. */
-  it('keeps a separate conversation per tab', () => {
-    localStorage.setItem(prospectorChatKey('p1', 'tab-a')!,
-      JSON.stringify([{ role: 'user', content: 'about tab a' }]));
-    const { result, rerender } = renderHook(
-      ({ key }) => useProspector(undefined, undefined, undefined, key),
-      { initialProps: { key: prospectorChatKey('p1', 'tab-a')! }, wrapper: Wrapper },
-    );
-    expect(result.current.messages[0].content).toBe('about tab a');
-
-    rerender({ key: prospectorChatKey('p1', 'tab-b')! });
-    expect(result.current.messages).toEqual([]);
-  });
-
-  it('restores a tab conversation when returning to it', () => {
-    localStorage.setItem(prospectorChatKey('p1', 'tab-a')!,
-      JSON.stringify([{ role: 'user', content: 'about tab a' }]));
-    const { result, rerender } = renderHook(
-      ({ key }) => useProspector(undefined, undefined, undefined, key),
-      { initialProps: { key: prospectorChatKey('p1', 'tab-a')! }, wrapper: Wrapper },
-    );
-    rerender({ key: prospectorChatKey('p1', 'tab-b')! });
-    rerender({ key: prospectorChatKey('p1', 'tab-a')! });
-    expect(result.current.messages[0].content).toBe('about tab a');
-  });
-});
-
 /**
  * Server-primary persistence. With a conversationId the server holds the conversation
  * and localStorage is only a buffer, so a save the server refuses means a turn that
@@ -981,7 +922,7 @@ describe('server-primary conversation persistence', () => {
 
   const mount = (cid: string | null = 'c1') =>
     renderHook(
-      ({ id }) => useProspector(undefined, undefined, undefined, null, null, id, 'p1'),
+      ({ id }) => useProspector(undefined, undefined, undefined, id, 'p1'),
       { initialProps: { id: cid }, wrapper: Wrapper },
     );
   const settle = (ms = 0) => act(async () => { await vi.advanceTimersByTimeAsync(ms); });

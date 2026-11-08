@@ -10,7 +10,7 @@ All developer documentation is under [`docs/dev/`](docs/dev/). Start with [`docs
 |---|---|
 | **Web UI (React SPA)** — architecture, routing, sidebar, contexts, page-by-page reference | [`docs/dev/ui/README.md`](docs/dev/ui/README.md) |
 | **Login / authentication refactor** — design notes, current auth model, options | [`docs/dev/LoginRefactor.md`](docs/dev/LoginRefactor.md) |
-| **Tab persistence & project tree** — server-side tabs, hide vs delete, per-tab Prospector | [`docs/dev/TabPersistence.md`](docs/dev/TabPersistence.md) |
+| **Tab persistence & project tree** — server-side tabs, hide vs delete | [`docs/dev/TabPersistence.md`](docs/dev/TabPersistence.md) |
 | **Geospatial filter builder** — draw shapes on a map, push into SQL as ST_ predicates | [`docs/dev/GeoFilterBuilder.md`](docs/dev/GeoFilterBuilder.md) |
 | **Prospector reports** — generated reports saved to a project wiki, PDF download | [`docs/dev/ProspectorReports.md`](docs/dev/ProspectorReports.md) |
 | **Workflows** — scheduled queries with action pipelines, conditions, run log | [`docs/dev/WORKFLOWS.md`](docs/dev/WORKFLOWS.md) (reference), [`docs/dev/WorkflowsGuide.md`](docs/dev/WorkflowsGuide.md) (user and admin guide) |

@@ -108,7 +108,7 @@ function MyPage() {
 
 - Toolbar calls `openModal('suggestions')`, `openModal('explain')`, etc. from its AI menu items.
 - `AiAssistantModal` (rendered inside ProjectQueryPage and SqlLabPage when appropriate) reads `mode` to decide which UI to show.
-- This is **separate from** Prospector's chat context (`ChatContext` in `types/ai.ts`). The modal handles one-shot SQL-on-selection AI features; Prospector is the persistent chat assistant in the right inspector. See [`components/prospector.md`](components/prospector.md).
+- This is **separate from** Prospector's chat context (`ChatContext` in `types/ai.ts`). The modal handles one-shot SQL-on-selection AI features; Prospector is the chat assistant, which lives on the project Conversations page. See [`components/prospector.md`](components/prospector.md).
 
 ## ProjectContextProvider
 
