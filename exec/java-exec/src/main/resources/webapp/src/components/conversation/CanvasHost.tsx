@@ -88,6 +88,24 @@ const OPEN_OVERLAY_SELECTOR = [
   '.ag-popup-child',
 ].join(',');
 
+// Body-level containers that antd (and ag-grid) draw popups into. They persist after the
+// popup closes, so one opened before full screen would otherwise be made inert and its
+// reopened menu or modal could not be clicked. They are left alone when the background is
+// made inert.
+const POPUP_CONTAINER_SELECTOR = [
+  '.ant-modal-root',
+  '.ant-dropdown',
+  '.ant-select-dropdown',
+  '.ant-popover',
+  '.ant-tooltip',
+  '.ant-message',
+  '.ant-notification',
+  '.ag-popup',
+].join(',');
+
+const isPopupContainer = (el: Element) =>
+  el.parentElement === document.body && (el.matches(POPUP_CONTAINER_SELECTOR) || !!el.querySelector(POPUP_CONTAINER_SELECTOR));
+
 /**
  * The slot beside the chat that shows whatever Prospector is working on. It owns the
  * secondary tab strip and the pin and full-screen controls; each viewer says which tabs
@@ -139,11 +157,13 @@ export default function CanvasHost({
 
     // Siblings of the canvas and of each of its ancestors, up to the body: the chat, the
     // conversation list and the app shell. Only those that are not already inert, so exit
-    // leaves anything else's inert alone.
+    // leaves anything else's inert alone, and never the popup containers named above. The
+    // alternative, inerting only known app regions, would need this component to know the
+    // shell's layout; skipping the few popup containers does not.
     const inerted: Element[] = [];
     for (let node: Element | null = asideRef.current; node && node !== document.body; node = node.parentElement) {
       Array.from(node.parentElement?.children ?? []).forEach((sibling) => {
-        if (sibling !== node && !sibling.hasAttribute('inert')) {
+        if (sibling !== node && !sibling.hasAttribute('inert') && !isPopupContainer(sibling)) {
           sibling.setAttribute('inert', '');
           inerted.push(sibling);
         }

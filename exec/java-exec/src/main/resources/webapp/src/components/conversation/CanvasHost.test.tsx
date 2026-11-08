@@ -17,7 +17,7 @@
  */
 import { describe, it, expect, vi } from 'vitest';
 import { render, screen, fireEvent } from '@testing-library/react';
-import { Modal, Dropdown } from 'antd';
+import { Modal, Dropdown, Select, Popover } from 'antd';
 import CanvasHost from './CanvasHost';
 import type { ResultsGridProps } from '../results/ResultsGrid';
 import type { CanvasTarget } from './CanvasHost';
@@ -253,6 +253,44 @@ describe('CanvasHost', () => {
 
       h.rerender({ isFullScreen: false });
       expect(chat).not.toHaveAttribute('inert');
+    });
+
+    // antd keeps a popup's body-level container after it closes, so a popup opened BEFORE
+    // full screen and reopened inside it renders into a container that already exists. The
+    // order below is the whole point: a popup first opened after entry proves nothing.
+    describe('popups opened before full screen stay usable inside it', () => {
+      const popups: Record<string, [string, (open: boolean) => React.ReactElement]> = {
+        dropdown: ['.ant-dropdown', (open) => (
+          <Dropdown open={open} menu={{ items: [{ key: 'a', label: 'popup content' }] }}>
+            <button>trigger</button>
+          </Dropdown>
+        )],
+        modal: ['.ant-modal-root', (open) => (
+          <Modal open={open} title="Profile">popup content</Modal>
+        )],
+        select: ['.ant-select-dropdown', (open) => (
+          <Select open={open} options={[{ value: 'a', label: 'popup content' }]} />
+        )],
+        popover: ['.ant-popover', (open) => (
+          <Popover open={open} content="popup content"><button>trigger</button></Popover>
+        )],
+      };
+
+      it.each(Object.keys(popups))('%s', (name) => {
+        const [selector, popup] = popups[name];
+        const h = host({ target: results('SELECT 1') });
+        const opened = render(popup(true));
+        opened.rerender(popup(false));
+        const container = document.querySelector(selector)?.closest('body > *');
+        expect(container).toBeTruthy();
+
+        h.rerender({ isFullScreen: true });
+        expect(container).not.toHaveAttribute('inert');
+        expect(screen.getByTestId('chat')).toHaveAttribute('inert');
+
+        opened.rerender(popup(true));
+        expect(screen.getByText('popup content').closest('[inert]')).toBeNull();
+      });
     });
 
     it('releases the background if it unmounts while full screen', () => {
