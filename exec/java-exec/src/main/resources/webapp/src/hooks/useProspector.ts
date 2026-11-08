@@ -295,18 +295,23 @@ function removeConversationBuffer(key: string): void {
 }
 
 /**
- * Drops an assistant tool_use message that nothing answers. Anthropic and OpenAI both
- * reject a tool_use with no matching tool_result with a 400, so a conversation holding
- * one cannot take another turn, and one saved to the server stays that way for good.
- * One only exists when a tool round was cut off (page closed, conversation switched
- * away) and the in-progress history reached the offline buffer, so it is stripped
- * wherever that buffer is read back, and from anything about to go to a provider.
+ * Removes the unanswered tool calls from a trailing assistant message. Anthropic and
+ * OpenAI both reject a tool_use with no matching tool_result with a 400, so a conversation
+ * holding one cannot take another turn, and one saved to the server stays malformed for
+ * good. The prose the model wrote alongside the calls is real content and is kept; only
+ * the calls go, and a message with no prose goes entirely.
+ *
+ * Applied wherever history leaves the hook or comes back from the buffer: the server
+ * write, a buffer read on load, and the provider request. One only exists when a tool
+ * round was cut off (Stop, a conversation switch, a closed page).
  */
 function dropUnmatchedToolUse(messages: ChatMessage[]): ChatMessage[] {
   const last = messages[messages.length - 1];
-  return last && last.role === 'assistant' && last.toolCalls && last.toolCalls.length > 0
-    ? messages.slice(0, -1)
-    : messages;
+  if (!last || last.role !== 'assistant' || !last.toolCalls || last.toolCalls.length === 0) {
+    return messages;
+  }
+  const rest = messages.slice(0, -1);
+  return last.content ? [...rest, { role: 'assistant', content: last.content }] : rest;
 }
 
 export interface UseProspectorReturn {
@@ -611,7 +616,8 @@ export function useProspector(
       }
       const key = conversationBufferKey(pid, cid);
       try {
-        const result = await saveConversationMessages(pid, cid, saving, version);
+        const result = await saveConversationMessages(
+          pid, cid, dropUnmatchedToolUse(saving), version);
         if (result.status === 'ok') {
           if (result.version === undefined) {
             // The write may have landed, but without its version the next one would carry

@@ -944,6 +944,37 @@ describe('server-primary conversation persistence', () => {
       expect(sent[sent.length - 1].content).toBe('try again');
     });
 
+    /**
+     * Stop leaves the open tool_use in state with isStreaming false, so the debounced
+     * flush on a switch can reach the server with it. The prose beside it is kept.
+     */
+    it('saves a Stopped, switched-away round without its unanswered tool call, keeping the prose', async () => {
+      vi.mocked(streamChat).mockImplementation(((_req, onDelta, onDone) => {
+        onDelta({ type: 'content', content: 'Let me check the schemas.' } as never);
+        onDelta({ type: 'tool_call_start', id: 'call-1', name: 'list_schemas' } as never);
+        onDelta({ type: 'tool_call_end', id: 'call-1' } as never);
+        onDone({ finish_reason: 'tool_calls' } as never);
+        return new AbortController();
+      }) as never);
+      const { result, rerender } = mount('c1');
+      await settle();
+      await send(result, 'list my schemas');
+      act(() => { result.current.stopStreaming(); });
+      serverHolds([{ role: 'user', content: 'c2 only' }], 1, 'c2');
+      rerender({ id: 'c2' });
+      await settle(DEBOUNCE_MS);
+      await act(async () => { finishTool([{ name: 'dfs' }]); await vi.advanceTimersByTimeAsync(0); });
+
+      const saves = vi.mocked(saveConversationMessages).mock.calls.filter((c) => c[1] === 'c1');
+      expect(saves).toHaveLength(1);
+      const payload = saves[0][2];
+      expect(payload.some((m) => m.toolCalls?.length)).toBe(false);
+      expect(payload.slice(-2)).toEqual([
+        { role: 'user', content: 'list my schemas' },
+        { role: 'assistant', content: 'Let me check the schemas.' },
+      ]);
+    });
+
     /** A reload takes the server's copy; a tool round for the discarded copy must not write it back. */
     it('does not let a tool round running during a reload overwrite the reloaded copy', async () => {
       const { result } = mount();
