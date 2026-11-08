@@ -134,6 +134,7 @@ export default function CanvasHost({
   // has the canvas full screen the control is the way out, whatever is shown.
   const artifactToOpen =
     !isFullScreen && onOpenArtifact && shown && shown.kind !== 'results' ? shown : null;
+  const fullScreenLabel = isFullScreen ? 'Exit full screen' : artifactToOpen ? 'Full screen: open in editor' : 'Full screen';
   const handleFullScreen = () => {
     if (artifactToOpen && onOpenArtifact) {
       onOpenArtifact(artifactToOpen.kind, artifactToOpen.id);
@@ -236,12 +237,12 @@ export default function CanvasHost({
             onClick={onTogglePin}
           />
         </Tooltip>
-        <Tooltip title={isFullScreen ? 'Exit full screen' : artifactToOpen ? 'Open in full editor' : 'Full screen'}>
+        <Tooltip title={fullScreenLabel}>
           <Button
             ref={fullScreenButtonRef}
             type="text"
             size="small"
-            aria-label={isFullScreen ? 'Exit full screen' : artifactToOpen ? 'Full screen: open in editor' : 'Full screen'}
+            aria-label={fullScreenLabel}
             icon={isFullScreen ? <FullscreenExitOutlined /> : <FullscreenOutlined />}
             disabled={!shown && !isFullScreen}
             onClick={handleFullScreen}

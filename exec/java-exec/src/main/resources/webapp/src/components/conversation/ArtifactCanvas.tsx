@@ -82,7 +82,6 @@ export function artifactPath(projectId: string, kind: ArtifactKind, id: string):
     case 'wiki': return `${base}/wiki/${enc}`;
     case 'datasource': return `${base}/datasources/${enc}`;
     case 'query': return `${base}/query`;
-    default: return base;
   }
 }
 
@@ -305,7 +304,14 @@ function DataSourceViewer({ id }: { id: string }) {
   return (
     <Resolved kind="datasource" query={query}>
       {(plugin) => {
-        const config = plugin.config ?? {};
+        // The one kind whose "not found" is a success: the server answers 200 with a null
+        // config for a name it does not know (the registry lookup returns null, it does not
+        // throw). Viz, dashboard, saved query and workflow all 404 explicitly, and a wiki
+        // page is looked up on the project, so the guard is this viewer's, not Resolved's.
+        if (!plugin.config) {
+          return <Deleted kind="datasource" />;
+        }
+        const config = plugin.config;
         const workspaces = config.workspaces && typeof config.workspaces === 'object'
           ? Object.keys(config.workspaces as Record<string, unknown>)
           : [];
@@ -342,7 +348,7 @@ interface ArtifactCanvasProps {
  * small summary where none does (workflow, data source). An id that no longer resolves shows
  * a deleted notice rather than throwing, since the thread outlives the artifacts it names.
  */
-export default function ArtifactCanvas({ kind, id, tab, messages = [] }: ArtifactCanvasProps) {
+export default function ArtifactCanvas({ kind, id, tab, messages = [] }: ArtifactCanvasProps): JSX.Element {
   if (tab === 'history') {
     return <ArtifactHistory messages={messages} id={id} />;
   }
@@ -353,6 +359,5 @@ export default function ArtifactCanvas({ kind, id, tab, messages = [] }: Artifac
     case 'workflow': return <WorkflowViewer id={id} />;
     case 'wiki': return <WikiViewer id={id} />;
     case 'datasource': return <DataSourceViewer id={id} />;
-    default: return null;
   }
 }

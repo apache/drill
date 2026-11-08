@@ -35,7 +35,7 @@ import { getPlugin } from '../../api/storage';
 import { getProject } from '../../api/projects';
 import { executeQuery } from '../../api/queries';
 import type { ChatMessage } from '../../types/ai';
-import type { Dashboard, DashboardPanel, Project, SavedQuery, Visualization } from '../../types';
+import type { Dashboard, DashboardPanel, Project, SavedQuery, StoragePluginDetail, Visualization } from '../../types';
 import type { Workflow } from '../../types/workflow';
 
 vi.mock('../../api/visualizations', () => ({ getVisualization: vi.fn() }));
@@ -344,6 +344,15 @@ describe('ArtifactCanvas', () => {
       expect(screen.getByText('Enabled')).toBeInTheDocument();
       expect(document.body.textContent).not.toContain('hunter2');
       expect(document.body.textContent).not.toContain('root');
+    });
+
+    // The server answers 200 with a null config for a name it does not know, not a 404.
+    it('renders a deleted-artifact message when the server answers 200 with no config', async () => {
+      vi.mocked(getPlugin).mockResolvedValue({ name: 'gone', config: null } as unknown as StoragePluginDetail);
+      show('datasource', 'gone', 'summary');
+      expect(await screen.findByText('This artifact was deleted')).toBeInTheDocument();
+      expect(screen.getByRole('link', { name: /data sources/i })).toHaveAttribute('href', '/projects/p1/datasources');
+      expect(screen.queryByText('Disabled')).not.toBeInTheDocument();
     });
 
     it('renders a deleted-artifact message when the plugin does not resolve', async () => {
