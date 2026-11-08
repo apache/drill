@@ -224,6 +224,14 @@ State changes:
 * `take-ownership` returns 409 if the admin is not a member of the workflow's project ("Add yourself to the project before taking ownership").
 * `assign-project` returns 409 if the workflow's saved query is not in the target project ("Add the workflow's saved query to that project first"), and 404 if the project does not exist.
 
+## Workflows created by Prospector
+
+The `create_workflow` Prospector tool ([PROSPECTOR.md](PROSPECTOR.md)) goes through the same create endpoint as the editor, so a workflow it makes arrives disabled. The server guarantees this, not the model or the prompt: the create handler sets `status` to `paused` and `schedule.enabled` to `false` whatever the request body says, and `WorkflowRunner.processDue` returns immediately for a workflow whose `schedule.enabled` is false, so it never runs and never emails anyone.
+
+Nothing in an update can turn it on either: `PUT /{id}` copies `schedule.enabled` from the stored workflow. `POST /{id}/enabled` (`setEnabled`) is the only path that flips the flag, and it refuses with 409 when the status is `owner_lost_access`, when the schedule has expired, or when the workflow has no project.
+
+In the Conversations page the only caller is `WorkflowActivationCard`, under the workflow's card in the thread. Its Activate button opens a confirm dialog built from the workflow as the server holds it (schedule, each action and its destination, each action's condition), with Cancel as the default focus, and only the dialog's OK calls `setEnabled`. A refusal from the server is shown under the card. The user can also enable it from the Workflows page, as for any workflow. See [conversations.md](ui/pages/conversations.md#canvas).
+
 ## REST reference
 
 Base path `/api/v1/workflows`. All endpoints need an authenticated user. Errors are `{"error": "<message>"}`. Validation failures are HTTP 422 with `{"errors": [{"path", "message"}]}`.

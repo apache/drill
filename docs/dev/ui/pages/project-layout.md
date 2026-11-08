@@ -25,7 +25,7 @@ The Sidebar's project sub-nav (`BASE_PROJECT_SECTIONS`, Workflows, then Wiki and
 
 - Conversations → `/projects/:id/chat` (the project index route redirects here)
 - Query → `/projects/:id/query`
-- Saved Queries → `/projects/:id/queries`
+- Queries → `/projects/:id/queries`
 - Visualizations → `/projects/:id/visualizations`
 - Dashboards → `/projects/:id/dashboards`
 - Workflows → `/projects/:id/workflows`
@@ -41,6 +41,7 @@ Each tab is a separate page component:
 
 | Tab | Route | Component | Doc |
 |---|---|---|---|
+| Conversations | `chat`, `chat/:conversationId` | `ConversationsPage` | [`conversations.md`](conversations.md) |
 | Query | `query` | `ProjectQueryPage` | [`project-query.md`](project-query.md) |
 | Saved Queries | `queries` | `ProjectSavedQueriesPage` | Wrapper; see [`saved-queries.md`](saved-queries.md) |
 | Visualizations | `visualizations` | `ProjectVisualizationsPage` | Wrapper; see [`visualizations.md`](visualizations.md) |
@@ -55,7 +56,7 @@ Each tab is a separate page component:
 
 Project pages come in three flavors:
 
-1. **Project-specific** — no cross-project equivalent. `ProjectDetailPage`, `ProjectQueryPage`, `ProjectWikiPage`, `ProjectDataSourcesPage`. Documented in their own files.
+1. **Project-specific** — no cross-project equivalent. `ConversationsPage`, `ProjectDetailPage`, `ProjectQueryPage`, `ProjectWikiPage`, `ProjectDataSourcesPage`. Documented in their own files.
 2. **Decorators** — render the cross-project page with `filterIds` and an "Add Item" modal that mutates the project's id arrays. `ProjectSavedQueriesPage`, `ProjectVisualizationsPage`, `ProjectDashboardsPage`. Documented as a short section inside the matching cross-project page doc.
 3. **Pass-through wrappers** — pull `projectId` from `ProjectContext` and pass it to the cross-project page so breadcrumb / back-nav stay in-project. `ProjectVisualizationDetailPage`, `ProjectDataSourceEditPage`, `ProjectWorkflowsPage`. Documented as a section inside the matching cross-project page doc.
 

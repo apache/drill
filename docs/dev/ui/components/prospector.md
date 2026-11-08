@@ -84,6 +84,11 @@ Returns:
   sendMessage(text, context): void;
   stopStreaming(): void;
   clearChat(): void;
+  executeToolCall(...): Promise<string>;
+  conversationId: string | null;   // null outside server mode
+  isLoaded: boolean;               // the server copy for conversationId has been loaded
+  saveStatus: 'idle' | 'saving' | 'too-large' | 'conflict' | 'error';
+  reloadConversation(): void;      // takes the server's copy over local changes
 }
 ```
 
@@ -108,7 +113,7 @@ Three separate paths end at the same wiki page, and all three build it with `bui
 
 1. **Quick action.** The "Generate Report" button in `QuickActionBar` sends a fixed prompt asking for a standalone, self-contained report (H1 title, executive summary, findings, recommendations) and tags the resulting user message `report_generation`. This is the only step that shapes what Prospector writes; the other two paths just decide whether to keep it.
 2. **The chip.** `ChatMessageBubble` calls `looksLikeReport(message.content)` (two or more markdown headings, plus a table or 1500+ characters) on every non-streaming assistant message. A hit shows a "This looks like a report" chip with **Save to project** and **Dismiss**. Save opens `SaveReportModal`, which lets the user pick a project, edit the title, and choose between a new page or overwriting an existing same-titled page under the `Reports` wiki folder (`REPORTS_FOLDER` in `report.ts`). Dismiss is remembered per message via `messageKey()`, a content hash rather than list index, because the server-merged conversation array gets replaced wholesale on mount and positions would then point at different messages.
-3. **The tool.** `write_wiki_page` lets Prospector write a wiki page itself when the user agrees in conversation, without the modal's project picker. It replaced `save_report`, which could only create pages in `Reports` and always appended the queries. The backend system prompt (`ProspectorResources.buildMessages`) instructs it to offer after writing a full report and to call the tool only once the user agrees. `executeToolCall`'s `write_wiki_page` case errors if `context.projectId` is unset, otherwise builds the markdown from `messagesRef.current` (a ref mirroring `messages`, so the callback doesn't have to depend on chat state and re-create itself every streamed token). The provenance footer is always written and names the conversation id (the tab id on the legacy path). `includeTranscript: true` also appends the query appendix. Without `pageId` it creates the page via `createWikiPage` in `folder` (default `REPORTS_FOLDER`), refusing with the existing page's id when that folder already holds a page of the same title (case-insensitive). With `pageId` it calls `updateWikiPage`, leaves the folder alone unless one is given, and reports a deleted page as an error instead of creating a new one. `get_project_docs` lists page ids so the model can update a page it did not write. Conversations stored before the rename still contain `save_report` calls; `autoFollow.ts` and `ArtifactHistory.tsx` keep the old name so their cards still appear.
+3. **The tool.** `write_wiki_page` lets Prospector write a wiki page itself when the user agrees in conversation, without the modal's project picker. It replaced `save_report`, which could only create pages in `Reports` and always appended the queries. The backend system prompt (`ProspectorResources.buildMessages`) instructs it to offer after writing a full report and to call the tool only once the user agrees. `executeToolCall`'s `write_wiki_page` case errors if `context.projectId` is unset, otherwise builds the markdown from `messagesRef.current` (a ref mirroring `messages`, so the callback doesn't have to depend on chat state and re-create itself every streamed token). The provenance footer is always written and names the conversation id. `includeTranscript: true` also appends the query appendix. Without `pageId` it creates the page via `createWikiPage` in `folder` (default `REPORTS_FOLDER`), refusing with the existing page's id when that folder already holds a page of the same title (case-insensitive). With `pageId` it calls `updateWikiPage`, leaves the folder alone unless one is given, and reports a deleted page as an error instead of creating a new one. `get_project_docs` lists page ids so the model can update a page it did not write. Conversations stored before the rename still contain `save_report` calls; `autoFollow.ts` and `ArtifactHistory.tsx` keep the old name so their cards still appear.
 
 Reports land as ordinary wiki pages under the `Reports` folder in the project tree (`ProjectWikiPage.tsx`), so they inherit whatever that page already does: markdown rendering, and a **Download as PDF** button that calls `window.print()` against a print-styled view (`wiki-printable` in `index.css`) for a selectable-text PDF via the browser's print dialog.
 
@@ -161,8 +166,6 @@ Separate from `ChatContext`. Owns whether the global AI assistant **modal** is o
 ChatContext (the per-message payload) lives in `types/ai.ts` and is constructed at the call site, not provided via Context.
 
 ## Integration points
-
-`useProspector` is currently instantiated in:
 
 `useProspector` is instantiated by the Conversations page, the only chat surface. SQL Lab and Logs no longer mount a panel; they link into a Scratch project conversation through Ask Prospector.
 

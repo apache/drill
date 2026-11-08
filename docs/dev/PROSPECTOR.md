@@ -67,7 +67,7 @@ Click "Test Connection" to validate your configuration before saving.
 
 ### Opening Prospector
 
-Click the floating AI button in the bottom-right corner of SQL Lab. The Prospector drawer opens on the right side.
+Prospector lives on the project Conversations page (`/projects/:id/chat`), reached from the project's Conversations entry in the sidebar. There is no floating button or drawer. SQL Lab and Logs have Ask Prospector controls that open a new conversation in the current project, or in the user's personal Scratch project when there is none, with a first turn already written. See [`ui/pages/conversations.md`](ui/pages/conversations.md).
 
 ### Asking Questions
 
@@ -81,12 +81,13 @@ Type a question or request in the chat input and press Enter (or click Send). Ex
 
 ### Quick Actions
 
-Quick action buttons appear above the chat input:
+Quick action buttons appear above the chat input, depending on context:
 
-- **Generate SQL**: Ask Prospector to generate a SQL query
+- **Suggest Queries**: Suggest queries for exploring the current data
 - **Explain Query**: Explain the SQL currently in the editor (shown when editor has SQL)
 - **Fix Error**: Fix the current query error (shown when there's an error)
 - **Suggest Chart**: Suggest a visualization for the current results (shown when results exist)
+- **Generate Report**: Ask for a standalone report that can be saved as a wiki page
 
 ### Tool Capabilities
 
@@ -106,10 +107,42 @@ Prospector has access to the following tools:
 #### Conversations are project artifacts, not tab state
 
 A Prospector conversation belongs to a project and is stored server-side (see the
-Conversations page doc, `ui/pages/conversations.md`). It is not tied to a SQL Lab tab: the
-per-tab conversation, its `/api/v1/tabs/{id}/conversation` endpoints and its
-`drill.sqllab.tab_conversations` store were removed. Existing tab conversations were
-dropped, not migrated; see [`TabPersistence.md`](TabPersistence.md).
+Conversations page doc, [`ui/pages/conversations.md`](ui/pages/conversations.md)). It is not
+tied to a SQL Lab tab: the per-tab conversation, its `/api/v1/tabs/{id}/conversation`
+endpoints and its `drill.sqllab.tab_conversations` store were removed. Existing tab
+conversations were dropped, not migrated; see [`TabPersistence.md`](TabPersistence.md).
+
+**Stores.** `ConversationStore` keeps two `PersistentStore`s on purpose: metadata records
+(`id`, `projectId`, `owner`, `name`, `createdAt`, `updatedAt`, `messageCount`, `version`) in
+`drill.sqllab.conversations`, and message bodies in `drill.sqllab.conversation_messages`.
+Listing conversations must not carry chat history. Message bodies are capped at
+`MAX_CONVERSATION_BYTES` (512 KB of serialized messages), half of ZooKeeper's default 1 MB
+znode limit, because the default store writes straight into a znode.
+
+**Ownership.** A conversation is private to the user who made it. The owner is taken from the
+authenticated principal, never from the request body; list returns only the caller's
+conversations, and any other user gets 403 on read, write, rename or delete. A conversation
+requested under a different project than its own is 404.
+
+**REST** (`ConversationResources`, base `/api/v1/projects/{projectId}/conversations`):
+
+| Method | Path | Notes |
+|---|---|---|
+| GET | `/` | The caller's conversations in the project. |
+| POST | `/` | Create. Body `{name?}`, default name "New conversation". 201 with the record. |
+| GET | `/{cid}` | `{record, messages}`. |
+| PUT | `/{cid}` | Rename, body `{name}`. 400 for a blank name. Does not change `version`. |
+| PUT | `/{cid}/messages` | Replace all messages, body `{messages, version}`. 409 if `version` is stale, 413 over the 512 KB cap. Returns the new `{version}`. |
+| DELETE | `/{cid}` | Delete the record and its messages. 204. |
+
+`PUT .../messages` is optimistic: the client holds the `version` it loaded, a write bumps it,
+and a second device writing from the old version gets 409. The client hook turns 409 into
+the `conflict` save status and 413 into `too-large`, which is a hard stop for the
+conversation (see the page doc). `GET /api/v1/projects/scratch` returns the caller's
+personal Scratch project, creating it on first call (id `scratch_<owner>`, hidden from the
+project list); it is the home for conversations started outside any project.
+
+**Known gap.** Deleting a project moves it to trash and leaves its conversations alone, which is right for a restore. Purging it, or the auto-purge of an expired trashed project, removes only the project: `ProjectResources` never touches `ConversationStore`, so the conversations stay in both stores as unreachable records.
 
 #### Function lookup and descriptions
 

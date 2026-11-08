@@ -25,11 +25,11 @@ This document covers every AI feature, its configuration, and how the pieces fit
 
 ## 1. Prospector (AI Chat Assistant)
 
-Prospector is a chat-based AI assistant integrated into SQL Lab's sidebar. It helps users explore schemas, write SQL, create visualizations, build dashboards, and analyze logs through natural language conversation.
+Prospector is a chat-based AI assistant. Its home is the project Conversations page, where each conversation is a durable, project-scoped record with a canvas beside the chat (see [PROSPECTOR.md](PROSPECTOR.md)); SQL Lab and Logs hand off to it through Ask Prospector. It helps users explore schemas, write SQL, create visualizations, build dashboards, and analyze logs through natural language conversation.
 
 ### Tools
 
-Prospector has access to seven tools that it calls autonomously during conversations:
+Prospector has access to the tools below, which it calls autonomously during conversations:
 
 | Tool | Description |
 |------|-------------|
@@ -38,7 +38,10 @@ Prospector has access to seven tools that it calls autonomously during conversat
 | `execute_sql` | Executes a SQL query and returns columns, row count, and sample rows. Also populates the SQL editor. |
 | `create_visualization` | Creates a chart (bar, line, pie, scatter, table, etc.) from a SQL query. |
 | `create_dashboard` | Creates a new dashboard with optional visualization panels and grid positioning. |
-| `save_query` | Saves a SQL query for later reuse. |
+| `save_query` | Saves a SQL query for later reuse. Inside a project it also adds the query to the project when the caller is the project owner; for other members the result has `addedToProject: false` and a do-not-retry `projectError`. |
+| `create_workflow` | Creates a scheduled workflow. Always created paused; a user must confirm activation. See [WORKFLOWS.md](WORKFLOWS.md#workflows-created-by-prospector). |
+| `write_wiki_page` | Creates or updates a project wiki page (replaced `save_report`). |
+| `get_project_docs` | Lists or reads the project's wiki pages. |
 | `get_available_functions` | Lists all SQL functions available in the Drill instance. |
 
 The AI is instructed to use tools proactively -- it will explore schemas, discover tables and columns, and write queries without asking the user for schema/table names.
@@ -244,7 +247,7 @@ The SQL Transpiler automatically converts SQL between dialects using [Java sqlgl
 
 ### Accessing Settings
 
-Open the Prospector sidebar and click the gear icon to open the settings modal. **Admin access is required.**
+Open Preferences from the app shell and choose the Prospector settings (`PreferencesModal` hosts `ProspectorSettingsModal`). **Admin access is required.**
 
 ### Configuration Options
 
@@ -276,7 +279,7 @@ For internal/corporate AI deployments, Drill supports advanced configuration:
 - **Static Request Parameters** -- Additional key-value pairs sent with every API request
 - **Custom API Formats** -- Support for proprietary/non-OpenAI-compatible APIs with request templates and response mapping
 
-See [ENTERPRISE_PROVIDERS.md](ENTERPRISE_PROVIDERS.md) for detailed configuration guide.
+See [ENTERPRISE_PROVIDERS.md](ai/ENTERPRISE_PROVIDERS.md) for detailed configuration guide.
 
 ### Storage
 
@@ -437,7 +440,7 @@ POST   /api/v1/transpile/time-grain   -- Add DATE_TRUNC
 
 ## See Also
 
-- [ENTERPRISE_PROVIDERS.md](ENTERPRISE_PROVIDERS.md) - Detailed guide for configuring internal/corporate AI models with proxy, SSL/TLS, custom headers, and static request parameters
+- [ENTERPRISE_PROVIDERS.md](ai/ENTERPRISE_PROVIDERS.md) - Detailed guide for configuring internal/corporate AI models with proxy, SSL/TLS, custom headers, and static request parameters
 - [PROSPECTOR.md](PROSPECTOR.md) - Prospector AI assistant architecture and tool definitions
 - [TRANSPILER.md](TRANSPILER.md) - SQL transpiler implementation details
 - [Environment.md](Environment.md) - Development environment setup
