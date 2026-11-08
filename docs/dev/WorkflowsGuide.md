@@ -239,7 +239,7 @@ Run history is visible to project members and admins only. People viewing a publ
 
 | State | Meaning | What to do |
 |---|---|---|
-| Paused | Saved but not running. Every new workflow starts here, including one Prospector creates in a conversation. | Turn on **Enabled**, or press **Activate** under the workflow in the conversation and confirm |
+| Paused | Saved, but not on a schedule (Run now still works). Every new workflow starts here, including one Prospector creates in a conversation. | Turn on **Enabled**, or press **Activate** under the workflow in the conversation and confirm |
 | On | Running on schedule | |
 | Failing | Two or more failed runs in a row (still on) | Check the Runs tab for the error |
 | Expiring soon | Will expire within the warning window (14 days by default) | Click **Renew** |
