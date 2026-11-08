@@ -44,7 +44,7 @@ Common failures: `if` statements without braces, unused imports, missing Apache 
 
 ### `jdbc-all` jar size limit
 
-The shaded JDBC driver (`exec/jdbc-all`) has a size limit enforced by `maven-enforcer-plugin` (~62 MB).
+The shaded JDBC driver (`exec/jdbc-all`) has a size limit enforced by `maven-enforcer-plugin` (68 MB, set by `jdbc-all-jar.maxsize` in [`exec/jdbc-all/pom.xml`](exec/jdbc-all/pom.xml)). Check it with `mvn verify -pl exec/jdbc-all` — `mvn enforcer:enforce` does **not** run this rule.
 
 If you add large resources to `exec/java-exec` (anything in `src/main/resources/webapp/`, large fonts, model files, etc.), update the exclusion filters in [`exec/jdbc-all/pom.xml`](exec/jdbc-all/pom.xml) under the `maven-shade-plugin` configuration. The `webapp/**` filter is already present.
 
