@@ -148,10 +148,31 @@ public class ConversationResources {
   }
 
   /**
-   * Returns an error response when the conversation is missing, belongs to another
-   * project, or is owned by someone else; null when the caller may proceed.
+   * Gates every endpoint on project access, using {@link ProjectResources#canRead} so the
+   * rule is the one definition rather than a copy. A missing, trashed or unreadable project
+   * is the same 404: a caller who may not read a project must not be able to tell it exists.
+   * Returns null when the caller may proceed.
+   */
+  private Response checkProject(String projectId) {
+    ProjectResources.Project project =
+        ProjectResources.openStore(storeProvider, workManager).get(projectId);
+    if (project == null || project.getDeletedAt() > 0
+        || !ProjectResources.canRead(project, getCurrentUser())) {
+      return error(Response.Status.NOT_FOUND, "Project not found");
+    }
+    return null;
+  }
+
+  /**
+   * Returns an error response when the project is not accessible, the conversation is
+   * missing, belongs to another project, or is owned by someone else; null when the caller
+   * may proceed.
    */
   private Response check(ConversationRecord record, String projectId) {
+    Response noProject = checkProject(projectId);
+    if (noProject != null) {
+      return noProject;
+    }
     if (record == null || !Objects.equals(projectId, record.getProjectId())) {
       return error(Response.Status.NOT_FOUND, "Conversation not found");
     }
@@ -165,9 +186,14 @@ public class ConversationResources {
   @Produces(MediaType.APPLICATION_JSON)
   @Operation(summary = "List conversations",
       description = "Returns the calling user's conversations in a project.")
-  public ConversationsResponse list(
+  public Response list(
       @Parameter(description = "Project ID") @PathParam("projectId") String projectId) {
-    return new ConversationsResponse(getStore().listForProject(projectId, getCurrentUser()));
+    Response noProject = checkProject(projectId);
+    if (noProject != null) {
+      return noProject;
+    }
+    return Response.ok(
+        new ConversationsResponse(getStore().listForProject(projectId, getCurrentUser()))).build();
   }
 
   @POST
@@ -178,6 +204,10 @@ public class ConversationResources {
   public Response create(
       @Parameter(description = "Project ID") @PathParam("projectId") String projectId,
       CreateRequest request) {
+    Response noProject = checkProject(projectId);
+    if (noProject != null) {
+      return noProject;
+    }
     ConversationRecord record = new ConversationRecord();
     record.setId(UUID.randomUUID().toString());
     record.setProjectId(projectId);

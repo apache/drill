@@ -35,6 +35,7 @@ import static org.junit.Assert.assertEquals;
 import static org.junit.Assert.assertNotNull;
 import static org.junit.Assert.assertNull;
 import static org.junit.Assert.assertTrue;
+import static org.junit.Assert.fail;
 
 public class ConversationStoreTest {
 
@@ -83,6 +84,31 @@ public class ConversationStoreTest {
 
     assertNull(store.findRecord("a"));
     assertTrue(store.findMessages("a").getMessages().isEmpty());
+  }
+
+  @Test
+  public void failedMessageDeleteLeavesTheConversationReachable() {
+    MemoryStore<ConversationRecord> records = new MemoryStore<>();
+    MemoryStore<Conversation> messages = new MemoryStore<Conversation>() {
+      @Override
+      public void delete(String key) {
+        throw new IllegalStateException("message store unavailable");
+      }
+    };
+    ConversationStore failing = new ConversationStore(records, messages);
+    failing.saveRecord(record("a", "p1", "alice"));
+    failing.saveMessages("a", new Conversation(new ArrayList<>(Arrays.asList(ChatMessage.user("hi")))));
+
+    try {
+      failing.delete("a");
+      fail("expected the message store failure to propagate");
+    } catch (IllegalStateException expected) {
+      // The failure is the point: what matters is what is left behind.
+    }
+
+    // The record survives, so the user can find the conversation and delete it again.
+    assertNotNull(failing.findRecord("a"));
+    assertEquals(1, failing.listForProject("p1", "alice").size());
   }
 
   @Test

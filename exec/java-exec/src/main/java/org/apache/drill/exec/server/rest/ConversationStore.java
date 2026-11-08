@@ -166,10 +166,14 @@ public class ConversationStore {
     }
   }
 
-  /** Removes the record and its messages. */
+  /**
+   * Removes the messages, then the record. In this order a failure between the two leaves a
+   * conversation that can still be found and deleted again; the other order strands a
+   * transcript body that nothing can reach.
+   */
   public void delete(String conversationId) {
-    recordStore.delete(conversationId);
     messageStore.delete(conversationId);
+    recordStore.delete(conversationId);
   }
 
   /** One conversation's metadata. Messages are stored separately. */

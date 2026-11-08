@@ -33,11 +33,14 @@ import org.apache.drill.test.ClusterTest;
 import org.junit.BeforeClass;
 import org.junit.Test;
 
+import java.util.Arrays;
+import java.util.List;
 import java.util.concurrent.TimeUnit;
 
 import static org.junit.Assert.assertEquals;
 import static org.junit.Assert.assertFalse;
 import static org.junit.Assert.assertNotEquals;
+import static org.junit.Assert.assertNotNull;
 import static org.junit.Assert.assertTrue;
 
 /** HTTP-level tests for the project-scoped conversation endpoints. */
@@ -95,6 +98,27 @@ public class ConversationResourcesTest extends ClusterTest {
     return call(new Request.Builder().url(url).delete(), out);
   }
 
+  /** The principal's name: Drill reports it on the caller's own scratch project. */
+  private static String me() throws Exception {
+    JsonNode[] out = new JsonNode[1];
+    assertEquals(200, get(String.format("http://localhost:%d/api/v1/projects/scratch", portNumber), out));
+    return out[0].get("owner").asText();
+  }
+
+  private static void seedProject(String id, String owner, boolean isPublic,
+      List<String> sharedWith, long deletedAt) {
+    Drillbit bit = cluster.drillbit();
+    ProjectResources.openStore(bit.getContext().getStoreProvider(), bit.getManager()).put(id,
+        new ProjectResources.Project(id, id, "", null, owner, isPublic, sharedWith, null, null,
+            null, null, null, false, 1L, 1L, null, null, deletedAt));
+  }
+
+  /** A live project the caller owns, so conversations under it are reachable. */
+  private static String mine(String id) throws Exception {
+    seedProject(id, me(), false, null, 0L);
+    return id;
+  }
+
   private static String create(String project) throws Exception {
     JsonNode[] out = new JsonNode[1];
     assertEquals(201, post(base(project), "{\"name\":\"c\"}", out));
@@ -108,6 +132,7 @@ public class ConversationResourcesTest extends ClusterTest {
 
   @Test
   public void postMintsIdAndTakesOwnerFromPrincipal() throws Exception {
+    mine("own");
     JsonNode[] out = new JsonNode[1];
     assertEquals(201, post(base("own"), "{\"name\":\"Hello\",\"owner\":\"mallory\"}", out));
     JsonNode rec = out[0];
@@ -123,7 +148,7 @@ public class ConversationResourcesTest extends ClusterTest {
 
   @Test
   public void messagesRoundTripThroughJackson() throws Exception {
-    String id = create("rt");
+    String id = create(mine("rt"));
     JsonNode[] out = new JsonNode[1];
     JsonNode rec;
     assertEquals(200, get(base("rt") + "/" + id, out));
@@ -151,7 +176,7 @@ public class ConversationResourcesTest extends ClusterTest {
 
   @Test
   public void toolCallsAndToolFieldsSurviveRoundTrip() throws Exception {
-    String id = create("tc");
+    String id = create(mine("tc"));
     JsonNode[] out = new JsonNode[1];
     String body = "{\"version\":1,\"messages\":["
         + "{\"role\":\"assistant\",\"content\":\"running\",\"toolCalls\":"
@@ -172,7 +197,7 @@ public class ConversationResourcesTest extends ClusterTest {
 
   @Test
   public void renameDoesNotInvalidateTheClientsMessageVersion() throws Exception {
-    String id = create("renamever");
+    String id = create(mine("renamever"));
     JsonNode[] out = new JsonNode[1];
     // The client holds the version from creation, before the rename.
     assertEquals(200, get(base("renamever") + "/" + id, out));
@@ -185,7 +210,7 @@ public class ConversationResourcesTest extends ClusterTest {
 
   @Test
   public void putMessagesOverCapReturns413() throws Exception {
-    String id = create("cap");
+    String id = create(mine("cap"));
     JsonNode[] out = new JsonNode[1];
     assertEquals(200, put(base("cap") + "/" + id + "/messages", messagesBody("small", 1), out));
 
@@ -203,7 +228,7 @@ public class ConversationResourcesTest extends ClusterTest {
 
   @Test
   public void putMessagesWithStaleVersionReturns409() throws Exception {
-    String id = create("stale");
+    String id = create(mine("stale"));
     JsonNode[] out = new JsonNode[1];
     assertEquals(200, put(base("stale") + "/" + id + "/messages", messagesBody("first", 1), out));
     // stored version is now 2; version 1 is stale
@@ -215,6 +240,7 @@ public class ConversationResourcesTest extends ClusterTest {
 
   @Test
   public void nonOwnerGetReturns403() throws Exception {
+    mine("own403");
     ConversationRecord r = new ConversationRecord();
     r.setId("alice-conv");
     r.setProjectId("own403");
@@ -231,7 +257,67 @@ public class ConversationResourcesTest extends ClusterTest {
 
   @Test
   public void getMissingConversationReturns404() throws Exception {
+    mine("missing");
     JsonNode[] out = new JsonNode[1];
     assertEquals(404, get(base("missing") + "/nope", out));
+  }
+
+  @Test
+  public void aUserWhoCannotReadTheProjectCannotListOrCreateUnderIt() throws Exception {
+    // Owned by someone else, private, and the caller is not in sharedWith.
+    seedProject("noaccess", "someone-else", false, Arrays.asList("not-me"), 0L);
+    JsonNode[] out = new JsonNode[1];
+
+    assertEquals(404, get(base("noaccess"), out));
+    assertEquals(404, post(base("noaccess"), "{\"name\":\"x\"}", out));
+    // Refused before anything was stored.
+    assertEquals(0, store().listForProject("noaccess", me()).size());
+  }
+
+  @Test
+  public void aUserRemovedFromSharedWithLosesTheirExistingConversations() throws Exception {
+    String owner = "someone-else";
+    seedProject("shared", owner, false, Arrays.asList(me()), 0L);
+    String id = create("shared");
+    JsonNode[] out = new JsonNode[1];
+    assertEquals(200, get(base("shared") + "/" + id, out));
+
+    seedProject("shared", owner, false, Arrays.asList("not-me"), 0L);
+
+    assertEquals(404, get(base("shared"), out));
+    assertEquals(404, get(base("shared") + "/" + id, out));
+    assertEquals(404, put(base("shared") + "/" + id + "/messages", messagesBody("x", 1), out));
+    assertEquals(404, put(base("shared") + "/" + id, "{\"name\":\"x\"}", out));
+    assertEquals(404, delete(base("shared") + "/" + id, out));
+    // Nothing was deleted: access lapsed, the conversation did not.
+    assertNotNull(store().findRecord(id));
+  }
+
+  @Test
+  public void aTrashedProjectsConversationsAreNotReachable() throws Exception {
+    mine("trashed");
+    String id = create("trashed");
+    JsonNode[] out = new JsonNode[1];
+    assertEquals(200, get(base("trashed") + "/" + id, out));
+
+    // Soft-deleted by its owner, who is the caller: ownership does not override the trash.
+    seedProject("trashed", me(), false, null, 12345L);
+
+    assertEquals(404, get(base("trashed"), out));
+    assertEquals(404, post(base("trashed"), "{\"name\":\"x\"}", out));
+    assertEquals(404, get(base("trashed") + "/" + id, out));
+    assertEquals(404, put(base("trashed") + "/" + id + "/messages", messagesBody("x", 1), out));
+    assertEquals(404, delete(base("trashed") + "/" + id, out));
+
+    // Restoring the project brings the conversation back untouched.
+    seedProject("trashed", me(), false, null, 0L);
+    assertEquals(200, get(base("trashed") + "/" + id, out));
+  }
+
+  @Test
+  public void aMissingProjectReturns404() throws Exception {
+    JsonNode[] out = new JsonNode[1];
+    assertEquals(404, get(base("never-existed"), out));
+    assertEquals(404, post(base("never-existed"), "{\"name\":\"x\"}", out));
   }
 }
