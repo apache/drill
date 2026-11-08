@@ -62,3 +62,6 @@ result-cache/
 !/exec/java-exec/src/main/resources/webapp/public/geojson/us-zipcodes.topojson
 /exec/java-exec/src/main/resources/webapp/public/geojson/*.zip
 /exec/java-exec/src/main/resources/webapp/public/geojson/cb_*
+
+# Superpowers brainstorming scratch
+.superpowers/
