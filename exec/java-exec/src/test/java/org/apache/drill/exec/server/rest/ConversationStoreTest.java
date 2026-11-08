@@ -93,6 +93,33 @@ public class ConversationStoreTest {
     assertEquals(4, store.findRecord("a").getVersion());
   }
 
+  @Test
+  public void deleteForProjectRemovesEveryMembersConversationsAndMessages() {
+    store.saveRecord(record("a", "p1", "alice"));
+    store.saveRecord(record("b", "p1", "bob"));
+    store.saveRecord(record("c", "p2", "alice"));
+    store.saveRecord(record("d", "p2", "bob"));
+    for (String id : new String[] {"a", "b", "c", "d"}) {
+      store.saveMessages(id, new Conversation(new ArrayList<>(Arrays.asList(ChatMessage.user("hi")))));
+    }
+
+    store.deleteForProject("p1");
+
+    assertNull(store.findRecord("a"));
+    assertNull(store.findRecord("b"));
+    assertTrue(store.findMessages("a").getMessages().isEmpty());
+    assertTrue(store.findMessages("b").getMessages().isEmpty());
+    // Other projects are untouched, for every owner.
+    assertNotNull(store.findRecord("c"));
+    assertNotNull(store.findRecord("d"));
+    assertEquals(1, store.findMessages("d").getMessages().size());
+  }
+
+  @Test
+  public void deleteForProjectWithNoConversationsIsANoOp() {
+    store.deleteForProject("nothing-here");
+  }
+
   /** Minimal in-memory PersistentStore. */
   private static class MemoryStore<V> implements PersistentStore<V> {
     private final Map<String, V> map = new TreeMap<>();

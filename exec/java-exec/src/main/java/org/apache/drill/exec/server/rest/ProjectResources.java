@@ -720,6 +720,8 @@ public class ProjectResources {
         }
         if (project.getDeletedAt() < expiryCutoff && !project.isSystem()) {
           try {
+            // Conversations first: if this fails the project stays and is retried next sweep.
+            ConversationStore.get(storeProvider, workManager).deleteForProject(entry.getKey());
             store.delete(entry.getKey());
           } catch (Exception e) {
             logger.warn("Failed to auto-purge expired project {}: {}",
@@ -798,6 +800,9 @@ public class ProjectResources {
             .build();
       }
 
+      // Conversations first, every member's: a failure leaves a retryable project rather
+      // than private transcripts with no project to find them through.
+      ConversationStore.get(storeProvider, workManager).deleteForProject(id);
       store.delete(id);
       schemaCache().removeProject(id);
       return Response.ok(new MessageResponse("Project permanently deleted")).build();

@@ -226,7 +226,7 @@ State changes:
 
 ## Workflows created by Prospector
 
-The `create_workflow` Prospector tool ([PROSPECTOR.md](PROSPECTOR.md)) goes through the same create endpoint as the editor, so a workflow it makes arrives disabled. The server guarantees this, not the model or the prompt: the create handler sets `status` to `paused` and `schedule.enabled` to `false` whatever the request body says, and `WorkflowRunner.processDue` returns immediately for a workflow whose `schedule.enabled` is false, so it never runs and never emails anyone.
+The `create_workflow` Prospector tool ([PROSPECTOR.md](PROSPECTOR.md)) goes through the same create endpoint as the editor, so a workflow it makes arrives disabled. The server guarantees this, not the model or the prompt: the create handler sets `status` to `paused` and `schedule.enabled` to `false` whatever the request body says, and `WorkflowRunner.processDue` returns immediately for a workflow whose `schedule.enabled` is false, so the scheduler never runs it. That is all it rules out: an owner, project owner or admin can still use Run now (`POST /{id}/run`), which has no enabled check and executes the query and the real actions, email included.
 
 Nothing in an update can turn it on either: `PUT /{id}` copies `schedule.enabled` from the stored workflow. `POST /{id}/enabled` (`setEnabled`) is the only path that flips the flag, and it refuses with 409 when the status is `owner_lost_access`, when the schedule has expired, or when the workflow has no project.
 

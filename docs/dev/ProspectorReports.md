@@ -85,9 +85,10 @@ Two routes, one action, so the chip and the model cannot contradict each other.
 A chip with no prose offer reads as ordinary UI; a prose offer with no chip
 still works, because the user answers and the tool fires.
 
-**Dismissal is sticky.** A hash of the dismissed message's content is stored with
-the conversation, so a dismissed suggestion does not return on re-render or
-reload.
+**Dismissal lasts for the page view only.** A hash of the dismissed message's content
+goes into a `useState<Set<string>>` in `ChatMessageList`, so a dismissed suggestion does
+not return on re-render. It is in memory: a reload, a remount or a switch to another
+conversation shows the chip again.
 
 ### 3. Saving into a project
 
@@ -177,7 +178,8 @@ and `jsPDF`'s built-in fonts have no emoji coverage.
 | `components/prospector/QuickActionBar.tsx` | Generate Report action and its prompt |
 | `components/prospector/ChatMessageBubble.tsx` | Suggestion chip, Save to project action |
 | `components/prospector/SaveReportModal.tsx` | New: project, title, update-vs-new |
-| `hooks/useProspector.ts` | `write_wiki_page` tool and handler; dismissed-suggestion state |
+| `hooks/useProspector.ts` | `write_wiki_page` tool and handler |
+| `components/prospector/ChatMessageList.tsx` | Dismissed-suggestion state (in memory) |
 | `utils/report.ts` | New: report heuristic, title extraction, provenance footer, query appendix |
 | `api/projects.ts` | `folder` on the wiki page create/update calls |
 | `types/index.ts` | `folder?: string` on `WikiPage` |

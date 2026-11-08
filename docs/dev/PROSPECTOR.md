@@ -2,14 +2,14 @@
 
 ## Overview
 
-Prospector is an integrated chat-based AI assistant for SQL Lab that helps users explore data, generate SQL queries, create visualizations, and build dashboards using natural language. It connects to LLM providers (OpenAI, Anthropic Claude, Ollama, OAuth2-gateway-fronted models, and custom enterprise APIs) through a backend proxy that keeps API keys secure.
+Prospector is a chat-based AI assistant, hosted on the project Conversations page, that helps users explore data, generate SQL queries, create visualizations, and build dashboards using natural language. It connects to LLM providers (OpenAI, Anthropic Claude, Ollama, OAuth2-gateway-fronted models, and custom enterprise APIs) through a backend proxy that keeps API keys secure.
 
 ## Architecture
 
 ```
 Browser (React)                    Drill Backend (Java)              LLM Provider
 +-------------------+             +----------------------+          +------------+
-| ProspectorDrawer  |--POST SSE-->| ProspectorResources  |--HTTP--> | OpenAI     |
+| ProspectorPanel   |--POST SSE-->| ProspectorResources  |--HTTP--> | OpenAI     |
 | useProspector hook|             | LlmProviderRegistry  |          | Anthropic  |
 | Tool Executor     |             | OpenAiCompatProvider  |          | Ollama     |
 | Quick Actions     |             | AnthropicProvider     |          +------------+
@@ -142,7 +142,7 @@ conversation (see the page doc). `GET /api/v1/projects/scratch` returns the call
 personal Scratch project, creating it on first call (id `scratch_<owner>`, hidden from the
 project list); it is the home for conversations started outside any project.
 
-**Known gap.** Deleting a project moves it to trash and leaves its conversations alone, which is right for a restore. Purging it, or the auto-purge of an expired trashed project, removes only the project: `ProjectResources` never touches `ConversationStore`, so the conversations stay in both stores as unreachable records.
+**Deletion.** Deleting a project moves it to trash and leaves its conversations alone, so a restore brings them back. Permanent removal cascades: `purgeProject`, and the auto-purge of an expired trashed project in `listTrash`, call `ConversationStore.deleteForProject` before deleting the project, which removes every member's conversations and their messages (not just the owner's, since each member's are private). The cascade runs first so a failure leaves a retryable project instead of unreachable transcripts; in the auto-purge sweep a failure is logged and the sweep continues.
 
 #### Function lookup and descriptions
 
@@ -377,20 +377,21 @@ webapp/src/
   api/ai.ts                     - API client functions
   hooks/useProspector.ts        - Core chat hook with tool execution
   components/prospector/
-    ProspectorDrawer.tsx         - Main drawer component
+    ProspectorPanel.tsx          - Chat panel (hosted by the Conversations page)
     ChatMessageList.tsx          - Scrollable message list
     ChatMessageBubble.tsx        - Individual message with markdown
     ToolCallDisplay.tsx          - Collapsible tool call panels
     QuickActionBar.tsx           - Quick action buttons
     ChatInput.tsx                - Text input with send/stop
-    ProspectorButton.tsx         - Floating action button
+    AskProspectorButton.tsx      - Link into a conversation from other pages
+    SaveReportModal.tsx          - Save a report to a project wiki
     ProspectorSettingsModal.tsx  - Admin settings dialog
     index.ts                     - Barrel exports
 ```
 
 ## Troubleshooting
 
-### Prospector button is disabled
+### Prospector is unavailable
 - Check that Prospector is enabled in settings
 - Verify an API key and model are configured
 - Check the Drill logs for configuration errors

@@ -147,6 +147,25 @@ public class ConversationStore {
     messageStore.put(conversationId, conversation);
   }
 
+  /**
+   * Removes every conversation in a project, whoever owns it. Used when a project is
+   * permanently deleted: conversations are private to each member, so all of them go, not
+   * just the purging owner's. Ids are collected first so nothing is deleted mid-iteration.
+   */
+  public void deleteForProject(String projectId) {
+    List<String> ids = new ArrayList<>();
+    Iterator<Map.Entry<String, ConversationRecord>> entries = recordStore.getAll();
+    while (entries.hasNext()) {
+      ConversationRecord record = entries.next().getValue();
+      if (record != null && Objects.equals(projectId, record.getProjectId())) {
+        ids.add(record.getId());
+      }
+    }
+    for (String id : ids) {
+      delete(id);
+    }
+  }
+
   /** Removes the record and its messages. */
   public void delete(String conversationId) {
     recordStore.delete(conversationId);
