@@ -342,6 +342,71 @@ describe('execute_sql honours the server sendDataToAi setting', () => {
   });
 });
 
+/**
+ * The conversations canvas shows the result of each query Prospector runs. The model is
+ * told only a summary, and rows only when sendDataToAi allows, but the user ran this
+ * query, so their own screen gets the whole result whatever that setting says.
+ */
+describe('execute_sql hands the full result to onQueryResult', () => {
+  const FULL = {
+    columns: ['region', 'amount'],
+    metadata: ['VARCHAR', 'INTEGER'],
+    rows: Array.from({ length: 8 }, (_, i) => ({ region: `r${i}`, amount: i })),
+    queryId: 'q-1',
+  };
+  const sqlCall = (sql = 'SELECT * FROM sales'): ToolCall => ({
+    id: 'call-q', name: 'execute_sql', arguments: JSON.stringify({ sql }),
+  });
+
+  beforeEach(() => {
+    vi.clearAllMocks();
+    vi.mocked(executeQuery).mockResolvedValue(FULL as never);
+  });
+
+  const mount = async (sendDataToAi: boolean, onQueryResult = vi.fn()) => {
+    vi.mocked(getAiStatus).mockResolvedValue(
+      { enabled: true, configured: true, sendDataToAi } as never);
+    const rendered = renderHook(
+      () => useProspector(undefined, undefined, undefined, null, null, null, null, onQueryResult),
+      { wrapper: Wrapper },
+    );
+    await waitFor(() => expect(getAiStatus).toHaveBeenCalled());
+    return { ...rendered, onQueryResult };
+  };
+
+  it('passes the SQL and every row, not the five-row sample the model gets', async () => {
+    const { result, onQueryResult } = await mount(true);
+    const out = JSON.parse(await result.current.executeToolCall(sqlCall(), ctx()));
+    expect(out.rows).toHaveLength(5);
+    expect(onQueryResult).toHaveBeenCalledTimes(1);
+    expect(onQueryResult).toHaveBeenCalledWith('SELECT * FROM sales', FULL);
+  });
+
+  it('still passes the rows when sendDataToAi withholds them from the model', async () => {
+    const { result, onQueryResult } = await mount(false);
+    const out = JSON.parse(await result.current.executeToolCall(sqlCall(), ctx()));
+    expect(out.rows).toBeUndefined();
+    expect(onQueryResult.mock.calls[0][1].rows).toHaveLength(8);
+  });
+
+  it('does not report a query that failed', async () => {
+    vi.mocked(executeQuery).mockRejectedValue(new Error('no such table'));
+    const { result, onQueryResult } = await mount(true);
+    const out = JSON.parse(await result.current.executeToolCall(sqlCall(), ctx()));
+    expect(out.error).toMatch(/no such table/);
+    expect(onQueryResult).not.toHaveBeenCalled();
+  });
+
+  it('still summarises for the model when no callback is given', async () => {
+    vi.mocked(getAiStatus).mockResolvedValue(
+      { enabled: true, configured: true, sendDataToAi: true } as never);
+    const { result } = renderHook(() => useProspector(), { wrapper: Wrapper });
+    await waitFor(() => expect(getAiStatus).toHaveBeenCalled());
+    const out = JSON.parse(await result.current.executeToolCall(sqlCall(), ctx()));
+    expect(out.rowCount).toBe(8);
+  });
+});
+
 describe('prospectorChatKey', () => {
   it('scopes a conversation to one tab within a project', () => {
     expect(prospectorChatKey('p1', 'tab-a')).not.toBe(prospectorChatKey('p1', 'tab-b'));

@@ -17,7 +17,7 @@
  */
 import { useEffect, useState } from 'react';
 import { describe, it, expect, vi, beforeAll, beforeEach } from 'vitest';
-import { render, screen, waitFor, fireEvent, within } from '@testing-library/react';
+import { render, screen, waitFor, fireEvent, within, act } from '@testing-library/react';
 import { MemoryRouter } from 'react-router-dom';
 import { QueryClient, QueryClientProvider } from '@tanstack/react-query';
 import App from '../App';
@@ -30,6 +30,8 @@ import {
   deleteConversation,
 } from '../api/conversations';
 import type { ChatMessage, ConversationRecord } from '../types/ai';
+import type { QueryResult } from '../types';
+import type { ResultsGridProps } from '../components/results/ResultsGrid';
 
 vi.mock('../hooks/useProspector', () => ({ useProspector: vi.fn() }));
 vi.mock('../api/conversations', () => ({
@@ -45,6 +47,13 @@ vi.mock('../api/projects', () => ({
 // The shell (sidebar, toolbar, inspector) is not under test and pulls in its own data.
 vi.mock('../components/shell/AppShell', () => ({
   default: ({ children }: { children: React.ReactNode }) => <>{children}</>,
+}));
+
+// The real grid is covered by ResultsCanvas.test.tsx; here it only needs to say what it got.
+vi.mock('../components/results/ResultsGrid', () => ({
+  default: ({ results }: ResultsGridProps) => (
+    <div data-testid="grid">{results?.rows.map((r) => JSON.stringify(r)).join(';')}</div>
+  ),
 }));
 
 function record(over: Partial<ConversationRecord> & { id: string }): ConversationRecord {
@@ -86,6 +95,17 @@ function boundConversation() {
   const calls = vi.mocked(useProspector).mock.calls;
   const last = calls[calls.length - 1];
   return last ? { conversationId: last[5], projectId: last[6] } : undefined;
+}
+
+/** What the page gave the hook to be told about query results, for one conversation. */
+function queryResultEmitter(conversationId: string) {
+  const calls = vi.mocked(useProspector).mock.calls.filter((c) => c[5] === conversationId);
+  const emit = calls[calls.length - 1]?.[7];
+  if (!emit) {
+    throw new Error(`The page passed no onQueryResult for ${conversationId}`);
+  }
+  return (sql: string, rows: Record<string, unknown>[]) =>
+    act(() => emit(sql, { columns: Object.keys(rows[0] ?? {}), metadata: [], rows, queryId: 'q' } as QueryResult));
 }
 
 describe('ConversationsPage', () => {
@@ -453,6 +473,87 @@ describe('ConversationsPage', () => {
       renderAt('/projects/p1/chat/ghost');
 
       expect(await screen.findByText('No conversations yet')).toBeInTheDocument();
+    });
+  });
+
+  describe('canvas', () => {
+    beforeEach(() => {
+      vi.mocked(listConversations).mockResolvedValue([
+        record({ id: 'c1', name: 'First thread', updatedAt: 200 }),
+        record({ id: 'c2', name: 'Second thread', updatedAt: 100 }),
+      ]);
+    });
+
+    it('starts empty and shows a query result the hook reports', async () => {
+      renderAt('/projects/p1/chat/c1');
+      expect(await screen.findByText(/nothing on the canvas yet/i)).toBeInTheDocument();
+
+      queryResultEmitter('c1')('SELECT region FROM sales', [{ region: 'West' }]);
+      expect(await screen.findByTestId('grid')).toHaveTextContent('{"region":"West"}');
+      fireEvent.click(screen.getByRole('tab', { name: 'SQL' }));
+      expect(screen.getByText('SELECT region FROM sales')).toBeInTheDocument();
+    });
+
+    it('replaces the result with the next one', async () => {
+      renderAt('/projects/p1/chat/c1');
+      await screen.findByText(/nothing on the canvas yet/i);
+      const emit = queryResultEmitter('c1');
+      emit('SELECT 1', [{ n: 1 }]);
+      emit('SELECT 2', [{ n: 2 }]);
+      expect(await screen.findByTestId('grid')).toHaveTextContent('{"n":2}');
+    });
+
+    it('holds the pinned result while a newer one arrives', async () => {
+      renderAt('/projects/p1/chat/c1');
+      await screen.findByText(/nothing on the canvas yet/i);
+      const emit = queryResultEmitter('c1');
+      emit('SELECT 1', [{ n: 1 }]);
+      fireEvent.click(await screen.findByRole('button', { name: 'Pin canvas' }));
+      emit('SELECT 2', [{ n: 2 }]);
+      expect(screen.getByTestId('grid')).toHaveTextContent('{"n":1}');
+
+      fireEvent.click(screen.getByRole('button', { name: 'Unpin canvas' }));
+      expect(screen.getByTestId('grid')).toHaveTextContent('{"n":2}');
+    });
+
+    it('does not carry a result, or its pin, into another conversation', async () => {
+      renderAt('/projects/p1/chat/c1');
+      await screen.findByText(/nothing on the canvas yet/i);
+      queryResultEmitter('c1')('SELECT 1', [{ n: 1 }]);
+      fireEvent.click(await screen.findByRole('button', { name: 'Pin canvas' }));
+      await screen.findByTestId('grid');
+
+      fireEvent.click(screen.getByRole('link', { name: /second thread/i }));
+      await waitFor(() => expect(boundConversation()?.conversationId).toBe('c2'));
+      expect(await screen.findByText(/nothing on the canvas yet/i)).toBeInTheDocument();
+      expect(screen.queryByTestId('grid')).not.toBeInTheDocument();
+
+      // The pin belonged to the first conversation: the second follows its own results.
+      queryResultEmitter('c2')('SELECT 2', [{ n: 2 }]);
+      expect(await screen.findByTestId('grid')).toHaveTextContent('{"n":2}');
+      expect(screen.getByRole('button', { name: 'Pin canvas' })).toBeInTheDocument();
+    });
+
+    it('ignores a result that finishes after the user has moved to another conversation', async () => {
+      renderAt('/projects/p1/chat/c1');
+      await screen.findByText(/nothing on the canvas yet/i);
+      const lateEmit = queryResultEmitter('c1');
+
+      fireEvent.click(await screen.findByRole('link', { name: /second thread/i }));
+      await waitFor(() => expect(boundConversation()?.conversationId).toBe('c2'));
+      lateEmit('SELECT late', [{ n: 'late' }]);
+
+      expect(await screen.findByText(/nothing on the canvas yet/i)).toBeInTheDocument();
+      expect(screen.queryByTestId('grid')).not.toBeInTheDocument();
+    });
+
+    it('toggles full screen from the canvas control', async () => {
+      renderAt('/projects/p1/chat/c1');
+      await screen.findByText(/nothing on the canvas yet/i);
+      queryResultEmitter('c1')('SELECT 1', [{ n: 1 }]);
+      fireEvent.click(await screen.findByRole('button', { name: 'Full screen' }));
+      fireEvent.click(screen.getByRole('button', { name: 'Exit full screen' }));
+      expect(screen.getByRole('button', { name: 'Full screen' })).toBeInTheDocument();
     });
   });
 });

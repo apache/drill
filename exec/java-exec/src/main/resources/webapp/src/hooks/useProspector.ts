@@ -43,7 +43,7 @@ import type {
   DoneEvent,
   UsageEvent,
 } from '../types/ai';
-import type { ChartType, VisualizationConfig } from '../types';
+import type { ChartType, QueryResult, VisualizationConfig } from '../types';
 
 const DEFAULT_MAX_TOOL_ROUNDS = 15;
 const PROJECT_DOC_MAX_CHARS = 8000;
@@ -410,6 +410,10 @@ export function useProspector(
   // When set, storageKeyArg and tabIdArg are ignored.
   conversationId?: string | null,
   projectId?: string | null,
+  // Called with the SQL and the FULL result of every execute_sql the model runs. The model
+  // sees only a summary (and rows only when sendDataToAi allows), but the user ran this
+  // query, so their own screen is not subject to that gate. Never forward it to the model.
+  onQueryResult?: (sql: string, result: QueryResult) => void,
 ): UseProspectorReturn {
   const serverMode = !!conversationId && !!projectId;
   const storageKey = serverMode ? null : storageKeyArg;
@@ -809,6 +813,10 @@ export function useProspector(
     return () => window.removeEventListener('online', onOnline);
   }, [conversationId, projectId, enqueueSave, loadConversation]);
 
+  // A ref, so a caller's changing callback never rebuilds executeToolCall mid-conversation.
+  const onQueryResultRef = useRef(onQueryResult);
+  onQueryResultRef.current = onQueryResult;
+
   const executeToolCall = useCallback(async (toolCall: ToolCall, context?: ChatContext): Promise<string> => {
     try {
       const args = JSON.parse(toolCall.arguments);
@@ -825,6 +833,7 @@ export function useProspector(
           if (onSqlGenerated && args.sql) {
             onSqlGenerated(args.sql as string, sanitizeTabTitle(args.title));
           }
+          onQueryResultRef.current?.(args.sql as string, result);
           const rowCount = result.rows?.length ?? 0;
           const summary = {
             columns: result.columns,

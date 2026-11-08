@@ -61,7 +61,7 @@ export const DEFAULT_RESULTS_SETTINGS: ResultsSettings = {
   timestampDisplayFormat: 'locale',
 };
 
-interface ResultsGridProps {
+export interface ResultsGridProps {
   results?: QueryResult;
   error?: QueryError;
   isLoading?: boolean;

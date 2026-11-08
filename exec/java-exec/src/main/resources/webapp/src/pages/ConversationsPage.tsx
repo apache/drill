@@ -30,7 +30,10 @@ import {
 } from '../api/conversations';
 import { ProspectorPanel } from '../components/prospector';
 import ConversationList from '../components/conversation/ConversationList';
+import CanvasHost from '../components/conversation/CanvasHost';
+import type { CanvasTarget } from '../components/conversation/CanvasHost';
 import type { ChatContext, ConversationRecord } from '../types/ai';
+import type { QueryResult } from '../types';
 
 /** The name the server gives a conversation created without one. */
 const DEFAULT_CONVERSATION_NAME = 'New conversation';
@@ -64,8 +67,18 @@ interface ConversationViewProps {
  */
 function ConversationView({ projectId, conversationId, record, onNew }: ConversationViewProps) {
   const queryClient = useQueryClient();
+  // The canvas lives here, not in the page: this component is keyed by conversation, so the
+  // target and its pin start clean for each one, and a query that finishes after the user
+  // has moved on reports to an unmounted component and lands nowhere.
+  const [canvasTarget, setCanvasTarget] = useState<CanvasTarget | null>(null);
+  const [pinned, setPinned] = useState(false);
+  const [fullScreen, setFullScreen] = useState(false);
+  const handleQueryResult = useCallback(
+    (sql: string, result: QueryResult) => setCanvasTarget({ kind: 'results', sql, result }),
+    [],
+  );
   const prospector = useProspector(
-    undefined, undefined, undefined, null, null, conversationId, projectId,
+    undefined, undefined, undefined, null, null, conversationId, projectId, handleQueryResult,
   );
   const { messages, saveStatus, reloadConversation } = prospector;
 
@@ -97,63 +110,52 @@ function ConversationView({ projectId, conversationId, record, onNew }: Conversa
   }, [unnamed, firstUserText, projectId, conversationId, queryClient]);
 
   return (
-    <div style={{ flex: 1, minWidth: 0, display: 'flex', flexDirection: 'column', minHeight: 0 }}>
-      {saveStatus === 'too-large' && (
-        <Alert
-          type="warning"
-          showIcon
-          banner
-          message="This conversation has reached its size limit and cannot take more messages."
-          action={<Button size="small" onClick={onNew}>Start a new conversation</Button>}
-        />
-      )}
-      {saveStatus === 'conflict' && (
-        <Alert
-          type="warning"
-          showIcon
-          banner
-          message="Another device wrote to this conversation first."
-          description="Reloading brings in that version and discards the changes you made here since."
-          action={<Button size="small" danger onClick={reloadConversation}>Reload</Button>}
-        />
-      )}
-      {saveStatus === 'error' && (
-        <Alert
-          type="error"
-          showIcon
-          banner
-          message="The latest messages are not saved to the server yet. Saving will be retried."
-        />
-      )}
-      <div style={{ flex: 1, minHeight: 0 }}>
-        <ProspectorPanel
-          prospector={panelProspector}
-          context={context}
-          clearLabel="New conversation"
-          clearIcon={<PlusOutlined />}
-        />
+    <>
+      <div style={{ flex: 1, minWidth: 0, display: 'flex', flexDirection: 'column', minHeight: 0 }}>
+        {saveStatus === 'too-large' && (
+          <Alert
+            type="warning"
+            showIcon
+            banner
+            message="This conversation has reached its size limit and cannot take more messages."
+            action={<Button size="small" onClick={onNew}>Start a new conversation</Button>}
+          />
+        )}
+        {saveStatus === 'conflict' && (
+          <Alert
+            type="warning"
+            showIcon
+            banner
+            message="Another device wrote to this conversation first."
+            description="Reloading brings in that version and discards the changes you made here since."
+            action={<Button size="small" danger onClick={reloadConversation}>Reload</Button>}
+          />
+        )}
+        {saveStatus === 'error' && (
+          <Alert
+            type="error"
+            showIcon
+            banner
+            message="The latest messages are not saved to the server yet. Saving will be retried."
+          />
+        )}
+        <div style={{ flex: 1, minHeight: 0 }}>
+          <ProspectorPanel
+            prospector={panelProspector}
+            context={context}
+            clearLabel="New conversation"
+            clearIcon={<PlusOutlined />}
+          />
+        </div>
       </div>
-    </div>
-  );
-}
-
-/** Placeholder for the canvas pane. */
-function CanvasPane() {
-  return (
-    <aside
-      aria-label="Canvas"
-      style={{
-        width: 320,
-        flexShrink: 0,
-        borderLeft: '1px solid var(--color-border-secondary)',
-        display: 'flex',
-        alignItems: 'center',
-        justifyContent: 'center',
-        background: 'var(--color-bg-container)',
-      }}
-    >
-      <Empty description="Charts and tables from this conversation will appear here" />
-    </aside>
+      <CanvasHost
+        target={canvasTarget}
+        pinned={pinned}
+        onTogglePin={() => setPinned((p) => !p)}
+        onFullScreen={() => setFullScreen((f) => !f)}
+        isFullScreen={fullScreen}
+      />
+    </>
   );
 }
 
@@ -289,7 +291,6 @@ export default function ConversationsPage() {
         onDelete={handleDelete}
       />
       {main}
-      <CanvasPane />
     </div>
   );
 }
