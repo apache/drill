@@ -15,8 +15,8 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
-import { Typography } from 'antd';
 import ResultsGrid from '../results/ResultsGrid';
+import SqlBlock from './SqlBlock';
 import type { QueryResult } from '../../types';
 
 /** The secondary tabs this viewer supports. CanvasHost renders the strip. */
@@ -43,22 +43,7 @@ interface ResultsCanvasProps {
  */
 export default function ResultsCanvas({ sql, result, tab }: ResultsCanvasProps) {
   if (tab === 'sql') {
-    return (
-      <pre
-        style={{
-          margin: 0,
-          padding: 12,
-          height: '100%',
-          overflow: 'auto',
-          whiteSpace: 'pre-wrap',
-          wordBreak: 'break-word',
-          fontFamily: 'var(--font-mono, monospace)',
-          fontSize: 12,
-        }}
-      >
-        {sql.trim() ? sql : <Typography.Text type="secondary">No SQL recorded.</Typography.Text>}
-      </pre>
-    );
+    return <SqlBlock sql={sql} />;
   }
   return <ResultsGrid results={result} sql={sql} />;
 }

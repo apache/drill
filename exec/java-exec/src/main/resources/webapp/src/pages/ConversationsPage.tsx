@@ -31,6 +31,7 @@ import {
 import { ProspectorPanel } from '../components/prospector';
 import ConversationList from '../components/conversation/ConversationList';
 import CanvasHost from '../components/conversation/CanvasHost';
+import { useOpenArtifact } from '../components/conversation/ArtifactCanvas';
 import type { CanvasTarget } from '../components/conversation/CanvasHost';
 import type { ChatContext, ConversationRecord } from '../types/ai';
 import type { QueryResult } from '../types';
@@ -81,6 +82,7 @@ function ConversationView({ projectId, conversationId, record, onNew }: Conversa
     undefined, undefined, undefined, null, null, conversationId, projectId, handleQueryResult,
   );
   const { messages, saveStatus, reloadConversation } = prospector;
+  const openArtifact = useOpenArtifact(projectId);
 
   const context: ChatContext = useMemo(
     () => ({ feature: 'project_chat', projectId }),
@@ -153,6 +155,8 @@ function ConversationView({ projectId, conversationId, record, onNew }: Conversa
         pinned={pinned}
         onTogglePin={() => setPinned((p) => !p)}
         onFullScreen={() => setFullScreen((f) => !f)}
+        onOpenArtifact={openArtifact}
+        messages={messages}
         isFullScreen={fullScreen}
       />
     </>

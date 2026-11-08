@@ -18,6 +18,7 @@
 import { describe, it, expect, vi } from 'vitest';
 import { render, screen, fireEvent } from '@testing-library/react';
 import { Modal, Dropdown, Select, Popover } from 'antd';
+import type { ChatMessage } from '../../types/ai';
 import CanvasHost from './CanvasHost';
 import type { ResultsGridProps } from '../results/ResultsGrid';
 import type { CanvasTarget } from './CanvasHost';
@@ -42,6 +43,17 @@ function result(over: Partial<QueryResult> = {}): QueryResult {
     ...over,
   };
 }
+
+// The artifact viewers fetch from the server and are covered in ArtifactCanvas.test.tsx. The
+// tab sets are the real ones; only the body is replaced, with what the host handed it.
+vi.mock('./ArtifactCanvas', async (importOriginal) => ({
+  ...(await importOriginal<typeof import('./ArtifactCanvas')>()),
+  default: (p: { kind: string; id: string; tab: string; messages?: ChatMessage[] }) => (
+    <div data-testid="artifact" data-kind={p.kind} data-id={p.id} data-tab={p.tab}>
+      {p.messages?.length ?? 0} messages
+    </div>
+  ),
+}));
 
 const results = (sql: string, r = result()): CanvasTarget => ({ kind: 'results', sql, result: r });
 
@@ -139,9 +151,50 @@ describe('CanvasHost', () => {
     expect(screen.getByRole('button', { name: /unpin/i })).toBeInTheDocument();
   });
 
-  it('names each stubbed kind until its viewer exists', () => {
-    host({ target: { kind: 'chart', id: 'viz-9' } });
-    expect(screen.getByText(/chart viewer for viz-9/i)).toBeInTheDocument();
+  it('renders the artifact viewer for an artifact target, with the active tab and the thread', () => {
+    const messages: ChatMessage[] = [{ role: 'user', content: 'hi' }, { role: 'assistant', content: 'hello' }];
+    host({ target: { kind: 'chart', id: 'viz-9' }, messages });
+    const viewer = screen.getByTestId('artifact');
+    expect(viewer).toHaveAttribute('data-kind', 'chart');
+    expect(viewer).toHaveAttribute('data-id', 'viz-9');
+    expect(viewer).toHaveAttribute('data-tab', 'chart');
+    expect(viewer).toHaveTextContent('2 messages');
+    fireEvent.click(screen.getByRole('tab', { name: 'History' }));
+    expect(screen.getByTestId('artifact')).toHaveAttribute('data-tab', 'history');
+  });
+
+  describe('full screen control', () => {
+    it('hands an artifact to its own page instead of toggling the overlay', () => {
+      const onOpenArtifact = vi.fn();
+      const h = host({ target: { kind: 'dashboard', id: 'd1' }, onOpenArtifact });
+      fireEvent.click(screen.getByRole('button', { name: /full screen/i }));
+      expect(onOpenArtifact).toHaveBeenCalledWith('dashboard', 'd1');
+      expect(h.onFullScreen).not.toHaveBeenCalled();
+    });
+
+    it('keeps the overlay for a results target even when an artifact opener is given', () => {
+      const onOpenArtifact = vi.fn();
+      const h = host({ target: results('SELECT 1'), onOpenArtifact });
+      fireEvent.click(screen.getByRole('button', { name: /full screen/i }));
+      expect(h.onFullScreen).toHaveBeenCalledTimes(1);
+      expect(onOpenArtifact).not.toHaveBeenCalled();
+    });
+
+    it('is still the way out of an overlay that an artifact target arrived in', () => {
+      const onOpenArtifact = vi.fn();
+      const h = host({ target: { kind: 'wiki', id: 'pg1' }, onOpenArtifact, isFullScreen: true });
+      fireEvent.click(screen.getByRole('button', { name: 'Exit full screen' }));
+      expect(h.onFullScreen).toHaveBeenCalledTimes(1);
+      expect(onOpenArtifact).not.toHaveBeenCalled();
+    });
+
+    it('opens the pinned artifact, not the newest target', () => {
+      const onOpenArtifact = vi.fn();
+      const h = host({ target: { kind: 'chart', id: 'pinned-one' }, pinned: true, onOpenArtifact });
+      h.rerender({ target: { kind: 'chart', id: 'newer' }, pinned: true });
+      fireEvent.click(screen.getByRole('button', { name: /full screen/i }));
+      expect(onOpenArtifact).toHaveBeenCalledWith('chart', 'pinned-one');
+    });
   });
 
   describe('tab state', () => {
@@ -153,7 +206,7 @@ describe('CanvasHost', () => {
       expect(activeTab()).toBe('sql');
 
       h.rerender({ target: { kind: 'chart', id: 'viz-9' } });
-      expect(activeTab()).toBe('view');
+      expect(activeTab()).toBe('chart');
     });
 
     it('remembers the tab chosen for a kind when its target returns', () => {
@@ -162,6 +215,47 @@ describe('CanvasHost', () => {
       h.rerender({ target: { kind: 'chart', id: 'viz-9' } });
       h.rerender({ target: results('SELECT 2') });
       expect(activeTab()).toBe('sql');
+    });
+  });
+
+  // Two viewers with different tab sets: results has Results and SQL, a wiki page has Page
+  // and History. A choice made on one must neither leak into the other nor be lost.
+  describe('viewers with different tab sets', () => {
+    const activeTab = () => screen.getByTestId('canvas-body').dataset.activeTab;
+    const tabNames = () => screen.getAllByRole('tab').map((t) => t.textContent);
+    const wiki: CanvasTarget = { kind: 'wiki', id: 'pg1' };
+
+    it('shows the other viewer its own default and tabs, not a tab it does not have', () => {
+      const h = host({ target: results('SELECT 1') });
+      fireEvent.click(screen.getByRole('tab', { name: 'SQL' }));
+      expect(activeTab()).toBe('sql');
+
+      h.rerender({ target: wiki });
+      expect(tabNames()).toEqual(['Page', 'History']);
+      expect(activeTab()).toBe('page');
+      expect(screen.getByTestId('artifact')).toHaveAttribute('data-tab', 'page');
+      expect(screen.queryByRole('tab', { name: 'SQL' })).not.toBeInTheDocument();
+    });
+
+    it('gives each viewer back the tab it was left on', () => {
+      const h = host({ target: results('SELECT 1') });
+      fireEvent.click(screen.getByRole('tab', { name: 'SQL' }));
+      h.rerender({ target: wiki });
+      fireEvent.click(screen.getByRole('tab', { name: 'History' }));
+      expect(activeTab()).toBe('history');
+
+      h.rerender({ target: results('SELECT 2') });
+      expect(activeTab()).toBe('sql');
+      expect(tabNames()).toEqual(['Results', 'SQL']);
+      h.rerender({ target: wiki });
+      expect(activeTab()).toBe('history');
+    });
+
+    it('does not carry a History choice from one artifact kind to another that also has it', () => {
+      const h = host({ target: wiki });
+      fireEvent.click(screen.getByRole('tab', { name: 'History' }));
+      h.rerender({ target: { kind: 'chart', id: 'viz-1' } });
+      expect(activeTab()).toBe('chart');
     });
   });
 

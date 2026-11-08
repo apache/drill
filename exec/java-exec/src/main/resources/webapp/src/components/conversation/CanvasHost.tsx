@@ -25,6 +25,9 @@ import {
   PushpinOutlined,
 } from '@ant-design/icons';
 import type { QueryResult } from '../../types';
+import type { ChatMessage } from '../../types/ai';
+import ArtifactCanvas, { artifactTabs } from './ArtifactCanvas';
+import type { ArtifactKind } from './ArtifactCanvas';
 import ResultsCanvas, { RESULTS_TABS } from './ResultsCanvas';
 
 export type CanvasTarget =
@@ -38,6 +41,14 @@ export interface CanvasHostProps {
   pinned: boolean;
   onTogglePin: () => void;
   onFullScreen: () => void;
+  /**
+   * Full screen for a project artifact is a hand-off to that artifact's own page, where it can
+   * be edited, not a bigger canvas. When given, the full-screen control calls this for
+   * artifact targets and leaves onFullScreen to results, which have no page of their own.
+   */
+  onOpenArtifact?: (kind: ArtifactKind, id: string) => void;
+  /** The conversation so far. The viewers' History tab is read from it. */
+  messages?: ChatMessage[];
   /** Whether the page has the canvas full screen, so the control can offer the way back. */
   isFullScreen?: boolean;
 }
@@ -48,17 +59,8 @@ interface Viewer {
   render: (tab: string) => ReactNode;
 }
 
-const STUB_LABELS = {
-  chart: 'chart',
-  dashboard: 'dashboard',
-  query: 'saved query',
-  workflow: 'workflow',
-  wiki: 'wiki page',
-  datasource: 'data source',
-} as const;
-
-/** The viewer for a target. Task 8 replaces each stub with the real component. */
-function viewerFor(target: CanvasTarget): Viewer {
+/** The viewer for a target: which tabs it has and what each one shows. */
+function viewerFor(target: CanvasTarget, messages: ChatMessage[]): Viewer {
   if (target.kind === 'results') {
     return {
       tabs: RESULTS_TABS,
@@ -66,14 +68,8 @@ function viewerFor(target: CanvasTarget): Viewer {
     };
   }
   return {
-    tabs: [{ key: 'view', label: 'View' }],
-    render: () => (
-      <Empty
-        image={Empty.PRESENTED_IMAGE_SIMPLE}
-        description={`The ${STUB_LABELS[target.kind]} viewer for ${target.id} is not available yet.`}
-        style={{ marginTop: 48 }}
-      />
-    ),
+    tabs: artifactTabs(target.kind),
+    render: (tab) => <ArtifactCanvas kind={target.kind} id={target.id} tab={tab} messages={messages} />,
   };
 }
 
@@ -106,6 +102,9 @@ const POPUP_CONTAINER_SELECTOR = [
 const isPopupContainer = (el: Element) =>
   el.parentElement === document.body && (el.matches(POPUP_CONTAINER_SELECTOR) || !!el.querySelector(POPUP_CONTAINER_SELECTOR));
 
+// A stable empty default, so an omitted prop does not hand viewers a new array every render.
+const NO_MESSAGES: ChatMessage[] = [];
+
 /**
  * The slot beside the chat that shows whatever Prospector is working on. It owns the
  * secondary tab strip and the pin and full-screen controls; each viewer says which tabs
@@ -116,6 +115,8 @@ export default function CanvasHost({
   pinned,
   onTogglePin,
   onFullScreen,
+  onOpenArtifact,
+  messages = NO_MESSAGES,
   isFullScreen = false,
 }: CanvasHostProps) {
   // What is on screen. Follows target until pinned, then holds. Adjusting state during
@@ -128,7 +129,18 @@ export default function CanvasHost({
   // another that happens to share a tab name.
   const [tabByKind, setTabByKind] = useState<Record<string, string>>({});
 
-  const viewer = shown ? viewerFor(shown) : null;
+  const viewer = shown ? viewerFor(shown, messages) : null;
+  // The artifact the full-screen control hands off to its own page, if any. While the page
+  // has the canvas full screen the control is the way out, whatever is shown.
+  const artifactToOpen =
+    !isFullScreen && onOpenArtifact && shown && shown.kind !== 'results' ? shown : null;
+  const handleFullScreen = () => {
+    if (artifactToOpen && onOpenArtifact) {
+      onOpenArtifact(artifactToOpen.kind, artifactToOpen.id);
+    } else {
+      onFullScreen();
+    }
+  };
   const activeTab = shown && viewer ? tabByKind[shown.kind] ?? viewer.tabs[0].key : undefined;
 
   const asideRef = useRef<HTMLElement>(null);
@@ -224,15 +236,15 @@ export default function CanvasHost({
             onClick={onTogglePin}
           />
         </Tooltip>
-        <Tooltip title={isFullScreen ? 'Exit full screen' : 'Full screen'}>
+        <Tooltip title={isFullScreen ? 'Exit full screen' : artifactToOpen ? 'Open in full editor' : 'Full screen'}>
           <Button
             ref={fullScreenButtonRef}
             type="text"
             size="small"
-            aria-label={isFullScreen ? 'Exit full screen' : 'Full screen'}
+            aria-label={isFullScreen ? 'Exit full screen' : artifactToOpen ? 'Full screen: open in editor' : 'Full screen'}
             icon={isFullScreen ? <FullscreenExitOutlined /> : <FullscreenOutlined />}
             disabled={!shown && !isFullScreen}
-            onClick={onFullScreen}
+            onClick={handleFullScreen}
           />
         </Tooltip>
       </div>
