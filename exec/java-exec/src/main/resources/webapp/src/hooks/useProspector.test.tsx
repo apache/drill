@@ -402,6 +402,23 @@ describe('write_wiki_page tool', () => {
     expect(createWikiPage).toHaveBeenCalledOnce();
   });
 
+  it.each([
+    ['title', { content: 'c' }],
+    ['content', { title: 'A' }],
+    ['a blank title', { title: '   ', content: 'c' }],
+  ])('tells the model what is missing when %s is omitted', async (_label, args) => {
+    vi.spyOn(console, 'error').mockImplementation(() => {});
+    const { result } = renderHook(() => useProspector(), { wrapper: Wrapper });
+    const out = JSON.parse(await result.current.executeToolCall(
+      writeCall(args), ctx('proj-42')));
+
+    expect(out.error).toContain('title and content are required');
+    expect(out.error).not.toContain('trim');
+    expect(createWikiPage).not.toHaveBeenCalled();
+    expect(console.error).not.toHaveBeenCalled();
+    (console.error as unknown as { mockRestore: () => void }).mockRestore();
+  });
+
   it('needs an active project', async () => {
     const { result } = renderHook(() => useProspector(), { wrapper: Wrapper });
     const out = JSON.parse(await result.current.executeToolCall(

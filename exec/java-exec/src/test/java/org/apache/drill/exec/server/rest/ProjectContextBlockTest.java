@@ -19,6 +19,7 @@ package org.apache.drill.exec.server.rest;
 
 import org.apache.drill.exec.server.rest.ai.ChatMessage;
 import org.apache.drill.exec.server.rest.ai.LlmConfig;
+import org.apache.drill.exec.server.rest.ai.ToolCall;
 import org.apache.drill.exec.store.sys.PersistentStore;
 import org.apache.drill.exec.store.sys.store.InMemoryStore;
 import org.junit.jupiter.api.Test;
@@ -152,6 +153,49 @@ public class ProjectContextBlockTest {
 
   private static String systemPromptOf(List<ChatMessage> messages) {
     return messages.get(0).getContent();
+  }
+
+  /**
+   * write_wiki_page replaced save_report, but stored conversations still contain
+   * save_report calls. The provider is sent that history next to a tools array that no
+   * longer lists the name, and a strict gateway may reject the mismatch. Only the name
+   * is rewritten: the tool_use id, its arguments and the paired result are left alone.
+   */
+  @Test
+  public void testRetiredSaveReportNameIsSentAsWriteWikiPage() {
+    ProspectorResources.ChatRequest req = request(null);
+    String args = "{\"title\":\"Q3\",\"content\":\"body\"}";
+    String result = "{\"id\":\"pg1\",\"title\":\"Q3\"}";
+    req.messages.add(ChatMessage.user("save it"));
+    req.messages.add(new ChatMessage("assistant", null,
+        List.of(new ToolCall("call_1", "save_report", args)), null, null));
+    req.messages.add(ChatMessage.tool("call_1", "save_report", result));
+
+    List<ChatMessage> sent = new ProspectorResources().buildMessages(new LlmConfig(), req, USER);
+
+    ToolCall call = sent.get(2).getToolCalls().get(0);
+    assertEquals("write_wiki_page", call.getName());
+    assertEquals("call_1", call.getId());
+    assertEquals(args, call.getArguments());
+    ChatMessage toolResult = sent.get(3);
+    assertEquals("write_wiki_page", toolResult.getName());
+    assertEquals("call_1", toolResult.getToolCallId());
+    assertEquals(result, toolResult.getContent());
+  }
+
+  @Test
+  public void testRenamingLeavesTheCallersMessagesAndOtherToolsAlone() {
+    ProspectorResources.ChatRequest req = request(null);
+    req.messages.add(new ChatMessage("assistant", null,
+        List.of(new ToolCall("c1", "save_report", "{}"), new ToolCall("c2", "execute_sql", "{}")),
+        null, null));
+
+    List<ChatMessage> sent = new ProspectorResources().buildMessages(new LlmConfig(), req, USER);
+
+    assertEquals("write_wiki_page", sent.get(1).getToolCalls().get(0).getName());
+    assertEquals("execute_sql", sent.get(1).getToolCalls().get(1).getName());
+    // The request is the stored history's source; it must keep the name it was saved with.
+    assertEquals("save_report", req.messages.get(0).getToolCalls().get(0).getName());
   }
 
   /**

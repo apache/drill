@@ -978,14 +978,19 @@ export function useProspector(
               + 'written inside a project. Ask the user to open one.' });
           }
           const projectId = context.projectId;
-          const title = (args.title as string).trim();
+          if (typeof args.title !== 'string' || !args.title.trim()
+              || typeof args.content !== 'string') {
+            return JSON.stringify({ error: 'write_wiki_page: title and content are required '
+              + 'and must be strings. Call it again with both.' });
+          }
+          const title = args.title.trim();
           const pageId = args.pageId as string | undefined;
           const folder = args.folder as string | undefined;
           // The footer is always written, so only the query appendix follows
           // includeTranscript. In server mode there is no tab id, so the conversation id
           // is the closed-over one: the conversation that issued this call.
           const markdown = buildReportMarkdown(
-            args.content as string,
+            args.content,
             messagesRef.current,
             {
               generatedAt: Date.now(),

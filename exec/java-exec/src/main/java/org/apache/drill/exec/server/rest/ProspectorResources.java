@@ -1026,10 +1026,48 @@ public class ProspectorResources {
 
     // Add user messages
     if (request.messages != null) {
-      messages.addAll(request.messages);
+      for (ChatMessage message : request.messages) {
+        messages.add(withCurrentToolNames(message));
+      }
     }
 
     return messages;
+  }
+
+  /** The tool that write_wiki_page replaced; conversations stored earlier still name it. */
+  private static final String RETIRED_SAVE_REPORT = "save_report";
+  private static final String WRITE_WIKI_PAGE = "write_wiki_page";
+
+  /**
+   * History is sent next to a tools array that no longer lists save_report, and a strict
+   * upstream may reject a call to a tool it was not offered. Rewrites only the name, in the
+   * assistant's tool call and in the paired tool result, and returns a copy so the stored
+   * history keeps what it was saved with. Ids, arguments and result content are untouched,
+   * so the tool_use and tool_result still pair.
+   */
+  private static ChatMessage withCurrentToolNames(ChatMessage message) {
+    boolean renameResult = message != null && RETIRED_SAVE_REPORT.equals(message.getName());
+    boolean renameCall = false;
+    if (message != null && message.getToolCalls() != null) {
+      for (ToolCall call : message.getToolCalls()) {
+        if (call != null && RETIRED_SAVE_REPORT.equals(call.getName())) {
+          renameCall = true;
+        }
+      }
+    }
+    if (!renameResult && !renameCall) {
+      return message;
+    }
+    List<ToolCall> calls = message.getToolCalls();
+    if (renameCall) {
+      calls = new ArrayList<>();
+      for (ToolCall call : message.getToolCalls()) {
+        calls.add(call != null && RETIRED_SAVE_REPORT.equals(call.getName())
+            ? new ToolCall(call.getId(), WRITE_WIKI_PAGE, call.getArguments()) : call);
+      }
+    }
+    return new ChatMessage(message.getRole(), message.getContent(), calls,
+        message.getToolCallId(), renameResult ? WRITE_WIKI_PAGE : message.getName());
   }
 
   /**
