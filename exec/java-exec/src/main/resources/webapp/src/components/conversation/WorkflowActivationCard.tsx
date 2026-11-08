@@ -146,7 +146,7 @@ export default function WorkflowActivationCard({ workflowId, name }: WorkflowAct
   } else if (wf.schedule.enabled) {
     status = `Active. ${describeSchedule(wf.schedule)}.`;
   } else {
-    status = 'Created paused and not running. It will not run until you activate it.';
+    status = 'Created paused, so it will not run on a schedule until you activate it.';
     canActivate = true;
   }
 

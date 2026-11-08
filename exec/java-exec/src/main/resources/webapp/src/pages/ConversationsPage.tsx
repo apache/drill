@@ -21,7 +21,7 @@ import { useQuery, useQueryClient } from '@tanstack/react-query';
 import { Alert, Button, Empty, Spin, message } from 'antd';
 import { PlusOutlined } from '@ant-design/icons';
 import { useProjectContext } from '../contexts/ProjectContext';
-import { useProspector } from '../hooks/useProspector';
+import { useProspector, conversationBufferKey } from '../hooks/useProspector';
 import {
   createConversation,
   deleteConversation,
@@ -318,6 +318,14 @@ export default function ConversationsPage() {
       message.error('Could not delete the conversation. Try again.');
       await queryClient.invalidateQueries({ queryKey: listKey(projectId!) });
       return;
+    }
+    // Only now, once the server has dropped the conversation: the buffer may be the only copy
+    // of an unsaved turn until then. Beyond the leak, this is the one way to reclaim a buffer
+    // stuck at the size cap, which would otherwise sit in the browser's quota forever.
+    try {
+      localStorage.removeItem(conversationBufferKey(projectId!, id));
+    } catch {
+      // Storage may be unavailable; there is nothing to reclaim then.
     }
     // If this was the open conversation it is now missing from the list, and the unknown-id
     // fallback below sends the user to the most recent one left, or the empty state.

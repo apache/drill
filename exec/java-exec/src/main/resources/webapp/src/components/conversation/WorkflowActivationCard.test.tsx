@@ -68,9 +68,12 @@ describe('WorkflowActivationCard', () => {
     document.querySelectorAll('.ant-modal-root').forEach((n) => n.remove());
   });
 
-  it('says the workflow is not running yet and offers Activate, without enabling anything', async () => {
+  it('says the workflow is off its schedule until activated and offers Activate', async () => {
     renderCard();
-    expect(await screen.findByText(/not running/i)).toBeInTheDocument();
+    // Run now has no enabled check, so the owner can still execute a paused workflow.
+    expect(await screen.findByText(
+      'Created paused, so it will not run on a schedule until you activate it.')).toBeInTheDocument();
+    expect(screen.queryByText(/not running/i)).not.toBeInTheDocument();
     expect(screen.getByRole('button', { name: 'Activate' })).toBeInTheDocument();
     expect(setWorkflowEnabled).not.toHaveBeenCalled();
   });

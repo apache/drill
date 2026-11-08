@@ -334,7 +334,7 @@ interface ConversationBuffer {
   messages: ChatMessage[];
 }
 
-const conversationBufferKey = (projectId: string, cid: string) =>
+export const conversationBufferKey = (projectId: string, cid: string) =>
   `prospector_conversation_buffer_${projectId}_${cid}`;
 
 function readConversationBuffer(key: string): ConversationBuffer | null {

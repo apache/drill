@@ -21,7 +21,7 @@ import { render, screen, waitFor, fireEvent, within, act } from '@testing-librar
 import { MemoryRouter, useLocation } from 'react-router-dom';
 import { QueryClient, QueryClientProvider } from '@tanstack/react-query';
 import App from '../App';
-import { useProspector } from '../hooks/useProspector';
+import { useProspector, conversationBufferKey } from '../hooks/useProspector';
 import type { UseProspectorReturn, SaveStatus } from '../hooks/useProspector';
 import {
   listConversations,
@@ -37,7 +37,12 @@ import type { SavedQuery } from '../types';
 import { AxiosError } from 'axios';
 import type { AxiosResponse } from 'axios';
 
-vi.mock('../hooks/useProspector', () => ({ useProspector: vi.fn() }));
+// Only the hook is faked. The buffer key helper stays real so the page and this file agree
+// on which localStorage entry belongs to a conversation.
+vi.mock('../hooks/useProspector', async (importOriginal) => ({
+  ...(await importOriginal<typeof import('../hooks/useProspector')>()),
+  useProspector: vi.fn(),
+}));
 vi.mock('../api/conversations', () => ({
   listConversations: vi.fn(),
   createConversation: vi.fn(),
@@ -535,6 +540,37 @@ describe('ConversationsPage', () => {
 
       await waitFor(() => expect(boundConversation()?.conversationId).toBe('b'));
       expect(deleteConversation).toHaveBeenCalledWith('p1', 'a');
+    });
+
+    it('removes the deleted conversation\'s offline buffer and leaves the others', async () => {
+      const buffer = JSON.stringify({ baseVersion: 1, messages: [] });
+      localStorage.setItem(conversationBufferKey('p1', 'b'), buffer);
+      localStorage.setItem(conversationBufferKey('p1', 'a'), buffer);
+      vi.mocked(listConversations).mockResolvedValue(twoConversations());
+      renderAt('/projects/p1/chat/a');
+
+      await confirmDelete('Beta thread');
+
+      await waitFor(() => expect(deleteConversation).toHaveBeenCalledWith('p1', 'b'));
+      await waitFor(() => expect(localStorage.getItem(conversationBufferKey('p1', 'b'))).toBeNull());
+      expect(localStorage.getItem(conversationBufferKey('p1', 'a'))).toBe(buffer);
+      localStorage.clear();
+    });
+
+    it('keeps the offline buffer when the server delete fails', async () => {
+      const buffer = JSON.stringify({ baseVersion: 1, messages: [] });
+      localStorage.setItem(conversationBufferKey('p1', 'b'), buffer);
+      vi.mocked(listConversations).mockResolvedValue(twoConversations());
+      vi.mocked(deleteConversation).mockRejectedValue(new Error('boom'));
+      const logged = vi.spyOn(console, 'error').mockImplementation(() => undefined);
+      renderAt('/projects/p1/chat/a');
+
+      await confirmDelete('Beta thread');
+
+      expect(await screen.findByText(/could not delete/i)).toBeInTheDocument();
+      expect(localStorage.getItem(conversationBufferKey('p1', 'b'))).toBe(buffer);
+      logged.mockRestore();
+      localStorage.clear();
     });
 
     it('shows the empty state when the last conversation is deleted', async () => {
