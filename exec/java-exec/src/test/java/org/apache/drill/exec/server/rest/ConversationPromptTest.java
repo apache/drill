@@ -121,6 +121,44 @@ public class ConversationPromptTest {
     assertFalse(lower(prompt).contains("activation button"));
   }
 
+  /**
+   * Build-first is scoped: without these sentences a conversation accumulates a chart or a
+   * saved query for every result, and creates a schedule nobody agreed to.
+   */
+  @Test
+  public void conversationModeScopesWhatItBuildsUnasked() {
+    String prompt = conversationPrompt();
+
+    assertTrue(prompt.contains("Do not chart or save every result unasked"),
+        "must not chart or save every result");
+    assertTrue(prompt.contains("when the user asks for one or asks for something that is one"),
+        "charts, dashboards and saved queries are for requests");
+    assertTrue(prompt.contains("A scheduled workflow needs the user's agreement first"));
+    assertTrue(prompt.contains("then call create_workflow once they agree"),
+        "no workflow before the user agrees");
+  }
+
+  /** execute_sql drops no card, so a model told every result gets one would misread the thread. */
+  @Test
+  public void conversationModeDoesNotPromiseACardForEveryResult() {
+    String prompt = conversationPrompt();
+
+    assertTrue(prompt.contains("The rows from execute_sql appear on the canvas without a card"));
+    assertTrue(prompt.contains("charts, dashboards, saved queries, workflows and wiki pages "
+        + "also get a card in the thread"));
+    assertFalse(prompt.contains("each with a card"));
+  }
+
+  /** The tool's own failure message tells the model to retry, so the prompt must not say "once". */
+  @Test
+  public void conversationModeAllowsRetryingARejectedWorkflow() {
+    String prompt = conversationPrompt();
+
+    assertTrue(prompt.contains("Do not call create_workflow again for a workflow that was created"));
+    assertTrue(prompt.contains("If the server rejects it, fix the fields and call it again"));
+    assertFalse(prompt.contains("once per workflow"));
+  }
+
   @Test
   public void conversationModeDescribesWriteWikiPageAsBuilt() {
     String prompt = conversationPrompt();
