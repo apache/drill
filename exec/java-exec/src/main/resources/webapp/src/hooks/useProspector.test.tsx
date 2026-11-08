@@ -18,6 +18,7 @@
 import { useState } from 'react';
 import { describe, expect, it, vi, beforeEach, afterEach } from 'vitest';
 import { renderHook, waitFor, act } from '@testing-library/react';
+import { message } from 'antd';
 import { QueryClient, QueryClientProvider } from '@tanstack/react-query';
 
 import { useProspector, prospectorChatKey, conversationLengthFor } from './useProspector';
@@ -25,6 +26,7 @@ import { createVisualization } from '../api/visualizations';
 import { createDashboard } from '../api/dashboards';
 import { addVisualization, addDashboard, getProject } from '../api/projects';
 import { executeQuery } from '../api/queries';
+import { getSchemas } from '../api/metadata';
 import { getAiStatus, streamChat } from '../api/ai';
 import {
   getConversation as getServerConversation,
@@ -523,6 +525,11 @@ describe('server-primary conversation persistence', () => {
 
   afterEach(() => {
     vi.useRealTimers();
+    // Targeted, not vi.restoreAllMocks(): that would also wipe the vi.fn() implementations
+    // that a hook cleanup (flushing a pending save) still runs against after this hook.
+    for (const spied of [console.error, message.info, message.warning]) {
+      (spied as { mockRestore?: () => void }).mockRestore?.();
+    }
   });
 
   it('loads messages from the server when a conversationId is given', async () => {
@@ -783,6 +790,158 @@ describe('server-primary conversation persistence', () => {
       expect(third.result.current.messages.map((m) => m.content)).toContain('unsaved turn');
       expect(saveConversationMessages).not.toHaveBeenCalled();
     });
+  });
+
+  describe('a tool call still running when the user moves on', () => {
+    let finishTool: (schemas: unknown[]) => void = () => {};
+    beforeEach(() => {
+      vi.mocked(getSchemas).mockImplementation(
+        () => new Promise((resolve) => { finishTool = resolve as never; }) as never);
+      // Round 1 asks for a tool and the tool is held open; round 2 must never be reached.
+      let round = 0;
+      vi.mocked(streamChat).mockImplementation(((_req, onDelta, onDone) => {
+        if (round++ === 0) {
+          onDelta({ type: 'tool_call_start', id: 'call-1', name: 'list_schemas' } as never);
+          onDelta({ type: 'tool_call_end', id: 'call-1' } as never);
+          onDone({ finish_reason: 'tool_calls' } as never);
+        } else {
+          onDelta({ type: 'content', content: 'round two' } as never);
+          onDone({ finish_reason: 'stop' } as never);
+        }
+        return new AbortController();
+      }) as never);
+    });
+
+    /**
+     * The continuation holds an absolute array built from the old conversation. Landing it
+     * in the new one would be saved with the new conversation's CORRECT version, so the
+     * server's 409 guard could not catch the overwrite.
+     */
+    it('does not write the old conversation into the new one when the tool finishes', async () => {
+      const { result, rerender } = mount('c1');
+      await settle();
+      await send(result, 'list my schemas');
+
+      const c2: ChatMessage[] = [{ role: 'user', content: 'c2 only' }];
+      serverHolds(c2, 5, 'c2');
+      rerender({ id: 'c2' });
+      await settle();
+      await act(async () => { finishTool([{ name: 'dfs' }]); await vi.advanceTimersByTimeAsync(0); });
+      await settle(DEBOUNCE_MS);
+      await settle(DEBOUNCE_MS);
+
+      expect(result.current.messages).toEqual(c2);
+      expect(vi.mocked(streamChat)).toHaveBeenCalledTimes(1);
+      for (const call of vi.mocked(saveConversationMessages).mock.calls.filter((c) => c[1] === 'c2')) {
+        expect(call[2].map((m) => m.content)).not.toContain('list my schemas');
+      }
+    });
+
+    /** Stop used to leave the tool round running; the history must still end consistently. */
+    it('stops the round on Stop but still records the tool result it was waiting for', async () => {
+      const { result } = mount('c1');
+      await settle();
+      await send(result, 'list my schemas');
+      act(() => { result.current.stopStreaming(); });
+      await act(async () => { finishTool([{ name: 'dfs' }]); await vi.advanceTimersByTimeAsync(0); });
+
+      expect(vi.mocked(streamChat)).toHaveBeenCalledTimes(1);
+      expect(result.current.messages.at(-1)?.role).toBe('tool');
+    });
+  });
+
+  /** The panel's trash button is wired to clearChat; it must not be able to empty the record. */
+  describe('clearChat on a server-primary conversation', () => {
+    it('does not empty the conversation or write [] to the server', async () => {
+      vi.spyOn(message, 'info').mockImplementation((() => {}) as never);
+      const { result } = mount();
+      await settle();
+      act(() => { result.current.clearChat(); });
+      await settle();
+      await settle(DEBOUNCE_MS);
+
+      expect(result.current.messages).toEqual(OLD);
+      expect(saveConversationMessages).not.toHaveBeenCalled();
+      expect(message.info).toHaveBeenCalled();
+    });
+
+    it('stays hard-stopped at the size cap instead of reopening the conversation to writes', async () => {
+      vi.spyOn(message, 'info').mockImplementation((() => {}) as never);
+      vi.mocked(saveConversationMessages).mockResolvedValue({ status: 'too-large' });
+      const { result } = mount();
+      await settle();
+      await send(result, 'one more');
+      await settle(DEBOUNCE_MS);
+      act(() => { result.current.clearChat(); });
+      await settle(DEBOUNCE_MS);
+
+      expect(result.current.saveStatus).toBe('too-large');
+      expect(result.current.messages.map((m) => m.content)).toContain('one more');
+      expect(saveConversationMessages).toHaveBeenCalledTimes(1);
+    });
+  });
+
+  /**
+   * The buffer is the only copy of an unsaved turn. Turn B is added while the write of A is
+   * in flight, then the user switches: the write of A finishing must not delete the buffer
+   * that still holds B, because the flushed write of A+B can then fail.
+   */
+  it('keeps the buffer holding turn B when the write of turn A finishes after a switch', async () => {
+    vi.spyOn(console, 'error').mockImplementation(() => {});
+    let finishFirst: (r: { status: 'ok'; version: number }) => void = () => {};
+    vi.mocked(saveConversationMessages)
+      .mockImplementationOnce(() => new Promise((resolve) => { finishFirst = resolve as never; }))
+      .mockRejectedValueOnce(new Error('Network Error'));
+    const { result, rerender } = mount('c1');
+    await settle();
+    await send(result, 'turn A');
+    await settle(DEBOUNCE_MS);
+    await send(result, 'turn B');
+    serverHolds([{ role: 'user', content: 'c2 only' }], 1, 'c2');
+    rerender({ id: 'c2' });
+    await settle();
+    finishFirst({ status: 'ok', version: 4 });
+    await settle();
+    await settle();
+
+    expect(saveConversationMessages).toHaveBeenCalledTimes(2);
+    expect(buffered('turn B')).toBe(true);
+  });
+
+  /** A failed buffer write silently removes the only safety net, so the user must be told. */
+  it('warns once when the browser refuses the local backup', async () => {
+    const warn = vi.spyOn(message, 'warning').mockImplementation((() => {}) as never);
+    const { result } = mount();
+    await settle();
+    vi.stubGlobal('localStorage', {
+      getItem: (k: string) => store[k] ?? null,
+      removeItem: (k: string) => { delete store[k]; },
+      setItem: () => { throw new Error('QuotaExceededError'); },
+    });
+    await send(result, 'one');
+    await send(result, 'two');
+
+    expect(warn).toHaveBeenCalledTimes(1);
+    expect(String(warn.mock.calls[0][0])).toMatch(/backup/);
+  });
+
+  /** ok without a version used to write undefined into the version map and drop every later save. */
+  it('reports an error, keeps the buffer and keeps saving when an ok response has no version', async () => {
+    vi.spyOn(console, 'error').mockImplementation(() => {});
+    vi.mocked(saveConversationMessages).mockResolvedValue({ status: 'ok' });
+    const { result } = mount();
+    await settle();
+    await send(result, 'one');
+    await settle(DEBOUNCE_MS);
+
+    expect(result.current.saveStatus).toBe('error');
+    expect(buffered('one')).toBe(true);
+
+    await send(result, 'two');
+    await settle(DEBOUNCE_MS);
+
+    expect(saveConversationMessages).toHaveBeenCalledTimes(2);
+    expect(vi.mocked(saveConversationMessages).mock.calls[1][3]).toBe(3);
   });
 
   describe('when the conversationId changes', () => {

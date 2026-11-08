@@ -272,11 +272,17 @@ function readConversationBuffer(key: string): ConversationBuffer | null {
   }
 }
 
-function writeConversationBuffer(key: string, buffer: ConversationBuffer): void {
+/**
+ * Returns whether the buffer was actually stored. The caller must act on false: the
+ * buffer is the only copy of an unsaved turn, so a quota or private-mode failure here
+ * means the safety net is gone and the user has to be told.
+ */
+function writeConversationBuffer(key: string, buffer: ConversationBuffer): boolean {
   try {
     localStorage.setItem(key, JSON.stringify(buffer));
+    return true;
   } catch {
-    // Ignore storage errors (quota, private mode); the in-memory copy is still live.
+    return false;
   }
 }
 
@@ -433,7 +439,15 @@ export function useProspector(
   const { sendDataToAiRef } = useSendDataToAi();
   const queryClient = useQueryClient();
 
+  // Identifies the stream round a callback belongs to. Aborting the SSE controller does
+  // not reach a continuation parked on `await executeToolCall`, which would later write
+  // its (now foreign) messages into whatever conversation is on screen. Bumped by every
+  // stop and conversation load, and by every new round; a callback whose epoch is no
+  // longer current has been overtaken and must not touch state.
+  const streamEpochRef = useRef(0);
+
   const stopStreaming = useCallback(() => {
+    streamEpochRef.current += 1;
     if (abortRef.current) {
       abortRef.current.abort();
       abortRef.current = null;
@@ -443,15 +457,19 @@ export function useProspector(
   }, []);
 
   const clearChat = useCallback(() => {
+    if (serverMode) {
+      // A server-primary conversation is a durable, named artifact: emptying it would
+      // write [] over the server record in one click, including at the size cap where
+      // this is the button a user reaches for. The hook refuses regardless of the caller.
+      // TODO(Task 6): route the panel's "Clear chat" affordance to creating a new conversation.
+      message.info('A saved conversation cannot be cleared. Start a new conversation instead.');
+      return;
+    }
     stopStreaming();
     setMessages([]);
     setUsage(null);
     toolRoundsRef.current = 0;
-    // Clearing makes room, so a conversation stopped at the size cap can be written again.
-    if (saveStatusRef.current === 'too-large') {
-      setSaveStatus('idle');
-    }
-  }, [stopStreaming, setSaveStatus]);
+  }, [stopStreaming, serverMode]);
 
   // Swap in the stored history when the project (storageKey) changes.
   const prevKeyRef = useRef(storageKey);
@@ -539,10 +557,35 @@ export function useProspector(
 
   // ---- Server-primary persistence (see the conversationId parameter) ----
 
+  // Stores the buffer and, once per failure streak, tells the user when it could not be:
+  // the buffer is then the only thing standing between an unsaved turn and its loss, and
+  // saveStatus alone would read 'idle' or 'saving' while that net is missing.
+  const bufferWarnedRef = useRef(false);
+  const storeBuffer = useCallback((key: string, buffer: ConversationBuffer) => {
+    if (writeConversationBuffer(key, buffer)) {
+      bufferWarnedRef.current = false;
+      return;
+    }
+    if (!bufferWarnedRef.current) {
+      bufferWarnedRef.current = true;
+      message.warning(
+        'This browser would not store a local backup of your conversation. If saving to the '
+        + 'server fails, your latest messages cannot be recovered, so avoid closing this tab '
+        + 'until the conversation shows as saved.',
+        10,
+      );
+    }
+  }, []);
+
   const enqueueSave = useCallback((pid: string, cid: string, saving: ChatMessage[]) => {
     saveChainRef.current = saveChainRef.current.then(async () => {
       const version = versionsRef.current[cid];
       if (version === undefined) {
+        // No known version means nothing can be written; never a silent no-op.
+        console.error('Cannot save conversation: no known version for', cid);
+        if (activeConversationRef.current === cid) {
+          setSaveStatus('error');
+        }
         return;
       }
       // The conversation can change under a save in flight. The write still goes to the
@@ -555,17 +598,25 @@ export function useProspector(
       try {
         const result = await saveConversationMessages(pid, cid, saving, version);
         if (result.status === 'ok') {
-          const saved = result.version as number;
+          if (result.version === undefined) {
+            // The write may have landed, but without its version the next one would carry
+            // a stale or missing version. Leave the map and the buffer alone and say so.
+            throw new Error('Server accepted the save but returned no version');
+          }
+          const saved = result.version;
           versionsRef.current[cid] = saved;
-          if (!isActive() || messagesRef.current === saving) {
+          const buffer = readConversationBuffer(key);
+          // Delete the buffer only when it holds nothing this write did not. The user can
+          // add turns while a write is in flight, and a flush after a conversation switch
+          // queues a later snapshot behind this one; in both cases the buffer is still the
+          // only copy of the extra turns, so it is rebased onto the new version instead.
+          const covered = isActive()
+            ? messagesRef.current === saving
+            : !buffer || JSON.stringify(buffer.messages) === JSON.stringify(saving);
+          if (covered) {
             removeConversationBuffer(key);
-          } else {
-            // The user kept going while this write was in flight: the buffer still holds
-            // unsaved turns, now on top of the version this write produced.
-            const buffer = readConversationBuffer(key);
-            if (buffer) {
-              writeConversationBuffer(key, { ...buffer, baseVersion: saved });
-            }
+          } else if (buffer) {
+            storeBuffer(key, { ...buffer, baseVersion: saved });
           }
           if (isActive()) {
             lastSyncedRef.current = saving;
@@ -583,7 +634,7 @@ export function useProspector(
         }
       }
     });
-  }, [setSaveStatus]);
+  }, [setSaveStatus, storeBuffer]);
 
   const loadConversation = useCallback((pid: string, cid: string) => {
     const token = ++loadTokenRef.current;
@@ -682,12 +733,12 @@ export function useProspector(
     if (messages === lastSyncedRef.current) {
       removeConversationBuffer(key);
     } else {
-      writeConversationBuffer(key, {
+      storeBuffer(key, {
         baseVersion: versionsRef.current[conversationId] ?? 0,
         messages,
       });
     }
-  }, [messages, conversationId, projectId]);
+  }, [messages, conversationId, projectId, storeBuffer]);
 
   // Debounced write, never while streaming (a half-finished tool round is not worth
   // storing) and not once the server has refused: too-large and conflict wait for the user.
@@ -954,6 +1005,7 @@ export function useProspector(
     allMessages: ChatMessage[],
     context: ChatContext,
   ) => {
+    const epoch = ++streamEpochRef.current;
     setIsStreaming(true);
     setStreamingContent('');
 
@@ -990,6 +1042,9 @@ export function useProspector(
       },
       // onDone
       async (doneEvent: DoneEvent) => {
+        if (epoch !== streamEpochRef.current) {
+          return;
+        }
         setIsStreaming(false);
         setStreamingContent('');
 
@@ -1027,6 +1082,14 @@ export function useProspector(
             });
           }
 
+          if (epoch !== streamEpochRef.current) {
+            // Stopped, cleared or switched to another conversation while a tool ran. The
+            // results complete the history only if nothing has replaced it; after a switch
+            // `prev` is the other conversation and must not be touched. No further round.
+            setMessages((prev) => (prev === updatedMessages ? [...prev, ...toolResults] : prev));
+            return;
+          }
+
           const messagesWithResults = [...updatedMessages, ...toolResults];
           setMessages(messagesWithResults);
 
@@ -1058,6 +1121,9 @@ export function useProspector(
       },
       // onError
       (error) => {
+        if (epoch !== streamEpochRef.current) {
+          return;
+        }
         setIsStreaming(false);
         setStreamingContent('');
         const errorMsg: ChatMessage = {
