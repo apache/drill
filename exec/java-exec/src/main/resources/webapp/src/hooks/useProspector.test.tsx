@@ -21,10 +21,14 @@ import { renderHook, waitFor, act } from '@testing-library/react';
 import { message } from 'antd';
 import { QueryClient, QueryClientProvider } from '@tanstack/react-query';
 
-import { useProspector, prospectorChatKey, conversationLengthFor } from './useProspector';
+import {
+  useProspector, prospectorChatKey, conversationLengthFor, TOOL_DEFINITIONS,
+} from './useProspector';
 import { createVisualization } from '../api/visualizations';
 import { createDashboard } from '../api/dashboards';
-import { addVisualization, addDashboard, getProject } from '../api/projects';
+import {
+  addVisualization, addDashboard, getProject, createWikiPage, updateWikiPage,
+} from '../api/projects';
 import { executeQuery } from '../api/queries';
 import { getSchemas } from '../api/metadata';
 import { getAiStatus, streamChat } from '../api/ai';
@@ -34,7 +38,7 @@ import {
 } from '../api/conversations';
 import type { ChatContext, ChatMessage, ConversationRecord, ToolCall } from '../types/ai';
 
-// useProspector reads/writes the React Query cache (save_report invalidation),
+// useProspector reads/writes the React Query cache (write_wiki_page invalidation),
 // so every render needs a QueryClientProvider in scope.
 function Wrapper({ children }: { children: React.ReactNode }) {
   const [client] = useState(() => new QueryClient({
@@ -46,6 +50,7 @@ function Wrapper({ children }: { children: React.ReactNode }) {
 vi.mock('../api/visualizations', () => ({ createVisualization: vi.fn() }));
 vi.mock('../api/projects', () => ({
   addVisualization: vi.fn(), addDashboard: vi.fn(), getProject: vi.fn(),
+  createWikiPage: vi.fn(), updateWikiPage: vi.fn(),
 }));
 vi.mock('../api/ai', () => ({ streamChat: vi.fn(), getAiStatus: vi.fn() }));
 vi.mock('../api/queries', () => ({ executeQuery: vi.fn() }));
@@ -184,8 +189,8 @@ describe('get_project_docs tool', () => {
     vi.clearAllMocks();
     vi.mocked(getProject).mockResolvedValue({
       wikiPages: [
-        { title: 'Runbook', content: 'step one ...' },
-        { title: 'Glossary', content: '...' },
+        { id: 'pg-runbook', title: 'Runbook', content: 'step one ...' },
+        { id: 'pg-glossary', title: 'Glossary', content: '...' },
       ],
     } as never);
   });
@@ -194,6 +199,14 @@ describe('get_project_docs tool', () => {
     const { result } = renderHook(() => useProspector(), { wrapper: Wrapper });
     const out = JSON.parse(await result.current.executeToolCall(docsCall(), ctx('proj-42')));
     expect(out.pages.map((p: { title: string }) => p.title)).toEqual(['Runbook', 'Glossary']);
+  });
+
+  // write_wiki_page updates a page by id, and this listing is the only place the model can
+  // learn the id of a page it did not write itself.
+  it('lists page ids so write_wiki_page can update an existing page', async () => {
+    const { result } = renderHook(() => useProspector(), { wrapper: Wrapper });
+    const out = JSON.parse(await result.current.executeToolCall(docsCall(), ctx('proj-42')));
+    expect(out.pages.map((p: { id: string }) => p.id)).toEqual(['pg-runbook', 'pg-glossary']);
   });
 
   it('returns the full content of a named page', async () => {
@@ -216,6 +229,206 @@ describe('get_project_docs tool', () => {
     const out = JSON.parse(await result.current.executeToolCall(docsCall(), ctx()));
     expect(out.error).toBe('No active project — get_project_docs is only available inside a project.');
     expect(out.error).not.toContain('Unknown tool');
+  });
+});
+
+describe('write_wiki_page tool', () => {
+  const writeCall = (args: Record<string, unknown>): ToolCall => ({
+    id: 'call-w',
+    name: 'write_wiki_page',
+    arguments: JSON.stringify(args),
+  });
+  const sqlTurn = (sql: string): ChatMessage => ({
+    role: 'assistant',
+    content: null,
+    toolCalls: [{ id: 'q1', name: 'execute_sql', arguments: JSON.stringify({ sql }) }],
+  });
+  const PAGE = { id: 'pg-1', title: 'Q3 findings', content: '', order: 0, createdAt: 0, updatedAt: 0 };
+  const written = (): string => vi.mocked(createWikiPage).mock.calls[0][1].content as string;
+
+  beforeEach(() => {
+    vi.clearAllMocks();
+    const store: Record<string, string> = {};
+    vi.stubGlobal('localStorage', {
+      getItem: (k: string) => store[k] ?? null,
+      setItem: (k: string, v: string) => { store[k] = v; },
+      removeItem: (k: string) => { delete store[k]; },
+      clear: () => { for (const k of Object.keys(store)) { delete store[k]; } },
+      get length() { return Object.keys(store).length; },
+    });
+    vi.mocked(getProject).mockResolvedValue({ wikiPages: [] } as never);
+    vi.mocked(createWikiPage).mockResolvedValue(PAGE as never);
+    vi.mocked(updateWikiPage).mockResolvedValue({ ...PAGE } as never);
+  });
+
+  it('no longer exposes a save_report tool', () => {
+    const names = TOOL_DEFINITIONS.map((t) => t.name);
+    expect(names).not.toContain('save_report');
+    expect(names).toContain('write_wiki_page');
+  });
+
+  it('creates a wiki page in the reports folder by default', async () => {
+    const { result } = renderHook(() => useProspector(), { wrapper: Wrapper });
+    const out = JSON.parse(await result.current.executeToolCall(
+      writeCall({ title: '  Q3 findings ', content: '# Q3\n\nBody.' }), ctx('proj-42')));
+
+    expect(createWikiPage).toHaveBeenCalledOnce();
+    const [projectId, page] = vi.mocked(createWikiPage).mock.calls[0];
+    expect(projectId).toBe('proj-42');
+    expect(page.title).toBe('Q3 findings');
+    expect(page.folder).toBe('Reports');
+    expect(page.content).toContain('# Q3\n\nBody.');
+    expect(updateWikiPage).not.toHaveBeenCalled();
+    // The shape the artifact card reader and the model both rely on.
+    expect(out).toMatchObject({
+      id: 'pg-1', title: 'Q3 findings', viewPath: '/projects/proj-42/wiki/pg-1',
+    });
+  });
+
+  it('writes into the folder it is given', async () => {
+    const { result } = renderHook(() => useProspector(), { wrapper: Wrapper });
+    await result.current.executeToolCall(
+      writeCall({ title: 'Runbook', content: 'steps', folder: 'Operations' }), ctx('proj-42'));
+    expect(vi.mocked(createWikiPage).mock.calls[0][1].folder).toBe('Operations');
+  });
+
+  it('appends the queries run only when includeTranscript is true', async () => {
+    localStorage.setItem('chat', JSON.stringify([sqlTurn('SELECT region FROM sales')]));
+    const { result } = renderHook(
+      () => useProspector(undefined, undefined, undefined, 'chat'), { wrapper: Wrapper });
+
+    await result.current.executeToolCall(
+      writeCall({ title: 'A', content: 'body' }), ctx('proj-42'));
+    expect(written()).not.toContain('SELECT region FROM sales');
+
+    vi.mocked(createWikiPage).mockClear();
+    await result.current.executeToolCall(
+      writeCall({ title: 'B', content: 'body', includeTranscript: true }), ctx('proj-42'));
+    expect(written()).toContain('## Appendix: queries run');
+    expect(written()).toContain('SELECT region FROM sales');
+  });
+
+  it('keeps the provenance footer when the transcript is left out', async () => {
+    const { result } = renderHook(() => useProspector(), { wrapper: Wrapper });
+    await result.current.executeToolCall(
+      writeCall({ title: 'A', content: 'body', includeTranscript: false }), ctx('proj-42'));
+    expect(written()).toContain('Generated by Prospector');
+  });
+
+  // In server mode the hook has no tab id, so the footer used to drop the conversation
+  // line from every page saved from a conversation.
+  it('records the conversation id in the footer of a server-primary conversation', async () => {
+    vi.mocked(getServerConversation).mockResolvedValue({
+      record: { id: 'conv-9', projectId: 'p1', version: 1 }, messages: [],
+    } as never);
+    const { result } = renderHook(
+      () => useProspector(undefined, undefined, undefined, null, null, 'conv-9', 'p1'),
+      { wrapper: Wrapper });
+    await waitFor(() => expect(getServerConversation).toHaveBeenCalled());
+
+    await result.current.executeToolCall(
+      writeCall({ title: 'A', content: 'body' }), ctx('p1'));
+    expect(written()).toContain('Conversation `conv-9`');
+  });
+
+  it('still records the tab id for a legacy tab-scoped conversation', async () => {
+    const { result } = renderHook(
+      () => useProspector(undefined, undefined, undefined, null, 'tab-3'), { wrapper: Wrapper });
+    await result.current.executeToolCall(
+      writeCall({ title: 'A', content: 'body' }), ctx('proj-42'));
+    expect(written()).toContain('Conversation `tab-3`');
+  });
+
+  it('updates the named page instead of creating a duplicate', async () => {
+    vi.mocked(updateWikiPage).mockResolvedValue({ ...PAGE, id: 'pg-7', title: 'Runbook' } as never);
+    const { result } = renderHook(() => useProspector(), { wrapper: Wrapper });
+    const out = JSON.parse(await result.current.executeToolCall(
+      writeCall({ title: 'Runbook', content: 'new steps', pageId: 'pg-7' }), ctx('proj-42')));
+
+    expect(createWikiPage).not.toHaveBeenCalled();
+    expect(updateWikiPage).toHaveBeenCalledOnce();
+    const [projectId, pageId, patch] = vi.mocked(updateWikiPage).mock.calls[0];
+    expect([projectId, pageId]).toEqual(['proj-42', 'pg-7']);
+    expect(patch.title).toBe('Runbook');
+    expect(patch.content).toContain('new steps');
+    // Updating a page must not move it: the folder is only sent when the model asked.
+    expect(patch).not.toHaveProperty('folder');
+    expect(out).toMatchObject({
+      id: 'pg-7', updated: true, viewPath: '/projects/proj-42/wiki/pg-7',
+    });
+  });
+
+  it('moves an updated page only when a folder is given', async () => {
+    const { result } = renderHook(() => useProspector(), { wrapper: Wrapper });
+    await result.current.executeToolCall(
+      writeCall({ title: 'R', content: 'c', pageId: 'pg-7', folder: 'Archive' }), ctx('proj-42'));
+    expect(vi.mocked(updateWikiPage).mock.calls[0][2].folder).toBe('Archive');
+  });
+
+  it('says so when the page to update no longer exists, and does not create one', async () => {
+    vi.mocked(updateWikiPage).mockRejectedValue(
+      Object.assign(new Error('Request failed with status code 404'), { response: { status: 404 } }));
+    vi.spyOn(console, 'error').mockImplementation(() => {});
+    const { result } = renderHook(() => useProspector(), { wrapper: Wrapper });
+    const out = JSON.parse(await result.current.executeToolCall(
+      writeCall({ title: 'Runbook', content: 'c', pageId: 'gone' }), ctx('proj-42')));
+
+    expect(out.error).toContain('gone');
+    expect(out.error).toContain('without pageId');
+    expect(createWikiPage).not.toHaveBeenCalled();
+    (console.error as unknown as { mockRestore: () => void }).mockRestore();
+  });
+
+  it('refuses to create a second page with the title of an existing one', async () => {
+    vi.mocked(getProject).mockResolvedValue({
+      wikiPages: [{ id: 'pg-old', title: 'q3 findings', folder: 'Reports', content: 'x' }],
+    } as never);
+    const { result } = renderHook(() => useProspector(), { wrapper: Wrapper });
+    const out = JSON.parse(await result.current.executeToolCall(
+      writeCall({ title: 'Q3 Findings', content: 'c' }), ctx('proj-42')));
+
+    expect(createWikiPage).not.toHaveBeenCalled();
+    expect(out.error).toContain('pg-old');
+    expect(out.error).toContain('pageId');
+  });
+
+  it('allows the same title in a different folder', async () => {
+    vi.mocked(getProject).mockResolvedValue({
+      wikiPages: [{ id: 'pg-old', title: 'Q3 findings', folder: 'Reports', content: 'x' }],
+    } as never);
+    const { result } = renderHook(() => useProspector(), { wrapper: Wrapper });
+    await result.current.executeToolCall(
+      writeCall({ title: 'Q3 findings', content: 'c', folder: 'Drafts' }), ctx('proj-42'));
+    expect(createWikiPage).toHaveBeenCalledOnce();
+  });
+
+  it('needs an active project', async () => {
+    const { result } = renderHook(() => useProspector(), { wrapper: Wrapper });
+    const out = JSON.parse(await result.current.executeToolCall(
+      writeCall({ title: 'A', content: 'c' }), ctx()));
+    expect(out.error).toContain('No active project');
+    expect(createWikiPage).not.toHaveBeenCalled();
+    expect(updateWikiPage).not.toHaveBeenCalled();
+  });
+
+  // The project and project-list caches feed the wiki list and SaveReportModal's
+  // collision check. Without the refresh they show the page missing until staleTime.
+  it.each([
+    ['creating', {}],
+    ['updating', { pageId: 'pg-7' }],
+  ])('refreshes the project caches after %s a page', async (_label, extra) => {
+    const client = new QueryClient();
+    const invalidate = vi.spyOn(client, 'invalidateQueries');
+    const { result } = renderHook(() => useProspector(), {
+      wrapper: ({ children }: { children: React.ReactNode }) =>
+        <QueryClientProvider client={client}>{children}</QueryClientProvider>,
+    });
+    await result.current.executeToolCall(
+      writeCall({ title: 'A', content: 'c', ...extra }), ctx('proj-42'));
+
+    const keys = invalidate.mock.calls.map((c) => (c[0] as { queryKey: unknown[] }).queryKey);
+    expect(keys).toContainEqual(['project', 'proj-42']);
+    expect(keys).toContainEqual(['projects']);
   });
 });
 

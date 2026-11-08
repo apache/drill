@@ -29,7 +29,9 @@ import {
   saveConversationMessages,
 } from '../api/conversations';
 import type { StoredChatMessage } from '../api/tabs';
-import { addVisualization, addDashboard, getProject, createWikiPage } from '../api/projects';
+import {
+  addVisualization, addDashboard, getProject, createWikiPage, updateWikiPage,
+} from '../api/projects';
 import { createDashboard } from '../api/dashboards';
 import { createSavedQuery } from '../api/savedQueries';
 import { buildReportMarkdown, REPORTS_FOLDER } from '../utils/report';
@@ -155,14 +157,37 @@ export const TOOL_DEFINITIONS: ToolDefinition[] = [
     },
   },
   {
-    name: 'save_report',
-    description: 'Save a report you have written into the current project\'s wiki, under the '
-      + 'Reports folder. Only call this after the user has agreed to save it.',
+    name: 'write_wiki_page',
+    description: 'Write a page into the current project\'s wiki: create a new one, or replace '
+      + 'the content of an existing one by passing its pageId. Only call this after the user '
+      + 'has agreed to it. A new page goes in the Reports folder unless you give a folder, and '
+      + 'creating a page whose title already exists in that folder is refused: pass that '
+      + 'page\'s pageId to update it instead. To update a page you did not just write, find '
+      + 'its id with get_project_docs. The page always ends with a note that Prospector wrote '
+      + 'it.',
     parameters: {
       type: 'object',
       properties: {
-        title: { type: 'string', description: 'Title for the report' },
-        content: { type: 'string', description: 'The full report in markdown' },
+        title: { type: 'string', description: 'Title for the page' },
+        content: {
+          type: 'string',
+          description: 'The full page in markdown. When updating, this replaces the existing '
+            + 'content, so send the whole page.',
+        },
+        folder: {
+          type: 'string',
+          description: 'Wiki folder for the page. Defaults to "Reports" when creating; an '
+            + 'update leaves the page where it is unless you give one.',
+        },
+        includeTranscript: {
+          type: 'boolean',
+          description: 'Append the SQL queries run in this conversation, so a reader can '
+            + 're-run them. Defaults to false. Set it to true for a report of findings.',
+        },
+        pageId: {
+          type: 'string',
+          description: 'Id of an existing page to update instead of creating a new one.',
+        },
       },
       required: ['title', 'content'],
     },
@@ -188,7 +213,7 @@ export const TOOL_DEFINITIONS: ToolDefinition[] = [
   {
     name: 'get_project_docs',
     description: 'Read the current project\'s documentation (wiki) pages. Call with no '
-      + 'arguments to list page titles, or with pageTitle to read one page in full. '
+      + 'arguments to list page titles and ids, or with pageTitle to read one page in full. '
       + 'Use this when the project has documentation that may explain the data, its '
       + 'conventions, or the business meaning of a table or column.',
     parameters: {
@@ -947,31 +972,76 @@ export function useProspector(
           return JSON.stringify({ id: saved.id, name: saved.name, message: 'Query saved successfully' });
         }
 
-        case 'save_report': {
+        case 'write_wiki_page': {
           if (!context?.projectId) {
-            return JSON.stringify({ error: 'No active project — a report can only be saved '
-              + 'inside a project. Ask the user to open one.' });
+            return JSON.stringify({ error: 'No active project — a wiki page can only be '
+              + 'written inside a project. Ask the user to open one.' });
           }
+          const projectId = context.projectId;
+          const title = (args.title as string).trim();
+          const pageId = args.pageId as string | undefined;
+          const folder = args.folder as string | undefined;
+          // The footer is always written, so only the query appendix follows
+          // includeTranscript. In server mode there is no tab id, so the conversation id
+          // is the closed-over one: the conversation that issued this call.
           const markdown = buildReportMarkdown(
             args.content as string,
             messagesRef.current,
-            { generatedAt: Date.now(), conversationId: tabId ?? undefined }
+            {
+              generatedAt: Date.now(),
+              conversationId: (serverMode ? conversationId : tabId) ?? undefined,
+            },
+            { includeQueries: args.includeTranscript === true }
           );
-          const page = await createWikiPage(context.projectId, {
-            title: (args.title as string).trim(),
-            content: markdown,
-            folder: REPORTS_FOLDER,
-          });
+
+          let page;
+          if (pageId) {
+            try {
+              // folder is left out unless asked for: an update must not move the page.
+              page = await updateWikiPage(projectId, pageId, {
+                title,
+                content: markdown,
+                ...(folder ? { folder } : {}),
+              });
+            } catch (err) {
+              if ((err as { response?: { status?: number } }).response?.status === 404) {
+                return JSON.stringify({ error: `No wiki page with id "${pageId}" in this `
+                  + 'project; it may have been deleted. Call write_wiki_page without pageId '
+                  + 'to create a new page, or use get_project_docs to find the right id.' });
+              }
+              throw err;
+            }
+          } else {
+            const targetFolder = folder || REPORTS_FOLDER;
+            // Read fresh rather than from the query cache, which may predate a page
+            // written earlier in this same conversation.
+            const existing = ((await getProject(projectId)).wikiPages || []).find((p) =>
+              (p.folder || '') === targetFolder
+              && p.title.trim().toLowerCase() === title.toLowerCase());
+            if (existing) {
+              return JSON.stringify({ error: `A page titled "${existing.title}" already exists `
+                + `in ${targetFolder} (id ${existing.id}). Pass pageId "${existing.id}" to `
+                + 'update it, or choose a different title.' });
+            }
+            page = await createWikiPage(projectId, {
+              title,
+              content: markdown,
+              folder: targetFolder,
+            });
+          }
           // Same collision-check cache that SaveReportModal reads; without this a
-          // second save_report call within the staleTime window would not see this
+          // second write_wiki_page call within the staleTime window would not see this
           // page either.
-          await queryClient.invalidateQueries({ queryKey: ['project', context.projectId] });
+          await queryClient.invalidateQueries({ queryKey: ['project', projectId] });
           await queryClient.invalidateQueries({ queryKey: ['projects'] });
           return JSON.stringify({
             id: page.id,
             title: page.title,
-            message: `Report saved to the project wiki under ${REPORTS_FOLDER}.`,
-            viewPath: `/projects/${context.projectId}/wiki/${page.id}`,
+            updated: !!pageId,
+            message: pageId
+              ? `Wiki page "${page.title}" updated.`
+              : `Wiki page "${page.title}" created in ${page.folder || REPORTS_FOLDER}.`,
+            viewPath: `/projects/${projectId}/wiki/${page.id}`,
           });
         }
 
@@ -1007,7 +1077,7 @@ export function useProspector(
           const project = await getProject(context.projectId);
           const pages = project.wikiPages || [];
           if (!args.pageTitle) {
-            return JSON.stringify({ pages: pages.map((p) => ({ title: p.title })) });
+            return JSON.stringify({ pages: pages.map((p) => ({ id: p.id, title: p.title })) });
           }
           const page = pages.find((p) => p.title === args.pageTitle);
           if (!page) {
@@ -1018,6 +1088,7 @@ export function useProspector(
           }
           const content = page.content || '';
           return JSON.stringify({
+            id: page.id,
             title: page.title,
             content: content.length > PROJECT_DOC_MAX_CHARS
               ? `${content.slice(0, PROJECT_DOC_MAX_CHARS)}...[truncated]`
@@ -1035,7 +1106,7 @@ export function useProspector(
       console.error(`Tool "${toolCall.name}" failed`, err);
       return JSON.stringify({ error: msg });
     }
-  }, [onSqlGenerated, onVisualizationCreated, sendDataToAiRef, tabId, queryClient]);
+  }, [onSqlGenerated, onVisualizationCreated, sendDataToAiRef, tabId, serverMode, conversationId, queryClient]);
 
   const doStreamRound = useCallback((
     allMessages: ChatMessage[],

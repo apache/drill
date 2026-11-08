@@ -128,11 +128,19 @@ export function provenanceFooter(p: ReportProvenance): string {
     + 'Review its findings before acting on them.*\n';
 }
 
-/** The full markdown written to the wiki: body, then evidence, then provenance. */
+/**
+ * The full markdown written to the wiki: body, then evidence, then provenance.
+ *
+ * `includeQueries: false` drops the evidence and keeps the provenance. The footer says a
+ * model wrote the page and when, which is true of every page Prospector writes, so it is
+ * not optional; the query appendix only belongs on a page that reports findings.
+ */
 export function buildReportMarkdown(
   content: string,
   messages: ChatMessage[],
-  p: ReportProvenance
+  p: ReportProvenance,
+  { includeQueries = true }: { includeQueries?: boolean } = {}
 ): string {
-  return `${content.trim()}${queryAppendix(messages)}${provenanceFooter(p)}`;
+  const evidence = includeQueries ? queryAppendix(messages) : '';
+  return `${content.trim()}${evidence}${provenanceFooter(p)}`;
 }

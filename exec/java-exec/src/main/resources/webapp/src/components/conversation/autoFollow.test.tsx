@@ -59,7 +59,9 @@ describe('createdArtifact', () => {
     ['create_visualization', 'chart', { id: 'v1', name: 'Sales' }, 'Sales'],
     ['create_dashboard', 'dashboard', { id: 'd1', name: 'Exec view' }, 'Exec view'],
     ['save_query', 'query', { id: 'q1', name: 'Active users' }, 'Active users'],
-    // A report is a wiki page, and the tool names it `title`.
+    // A wiki page, which the tool names `title`.
+    ['write_wiki_page', 'wiki', { id: 'pg1', title: 'Q3 report' }, 'Q3 report'],
+    // Retired tool name; conversations stored before the rename still contain it.
     ['save_report', 'wiki', { id: 'pg1', title: 'Q3 report' }, 'Q3 report'],
   ])('reads the id and name %s returns', (toolName, kind, body, name) => {
     expect(createdArtifact(asCall(toolName), tool(body))).toEqual({ kind, id: body.id, name });

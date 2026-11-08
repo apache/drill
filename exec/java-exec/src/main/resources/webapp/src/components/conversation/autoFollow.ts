@@ -30,19 +30,21 @@ export interface CreatedArtifact {
  * The tools whose result is a durable project artifact, and what kind it is. execute_sql is
  * deliberately absent: an exploratory query is not an artifact, and a card for every
  * intermediate one would bury the real ones. Its results still reach the canvas, through the
- * hook's onQueryResult. A report is a wiki page, so save_report is a wiki artifact.
+ * hook's onQueryResult. A wiki page is a wiki artifact. save_report is the retired name of
+ * write_wiki_page and stays here because stored conversations still carry its calls.
  */
 const ARTIFACT_TOOLS: Record<string, ArtifactKind> = {
   create_visualization: 'chart',
   create_dashboard: 'dashboard',
   save_query: 'query',
+  write_wiki_page: 'wiki',
   save_report: 'wiki',
 };
 
 /**
  * The artifact a tool call created, read from its result in the thread, or null when the
  * call is not an artifact tool, has no result yet, failed, or returned no id. The tools
- * already return `id` and `name` (save_report returns `title`), so nothing is added to them.
+ * already return `id` and `name` (the wiki tools return `title`), so nothing is added to them.
  */
 export function createdArtifact(call: ToolCall, result: ChatMessage | undefined): CreatedArtifact | null {
   const kind = ARTIFACT_TOOLS[call.name];

@@ -75,11 +75,11 @@ string work, no model involvement:
 Tune conservatively. A chip that appears under every long answer teaches people
 to ignore it, and a missed report costs one click on a menu item.
 
-**The tool.** `save_report` joins the existing client-side tools in
+**The tool.** `write_wiki_page` (it replaced `save_report`, which only created pages under `Reports`) joins the existing client-side tools in
 `useProspector.ts`, next to `save_query`, `create_visualization` and
 `create_dashboard`. The system prompt tells Prospector that after producing a
 full report it should offer to save it; if the user agrees in conversation, it
-calls `save_report` and the same save path runs.
+calls `write_wiki_page` with `includeTranscript: true`, which writes the same markdown the modal does.
 
 Two routes, one action, so the chip and the model cannot contradict each other.
 A chip with no prose offer reads as ordinary UI; a prose offer with no chip
@@ -177,7 +177,7 @@ and `jsPDF`'s built-in fonts have no emoji coverage.
 | `components/prospector/QuickActionBar.tsx` | Generate Report action and its prompt |
 | `components/prospector/ChatMessageBubble.tsx` | Suggestion chip, Save to project action |
 | `components/prospector/SaveReportModal.tsx` | New: project, title, update-vs-new |
-| `hooks/useProspector.ts` | `save_report` tool and handler; dismissed-suggestion state |
+| `hooks/useProspector.ts` | `write_wiki_page` tool and handler; dismissed-suggestion state |
 | `utils/report.ts` | New: report heuristic, title extraction, provenance footer, query appendix |
 | `api/projects.ts` | `folder` on the wiki page create/update calls |
 | `types/index.ts` | `folder?: string` on `WikiPage` |

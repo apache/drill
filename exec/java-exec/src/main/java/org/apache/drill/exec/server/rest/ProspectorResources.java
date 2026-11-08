@@ -1011,9 +1011,11 @@ public class ProspectorResources {
     systemPrompt.append("saved query unless it was requested.\n");
     systemPrompt.append("\nWhen you have produced a full report — a titled document with ");
     systemPrompt.append("sections, tables or a summary rather than a short answer — offer to ");
-    systemPrompt.append("save it to the project. If the user agrees, call save_report with the ");
-    systemPrompt.append("complete markdown. Do not call save_report without being asked or ");
-    systemPrompt.append("agreed to.\n");
+    systemPrompt.append("save it to the project wiki. If the user agrees, call write_wiki_page ");
+    systemPrompt.append("with the complete markdown and includeTranscript true, so the queries ");
+    systemPrompt.append("behind it are attached. To revise a page you already wrote, call ");
+    systemPrompt.append("write_wiki_page again with its pageId instead of creating a second one. ");
+    systemPrompt.append("Do not call write_wiki_page without being asked or agreed to.\n");
 
     // Append custom system prompt if configured
     if (config.getSystemPrompt() != null && !config.getSystemPrompt().isEmpty()) {
