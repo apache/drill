@@ -128,6 +128,15 @@ public class ConversationStore {
     recordStore.put(record.getId(), record);
   }
 
+  /**
+   * Stores the record without touching its version, for metadata edits such as a
+   * rename. The version guards message writes, so an edit that leaves the messages
+   * alone must not invalidate the version a client holds.
+   */
+  public void updateMetadata(ConversationRecord record) {
+    recordStore.put(record.getId(), record);
+  }
+
   /** Never null: a conversation that has not been talked to simply has no messages yet. */
   public Conversation findMessages(String conversationId) {
     Conversation stored = messageStore.get(conversationId);

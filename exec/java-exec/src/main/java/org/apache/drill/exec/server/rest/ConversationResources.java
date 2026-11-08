@@ -229,10 +229,7 @@ public class ConversationResources {
       }
       record.setName(request.name.trim());
       record.setUpdatedAt(Instant.now().toEpochMilli());
-      // saveRecord bumps the version. A rename must not invalidate the version a client
-      // holds for its next message write, so step back one first.
-      record.setVersion(record.getVersion() - 1);
-      store.saveRecord(record);
+      store.updateMetadata(record);
       return Response.ok(record).build();
     }
   }

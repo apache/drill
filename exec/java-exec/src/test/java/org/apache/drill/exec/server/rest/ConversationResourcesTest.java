@@ -150,6 +150,40 @@ public class ConversationResourcesTest extends ClusterTest {
   }
 
   @Test
+  public void toolCallsAndToolFieldsSurviveRoundTrip() throws Exception {
+    String id = create("tc");
+    JsonNode[] out = new JsonNode[1];
+    String body = "{\"version\":1,\"messages\":["
+        + "{\"role\":\"assistant\",\"content\":\"running\",\"toolCalls\":"
+        + "[{\"id\":\"call_1\",\"name\":\"run_sql\",\"arguments\":\"{\\\"sql\\\":\\\"SELECT 1\\\"}\"}]},"
+        + "{\"role\":\"tool\",\"content\":\"ok\",\"toolCallId\":\"call_1\",\"name\":\"run_sql\"}]}";
+    assertEquals(200, put(base("tc") + "/" + id + "/messages", body, out));
+
+    assertEquals(200, get(base("tc") + "/" + id, out));
+    JsonNode msgs = out[0].get("messages");
+    assertEquals(2, msgs.size());
+    JsonNode call = msgs.get(0).get("toolCalls").get(0);
+    assertEquals("call_1", call.get("id").asText());
+    assertEquals("run_sql", call.get("name").asText());
+    assertEquals("{\"sql\":\"SELECT 1\"}", call.get("arguments").asText());
+    assertEquals("call_1", msgs.get(1).get("toolCallId").asText());
+    assertEquals("run_sql", msgs.get(1).get("name").asText());
+  }
+
+  @Test
+  public void renameDoesNotInvalidateTheClientsMessageVersion() throws Exception {
+    String id = create("renamever");
+    JsonNode[] out = new JsonNode[1];
+    // The client holds the version from creation, before the rename.
+    assertEquals(200, get(base("renamever") + "/" + id, out));
+    int held = out[0].get("record").get("version").asInt();
+
+    assertEquals(200, put(base("renamever") + "/" + id, "{\"name\":\"Renamed\"}", out));
+    assertEquals(200, put(base("renamever") + "/" + id + "/messages",
+        messagesBody("after rename", held), out));
+  }
+
+  @Test
   public void putMessagesOverCapReturns413() throws Exception {
     String id = create("cap");
     JsonNode[] out = new JsonNode[1];
