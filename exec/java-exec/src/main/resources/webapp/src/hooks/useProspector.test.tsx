@@ -397,6 +397,13 @@ describe('execute_sql hands the full result to onQueryResult', () => {
     expect(onQueryResult).not.toHaveBeenCalled();
   });
 
+  it('has nothing to report when the call carried no SQL string', async () => {
+    const { result, onQueryResult } = await mount(true);
+    await result.current.executeToolCall(
+      { id: 'call-q', name: 'execute_sql', arguments: JSON.stringify({}) }, ctx());
+    expect(onQueryResult).not.toHaveBeenCalled();
+  });
+
   it('still summarises for the model when no callback is given', async () => {
     vi.mocked(getAiStatus).mockResolvedValue(
       { enabled: true, configured: true, sendDataToAi: true } as never);

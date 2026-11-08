@@ -36,8 +36,10 @@ interface ResultsCanvasProps {
  * The rows of a query Prospector ran, or the SQL behind them. The grid is the same one
  * the SQL Lab uses, so export, profiling and column tools come with it. Only the props
  * that make sense beside a chat are passed: the result and its SQL. Nothing here re-runs
- * or clears, because a canvas result is a snapshot that the next target replaces, and
- * there is no cache id, because the hook hands over the rows rather than a cached query.
+ * or clears, because a canvas result is a snapshot that the next target replaces. The grid
+ * also gets no cache id (the hook hands over the rows rather than a cached query), so data
+ * profiling re-derives from the SQL at the cost of one extra round trip. Create Chart and
+ * Share as API are left out of the Analyze menu automatically, as no handlers are passed.
  */
 export default function ResultsCanvas({ sql, result, tab }: ResultsCanvasProps) {
   if (tab === 'sql') {

@@ -411,8 +411,10 @@ export function useProspector(
   conversationId?: string | null,
   projectId?: string | null,
   // Called with the SQL and the FULL result of every execute_sql the model runs. The model
-  // sees only a summary (and rows only when sendDataToAi allows), but the user ran this
-  // query, so their own screen is not subject to that gate. Never forward it to the model.
+  // sees only a summary (and rows only when sendDataToAi allows). This is for the user's own
+  // screen and is not subject to that gate: the SQL is already shown to them through
+  // onSqlGenerated, and the rows never go back into the model's messages. Never forward it
+  // to the model.
   onQueryResult?: (sql: string, result: QueryResult) => void,
 ): UseProspectorReturn {
   const serverMode = !!conversationId && !!projectId;
@@ -833,7 +835,9 @@ export function useProspector(
           if (onSqlGenerated && args.sql) {
             onSqlGenerated(args.sql as string, sanitizeTabTitle(args.title));
           }
-          onQueryResultRef.current?.(args.sql as string, result);
+          if (typeof args.sql === 'string') {
+            onQueryResultRef.current?.(args.sql, result);
+          }
           const rowCount = result.rows?.length ?? 0;
           const summary = {
             columns: result.columns,

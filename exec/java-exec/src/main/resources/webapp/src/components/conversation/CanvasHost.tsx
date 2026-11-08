@@ -15,7 +15,7 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
-import { useState } from 'react';
+import { useEffect, useRef, useState } from 'react';
 import type { ReactNode } from 'react';
 import { Button, Empty, Tabs, Tooltip } from 'antd';
 import {
@@ -77,6 +77,17 @@ function viewerFor(target: CanvasTarget): Viewer {
   };
 }
 
+// Things that handle Escape themselves and are drawn outside the canvas. While one is open
+// the key belongs to it, not to full screen. Modals and select/dropdown/popover panels
+// from antd, and the context menus ag-grid opens.
+const OPEN_OVERLAY_SELECTOR = [
+  '.ant-modal-wrap:not([style*="display: none"])',
+  '.ant-dropdown:not(.ant-dropdown-hidden)',
+  '.ant-select-dropdown:not(.ant-select-dropdown-hidden)',
+  '.ant-popover:not(.ant-popover-hidden)',
+  '.ag-popup-child',
+].join(',');
+
 /**
  * The slot beside the chat that shows whatever Prospector is working on. It owns the
  * secondary tab strip and the pin and full-screen controls; each viewer says which tabs
@@ -95,14 +106,61 @@ export default function CanvasHost({
   if (!pinned && shown !== target) {
     setShown(target);
   }
-  const [tab, setTab] = useState('');
+  // The chosen tab is remembered per kind, so one viewer's selection can never be applied to
+  // another that happens to share a tab name.
+  const [tabByKind, setTabByKind] = useState<Record<string, string>>({});
 
   const viewer = shown ? viewerFor(shown) : null;
-  const activeTab = viewer?.tabs.some((t) => t.key === tab) ? tab : viewer?.tabs[0].key;
+  const activeTab = shown && viewer ? tabByKind[shown.kind] ?? viewer.tabs[0].key : undefined;
+
+  const asideRef = useRef<HTMLElement>(null);
+  const fullScreenButtonRef = useRef<HTMLButtonElement>(null);
+
+  // Full screen is a modal dialog: Escape leaves it, focus goes to the exit control and
+  // comes back to the full-screen control, and nothing behind it can be tabbed to.
+  const onFullScreenRef = useRef(onFullScreen);
+  onFullScreenRef.current = onFullScreen;
+  const wasFullScreen = useRef(false);
+  useEffect(() => {
+    if (isFullScreen !== wasFullScreen.current) {
+      wasFullScreen.current = isFullScreen;
+      fullScreenButtonRef.current?.focus();
+    }
+    if (!isFullScreen) {
+      return undefined;
+    }
+    const onKeyDown = (e: KeyboardEvent) => {
+      if (e.key !== 'Escape' || e.defaultPrevented || document.querySelector(OPEN_OVERLAY_SELECTOR)) {
+        return;
+      }
+      onFullScreenRef.current();
+    };
+    document.addEventListener('keydown', onKeyDown);
+
+    // Siblings of the canvas and of each of its ancestors, up to the body: the chat, the
+    // conversation list and the app shell. Only those that are not already inert, so exit
+    // leaves anything else's inert alone.
+    const inerted: Element[] = [];
+    for (let node: Element | null = asideRef.current; node && node !== document.body; node = node.parentElement) {
+      Array.from(node.parentElement?.children ?? []).forEach((sibling) => {
+        if (sibling !== node && !sibling.hasAttribute('inert')) {
+          sibling.setAttribute('inert', '');
+          inerted.push(sibling);
+        }
+      });
+    }
+    return () => {
+      document.removeEventListener('keydown', onKeyDown);
+      inerted.forEach((el) => el.removeAttribute('inert'));
+    };
+  }, [isFullScreen]);
 
   return (
     <aside
+      ref={asideRef}
       aria-label="Canvas"
+      role={isFullScreen ? 'dialog' : undefined}
+      aria-modal={isFullScreen ? true : undefined}
       style={{
         width: isFullScreen ? undefined : 440,
         flexShrink: 0,
@@ -130,7 +188,7 @@ export default function CanvasHost({
             <Tabs
               size="small"
               activeKey={activeTab}
-              onChange={setTab}
+              onChange={(key) => shown && setTabByKind((prev) => ({ ...prev, [shown.kind]: key }))}
               items={viewer.tabs}
               tabBarStyle={{ margin: 0 }}
             />
@@ -148,6 +206,7 @@ export default function CanvasHost({
         </Tooltip>
         <Tooltip title={isFullScreen ? 'Exit full screen' : 'Full screen'}>
           <Button
+            ref={fullScreenButtonRef}
             type="text"
             size="small"
             aria-label={isFullScreen ? 'Exit full screen' : 'Full screen'}
@@ -157,7 +216,7 @@ export default function CanvasHost({
           />
         </Tooltip>
       </div>
-      <div style={{ flex: 1, minHeight: 0 }}>
+      <div data-testid="canvas-body" data-active-tab={activeTab} style={{ flex: 1, minHeight: 0 }}>
         {viewer && activeTab ? (
           viewer.render(activeTab)
         ) : (

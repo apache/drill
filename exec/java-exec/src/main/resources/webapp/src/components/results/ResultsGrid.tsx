@@ -331,26 +331,34 @@ export default function ResultsGrid({
     },
   ];
 
+  // Chart and API sharing need the host page to supply them; an item with no handler would
+  // close the menu and do nothing, so it is left out instead.
   const analyzeMenuItems: MenuProps['items'] = [
-    {
-      key: 'chart',
-      icon: <BarChartOutlined />,
-      label: 'Create Chart',
-      onClick: onCreateVisualization,
-    },
+    ...(onCreateVisualization
+      ? [{
+        key: 'chart',
+        icon: <BarChartOutlined />,
+        label: 'Create Chart',
+        onClick: onCreateVisualization,
+      }]
+      : []),
     {
       key: 'profile',
       icon: <ProfileOutlined />,
       label: 'Profile Data',
       onClick: () => setProfilerOpen(true),
     },
-    { type: 'divider' },
-    {
-      key: 'share',
-      icon: <ApiOutlined />,
-      label: 'Share as API',
-      onClick: onShareApi,
-    },
+    ...(onShareApi
+      ? [
+        { type: 'divider' as const },
+        {
+          key: 'share',
+          icon: <ApiOutlined />,
+          label: 'Share as API',
+          onClick: onShareApi,
+        },
+      ]
+      : []),
   ];
 
   const viewMenuItems: MenuProps['items'] = [
