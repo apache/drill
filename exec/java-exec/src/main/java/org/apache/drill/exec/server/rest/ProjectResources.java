@@ -76,6 +76,7 @@ public class ProjectResources {
   private static final long TRASH_TTL_MS = 30L * 24 * 60 * 60 * 1000;
 
   public static final String SYSTEM_LOGS_PROJECT_ID = "system-drill-logs";
+  static final String SCRATCH_ID_PREFIX = "scratch_";
 
   private static final String DFS_PLUGIN_NAME = "dfs";
   private static final String LOGS_WORKSPACE_NAME = "logs";
@@ -492,6 +493,11 @@ public class ProjectResources {
           continue;
         }
 
+        // Scratch projects back conversations outside any project; they are not user-visible.
+        if (project.isSystem() && project.getId().startsWith(SCRATCH_ID_PREFIX)) {
+          continue;
+        }
+
         if (canRead(project, currentUser)) {
           projects.add(project);
         }
@@ -676,6 +682,20 @@ public class ProjectResources {
     } catch (Exception e) {
       logger.error("Error deleting project", e);
       throw new DrillRuntimeException("Failed to delete project: " + e.getMessage(), e);
+    }
+  }
+
+  @GET
+  @Path("/scratch")
+  @Produces(MediaType.APPLICATION_JSON)
+  @Operation(summary = "Get Scratch project",
+      description = "Returns the current user's personal Scratch project, creating it on first call")
+  public Response getScratchProject() {
+    try {
+      return Response.ok(getOrCreateScratch(getStore(), getCurrentUser())).build();
+    } catch (Exception e) {
+      logger.error("Error getting scratch project", e);
+      throw new DrillRuntimeException("Failed to get scratch project: " + e.getMessage(), e);
     }
   }
 
@@ -1910,6 +1930,27 @@ public class ProjectResources {
       }
     } catch (Exception e) {
       logger.warn("Failed to auto-configure log workspace: {}", e.getMessage());
+    }
+  }
+
+  /**
+   * Returns the owner's personal Scratch project, creating it on first use. Idempotent:
+   * the id is deterministic ({@code scratch_<owner>}) and creation is serialised per id so
+   * concurrent first calls cannot produce two projects.
+   */
+  public static Project getOrCreateScratch(PersistentStore<Project> store, String owner) {
+    String id = SCRATCH_ID_PREFIX + owner;
+    synchronized (id.intern()) {
+      Project existing = store.get(id);
+      if (existing != null) {
+        return existing;
+      }
+      long now = Instant.now().toEpochMilli();
+      Project scratch = new Project(id, "Scratch",
+          "Personal workspace for AI conversations outside any project", null, owner, false,
+          null, null, null, null, null, null, true, now, now, null, null, 0L);
+      store.put(id, scratch);
+      return scratch;
     }
   }
 
