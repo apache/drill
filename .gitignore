@@ -65,3 +65,6 @@ result-cache/
 
 # Superpowers brainstorming scratch
 .superpowers/
+
+# Git worktrees
+.worktrees/
