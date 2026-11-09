@@ -60,6 +60,8 @@ Browse dashboards. Filter by favorites or visibility. Create, edit metadata, del
 
 The dashboard canvas. Grid layout with live panels (visualizations, markdown, images, AI Q&A, alerts, NL filters). View mode and edit mode share the same component; edit mode adds drag-resize handles, an "Add panel" affordance, theme picker, and refresh-rate settings.
 
+The grid identifies a panel by its `id`, both as the React key and as the layout item's `i`, so a panel without one is never placed or drawn. `DashboardResources` fills in any missing id on create and update, and repairs a stored dashboard the first time it is read, because a client can leave them out (Prospector's `create_dashboard` does).
+
 ### Data sources
 
 | API | Module |
