@@ -28,6 +28,7 @@ import {
   Alert,
 } from 'antd';
 import { PlusOutlined, DeleteOutlined, LinkOutlined } from '@ant-design/icons';
+import { testConnection } from '../../api/storage';
 
 interface JdbcFormProps {
   config: Record<string, unknown>;
@@ -38,6 +39,21 @@ interface ParamRow {
   key: string;
   paramKey: string;
   paramValue: string;
+}
+
+/**
+ * Where a JDBC plugin's credentials live. Drill writes them at the top level of the config
+ * when they were given as `username`/`password`, and inside a `PlainCredentialsProvider`
+ * otherwise; both shapes come back from the server, so the form reads and writes whichever
+ * one this config uses.
+ */
+function credentialsOf(config: Record<string, unknown>): { username: string; password: string } {
+  const provider = config.credentialsProvider as { credentials?: Record<string, string> } | undefined;
+  const creds = provider?.credentials ?? {};
+  return {
+    username: (config.username as string) || creds.username || '',
+    password: (config.password as string) || creds.password || '',
+  };
 }
 
 const commonDrivers = [
@@ -54,8 +70,8 @@ const commonDrivers = [
 export default function JdbcForm({ config, onChange }: JdbcFormProps) {
   const [driver, setDriver] = useState<string>((config.driver as string) || '');
   const [url, setUrl] = useState<string>((config.url as string) || '');
-  const [username, setUsername] = useState<string>((config.username as string) || '');
-  const [password, setPassword] = useState<string>((config.password as string) || '');
+  const [username, setUsername] = useState<string>(() => credentialsOf(config).username);
+  const [password, setPassword] = useState<string>(() => credentialsOf(config).password);
   const [writable, setWritable] = useState<boolean>((config.writable as boolean) || false);
   const [caseInsensitive, setCaseInsensitive] = useState<boolean>(
     (config.caseInsensitiveTableNames as boolean) || false
@@ -68,8 +84,8 @@ export default function JdbcForm({ config, onChange }: JdbcFormProps) {
   useEffect(() => {
     setDriver((config.driver as string) || '');
     setUrl((config.url as string) || '');
-    setUsername((config.username as string) || '');
-    setPassword((config.password as string) || '');
+    setUsername(credentialsOf(config).username);
+    setPassword(credentialsOf(config).password);
     setWritable((config.writable as boolean) || false);
     setCaseInsensitive((config.caseInsensitiveTableNames as boolean) || false);
     setBatchSize((config.writerBatchSize as number) || 10000);
@@ -91,6 +107,26 @@ export default function JdbcForm({ config, onChange }: JdbcFormProps) {
     [config, onChange]
   );
 
+  // A credential goes back where it came from: changing one inside a credentials provider
+  // must not leave a second, stale copy at the top level for the server to choose between.
+  const emitCredential = useCallback(
+    (field: 'username' | 'password', value: string) => {
+      const provider = config.credentialsProvider as Record<string, unknown> | undefined;
+      if (provider) {
+        onChange({
+          ...config,
+          credentialsProvider: {
+            ...provider,
+            credentials: { ...(provider.credentials as Record<string, string> | undefined), [field]: value },
+          },
+        });
+      } else {
+        onChange({ ...config, [field]: value });
+      }
+    },
+    [config, onChange],
+  );
+
   const handleTestConnection = useCallback(async () => {
     if (!driver || !url) {
       setTestResult({ success: false, message: 'Please enter a Driver Class and JDBC URL' });
@@ -105,25 +141,16 @@ export default function JdbcForm({ config, onChange }: JdbcFormProps) {
         type: 'jdbc',
         driver,
         url,
-        username,
-        password,
+        // Only when set: an empty user name is a user name, and the server would try to
+        // connect as it rather than without credentials.
+        ...(username ? { username } : {}),
+        ...(password ? { password } : {}),
         writable,
         caseInsensitiveTableNames: caseInsensitive,
         writerBatchSize: batchSize,
       };
 
-      const response = await fetch('/storage/test-connection', {
-        method: 'POST',
-        headers: {
-          'Content-Type': 'application/json',
-        },
-        body: JSON.stringify({
-          name: 'test-connection',
-          config: testConfig,
-        }),
-      });
-
-      const result = await response.json();
+      const result = await testConnection('test-connection', testConfig);
       setTestResult({
         success: result.success || false,
         message: result.message || 'Unknown error',
@@ -235,7 +262,7 @@ export default function JdbcForm({ config, onChange }: JdbcFormProps) {
           value={username}
           onChange={(e) => {
             setUsername(e.target.value);
-            emitChange({ username: e.target.value });
+            emitCredential('username', e.target.value);
           }}
           placeholder="username"
         />
@@ -246,7 +273,7 @@ export default function JdbcForm({ config, onChange }: JdbcFormProps) {
           value={password}
           onChange={(e) => {
             setPassword(e.target.value);
-            emitChange({ password: e.target.value });
+            emitCredential('password', e.target.value);
           }}
           placeholder="password"
         />
