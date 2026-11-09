@@ -18,6 +18,7 @@
 package org.apache.drill.exec.store.parquet.columnreaders;
 
 import org.apache.drill.common.exceptions.ExecutionSetupException;
+import org.apache.drill.common.types.TypeProtos;
 import org.apache.drill.exec.ExecConstants;
 import org.apache.drill.exec.vector.BigIntVector;
 import org.apache.drill.exec.vector.BitVector;
@@ -73,7 +74,10 @@ public class ColumnReaderFactory {
     ConvertedType convertedType = schemaElement.getConverted_type();
     // if the column is required, or repeated (in which case we just want to use this to generate our appropriate
     // ColumnReader for actually transferring data into the data vector inside of our repeated vector
-    if (descriptor.getMaxDefinitionLevel() == 0 || descriptor.getMaxRepetitionLevel() > 0) {
+    // Choose a reader based on a ValueVector DataMode since we might want to put
+    // parquet's REQUIRED column into a Drill's OPTIONAL ValueVector
+    // see ParquetSchema#tableSchema for details
+    if (v.getField().getDataMode() != TypeProtos.DataMode.OPTIONAL) {
       return getColumnReader(recordReader, fixedLength, descriptor, columnChunkMetaData, v, schemaElement, convertedType);
     } else { // if the column is nullable
       return getNullableColumnReader(recordReader, descriptor,
@@ -86,8 +90,11 @@ public class ColumnReaderFactory {
                                           SchemaElement schemaElement
   ) throws ExecutionSetupException {
     ConvertedType convertedType = schemaElement.getConverted_type();
-    switch (descriptor.getMaxDefinitionLevel()) {
-      case 0:
+    // Choose a reader based on a ValueVector DataMode since we might want to put
+    // parquet's REQUIRED column into a Drill's OPTIONAL ValueVector
+    // see ParquetSchema#tableSchema for details
+    switch (v.getField().getDataMode()) {
+    case REQUIRED:
         if (convertedType == null) {
           return new VarLengthColumnReaders.VarBinaryColumn(parentReader, descriptor, columnChunkMetaData, fixedLength, (VarBinaryVector) v, schemaElement);
         }

@@ -32,9 +32,10 @@ import org.apache.drill.exec.exception.SchemaChangeException;
 import org.apache.drill.exec.expr.TypeHelper;
 import org.apache.drill.exec.physical.impl.OutputMutator;
 import org.apache.drill.exec.record.MaterializedField;
+import org.apache.drill.exec.record.metadata.TupleMetadata;
 import org.apache.drill.exec.server.options.OptionManager;
 import org.apache.drill.exec.store.parquet.ParquetReaderUtility;
-import org.apache.drill.exec.vector.NullableIntVector;
+import org.apache.drill.exec.vector.ValueVector;
 import org.apache.parquet.column.ColumnDescriptor;
 import org.apache.parquet.format.SchemaElement;
 import org.apache.parquet.hadoop.metadata.BlockMetaData;
@@ -65,6 +66,19 @@ public final class ParquetSchema {
   private final ParquetMetadata footer;
 
   /**
+   * Schema for the whole table constructed by a GroupScan from all the parquet files to read.
+   * If we don't find a selected column in our parquet file, type for the null-filled vector
+   * to create would be tried to find in this schema. That is, if some other parquet file contains
+   * the column, we'll take their type. Otherwise, default to Nullable Int.
+   * Also, if at least 1 file does not contain the selected column, then the overall table schema
+   * should have this field with OPTIONAL data mode. GroupScan catches this case and sets the
+   * appropriate data mode in this schema. Our mission here is to enforce that OPTIONAL mode in our
+   * output schema, even if the particular parquet file we're reading from has this field REQUIRED,
+   * to provide consistency across all scan batches.
+   */
+  private final TupleMetadata tableSchema;
+
+  /**
    * List of metadata for selected columns. This list does two things.
    * First, it identifies the Parquet columns we wish to select. Second, it
    * provides metadata for those columns. Note that null columns (columns
@@ -91,11 +105,12 @@ public final class ParquetSchema {
    * this is a SELECT * query
    */
 
-  public ParquetSchema(OptionManager options, int rowGroupIndex, ParquetMetadata footer, Collection<SchemaPath> selectedCols) {
+  public ParquetSchema(OptionManager options, int rowGroupIndex, ParquetMetadata footer, Collection<SchemaPath> selectedCols, TupleMetadata tableSchema) {
     this.options = options;
     this.rowGroupIndex = rowGroupIndex;
     this.selectedCols = selectedCols;
     this.footer = footer;
+    this.tableSchema = tableSchema;
     if (selectedCols == null) {
       columnsFound = null;
     } else {
@@ -127,12 +142,21 @@ public final class ParquetSchema {
     // loop to add up the length of the fixed width columns and build the schema
     for (ColumnDescriptor column : footer.getFileMetaData().getSchema().getColumns()) {
       ParquetColumnMetadata columnMetadata = new ParquetColumnMetadata(column);
-      columnMetadata.resolveDrillType(schemaElements, options);
+      columnMetadata.resolveDrillType(schemaElements, options, shouldEnforceOptional(column));
       if (!columnSelected(column)) {
         continue;
       }
       selectedColumnMetadata.add(columnMetadata);
     }
+  }
+
+  private boolean shouldEnforceOptional(ColumnDescriptor column) {
+    String columnName = SchemaPath.getCompoundPath(column.getPath()).getAsUnescapedPath();
+    MaterializedField tableField;
+    if (tableSchema == null || (tableField = tableSchema.column(columnName)) == null) {
+      return false;
+    }
+    return tableField.getDataMode() == DataMode.OPTIONAL;
   }
 
   /**
@@ -206,7 +230,7 @@ public final class ParquetSchema {
    * @throws SchemaChangeException should not occur
    */
 
-  public void createNonExistentColumns(OutputMutator output, List<NullableIntVector> nullFilledVectors) throws SchemaChangeException {
+  public void createNonExistentColumns(OutputMutator output, List<ValueVector> nullFilledVectors) throws SchemaChangeException {
     List<SchemaPath> projectedColumns = Lists.newArrayList(selectedCols);
     for (int i = 0; i < columnsFound.length; i++) {
       SchemaPath col = projectedColumns.get(i);
@@ -227,12 +251,14 @@ public final class ParquetSchema {
    * @throws SchemaChangeException should not occur
    */
 
-  private NullableIntVector createMissingColumn(SchemaPath col, OutputMutator output) throws SchemaChangeException {
-    // col.toExpr() is used here as field name since we don't want to see these fields in the existing maps
-    MaterializedField field = MaterializedField.create(col.toExpr(),
-                                                    Types.optional(TypeProtos.MinorType.INT));
-    return (NullableIntVector) output.addField(field,
-              TypeHelper.getValueVectorClass(TypeProtos.MinorType.INT, DataMode.OPTIONAL));
+  private ValueVector createMissingColumn(SchemaPath col, OutputMutator output) throws SchemaChangeException {
+    String colName = col.getAsUnescapedPath();
+    MaterializedField tableField = tableSchema.column(colName);
+    TypeProtos.MinorType type = tableField == null ? TypeProtos.MinorType.INT : tableField.getType().getMinorType();
+    MaterializedField field = MaterializedField.create(colName,
+                                                    Types.optional(type));
+    return output.addField(field,
+        TypeHelper.getValueVectorClass(type, DataMode.OPTIONAL));
   }
 
   Map<String, Integer> buildChunkMap(BlockMetaData rowGroupMetadata) {

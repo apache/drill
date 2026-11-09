@@ -640,7 +640,7 @@ public class ParquetRecordReaderTest extends BaseTestQuery {
       );
       final ParquetRecordReader rr = new ParquetRecordReader(context, fileName, 0, fs,
           ccf,
-          f.getParquetMetadata(), columns, ParquetReaderUtility.DateCorruptionStatus.META_SHOWS_CORRUPTION);
+          f.getParquetMetadata(), columns, ParquetReaderUtility.DateCorruptionStatus.META_SHOWS_CORRUPTION, null);
       final TestOutputMutator mutator = new TestOutputMutator(allocator);
       rr.setup(null, mutator);
       final Stopwatch watch = Stopwatch.createStarted();
