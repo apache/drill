@@ -1183,7 +1183,7 @@ export default function ColumnMapper({ columns, chartType, config, onChange, onC
           <Divider style={{ margin: '8px 0' }} />
           <Form.Item label="Pie Style">
             <Radio.Group
-              value={(config.chartOptions?.pieStyle as string) || 'donut'}
+              value={(config.chartOptions?.pieStyle as string) || 'pie'}
               onChange={(e) => onChange({
                 ...config,
                 chartOptions: { ...config.chartOptions, pieStyle: e.target.value },

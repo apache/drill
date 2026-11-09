@@ -25,6 +25,7 @@ import type { ReactNode } from 'react';
 import ErrorBoundary from '../ErrorBoundary';
 import { ProjectContextProvider } from '../../contexts/ProjectContext';
 import ArtifactCanvas, { artifactPath, artifactTabs, useOpenArtifact } from './ArtifactCanvas';
+import { INITIAL_PANELS } from './DashboardCanvas';
 import type { ArtifactKind } from './ArtifactCanvas';
 import { computeEffectiveQuery } from '../../utils/sqlTransformations';
 import { getVisualization } from '../../api/visualizations';
@@ -225,16 +226,17 @@ describe('ArtifactCanvas', () => {
     });
 
     it('mounts only the first panels of a large dashboard until asked for the rest', async () => {
-      const many = Array.from({ length: 9 }, (_, i) =>
+      const count = INITIAL_PANELS + 1;
+      const many = Array.from({ length: count }, (_, i) =>
         panel({ id: 'p' + i, y: i, type: 'markdown', content: 'panel number ' + i }));
       vi.mocked(getDashboard).mockResolvedValue(dashboard(many));
       show('dashboard', 'd1', 'dashboard');
 
       await screen.findByText('panel number 0');
-      expect(screen.getByText('panel number 5')).toBeInTheDocument();
-      expect(screen.queryByText('panel number 6')).not.toBeInTheDocument();
-      fireEvent.click(screen.getByRole('button', { name: /show all 9 panels/i }));
-      expect(screen.getByText('panel number 8')).toBeInTheDocument();
+      expect(screen.getByText(`panel number ${INITIAL_PANELS - 1}`)).toBeInTheDocument();
+      expect(screen.queryByText(`panel number ${INITIAL_PANELS}`)).not.toBeInTheDocument();
+      fireEvent.click(screen.getByRole('button', { name: new RegExp(`show all ${count} panels`, 'i') }));
+      expect(screen.getByText(`panel number ${INITIAL_PANELS}`)).toBeInTheDocument();
     });
 
     it('says so when the dashboard has no panels', async () => {

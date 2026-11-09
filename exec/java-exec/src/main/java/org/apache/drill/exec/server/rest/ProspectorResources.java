@@ -781,6 +781,8 @@ public class ProspectorResources {
       + "  for, written for someone who sees the chart on a dashboard without having read this\n"
       + "  conversation. It appears under the chart's title, so keep it under about 90\n"
       + "  characters and do not repeat the title.\n"
+      + "- Never set a pie chart's pieStyle to donut or nightingale unless the user asks for\n"
+      + "  that shape by name.\n"
       + "- A dashboard opens with an executiveSummary panel across all 12 columns, which writes\n"
       + "  itself from the dashboard's data when the user opens it, and then the charts below.\n"
       + "- A scheduled workflow needs the user's agreement first: propose the schedule and the\n"

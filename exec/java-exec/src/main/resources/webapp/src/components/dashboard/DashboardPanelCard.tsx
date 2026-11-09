@@ -86,12 +86,6 @@ interface DashboardPanelCardProps {
   darkMode?: boolean;
   filters?: DashboardFilter[];
   allPanels?: DashboardPanel[];
-  /**
-   * Chart height in pixels, for a host that does not lay the panel out on the dashboard
-   * grid. Without it the chart is sized from the panel's grid rows, and a shorter card
-   * clips the x axis and the legend off the bottom.
-   */
-  chartHeight?: number;
   onRemove?: (panelId: string) => void;
   onPanelChange?: (panel: DashboardPanel) => void;
   onChartClick?: (column: string, value: string, vizId: string, isTemporal?: boolean, isNumeric?: boolean) => void;
@@ -106,7 +100,6 @@ export default function DashboardPanelCard({
   darkMode,
   filters,
   allPanels,
-  chartHeight,
   onRemove,
   onPanelChange,
   onChartClick,
@@ -488,7 +481,7 @@ export default function DashboardPanelCard({
               chartType={visualization.chartType}
               config={mergedConfig!}
               data={queryResult || null}
-              height={chartHeight ?? Math.max((panel.height * 120) - 60, 150)}
+              height={Math.max((panel.height * 120) - 60, 150)}
               darkMode={darkMode}
               onChartClick={onChartClick ? handleChartClick : undefined}
             />

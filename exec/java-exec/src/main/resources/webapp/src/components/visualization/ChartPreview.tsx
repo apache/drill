@@ -1069,7 +1069,8 @@ const ChartPreviewComponent = forwardRef<any, ChartPreviewProps>(({
           return null;
         }
         const labelField = dimensions[0];
-        const pieStyle = (config.chartOptions?.pieStyle as string) || 'donut';
+        // A plain pie unless the chart asks for something else: a donut is a choice, not a default.
+        const pieStyle = (config.chartOptions?.pieStyle as string) || 'pie';
         const showLabels = config.chartOptions?.showPieLabels !== false;
         const legendPos = (config.chartOptions?.legendPosition as string) || 'right';
         const isNested = metrics.length > 1;

@@ -246,6 +246,7 @@ function ConversationView({ projectId, conversationId, record, onNew }: Conversa
         onTogglePin={handleTogglePin}
         onFullScreen={() => setFullScreen((f) => !f)}
         onOpenArtifact={openArtifact}
+        onSelectArtifact={handleOpenCard}
         messages={messages}
         isFullScreen={fullScreen}
       />

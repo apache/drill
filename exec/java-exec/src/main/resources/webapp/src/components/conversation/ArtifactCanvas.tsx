@@ -247,9 +247,18 @@ function ChartViewer({ id, tab }: { id: string; tab: string }) {
   );
 }
 
-function DashboardViewer({ id }: { id: string }) {
+function DashboardViewer({ id, onSelect }: { id: string; onSelect?: (kind: ArtifactKind, id: string) => void }) {
   const query = useArtifact(['dashboard', id], () => getDashboard(id));
-  return <Resolved kind="dashboard" query={query}>{(d) => <DashboardCanvas dashboard={d} />}</Resolved>;
+  return (
+    <Resolved kind="dashboard" query={query}>
+      {(d) => (
+        <DashboardCanvas
+          dashboard={d}
+          onOpenChart={onSelect ? (vizId) => onSelect('chart', vizId) : undefined}
+        />
+      )}
+    </Resolved>
+  );
 }
 
 function QueryViewer({ id }: { id: string }) {
@@ -343,6 +352,8 @@ interface ArtifactCanvasProps {
   tab: string;
   /** The conversation so far; History is read from it, as nothing versions artifacts. */
   messages?: ChatMessage[];
+  /** Moves the canvas to another artifact: a dashboard's tiles open their own chart. */
+  onSelect?: (kind: ArtifactKind, id: string) => void;
 }
 
 /**
@@ -351,13 +362,13 @@ interface ArtifactCanvasProps {
  * small summary where none does (workflow, data source). An id that no longer resolves shows
  * a deleted notice rather than throwing, since the thread outlives the artifacts it names.
  */
-export default function ArtifactCanvas({ kind, id, tab, messages = [] }: ArtifactCanvasProps): JSX.Element {
+export default function ArtifactCanvas({ kind, id, tab, messages = [], onSelect }: ArtifactCanvasProps): JSX.Element {
   if (tab === 'history') {
     return <ArtifactHistory messages={messages} id={id} />;
   }
   switch (kind) {
     case 'chart': return <ChartViewer id={id} tab={tab} />;
-    case 'dashboard': return <DashboardViewer id={id} />;
+    case 'dashboard': return <DashboardViewer id={id} onSelect={onSelect} />;
     case 'query': return <QueryViewer id={id} />;
     case 'workflow': return <WorkflowViewer id={id} />;
     case 'wiki': return <WikiViewer id={id} />;

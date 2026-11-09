@@ -47,6 +47,12 @@ export interface CanvasHostProps {
    * artifact targets and leaves onFullScreen to results, which have no page of their own.
    */
   onOpenArtifact?: (kind: ArtifactKind, id: string) => void;
+  /**
+   * Moves the canvas to another artifact without leaving the page. A dashboard is shown as
+   * thumbnails, since it cannot be read at canvas width; this is how one of its charts is
+   * opened at full width instead.
+   */
+  onSelectArtifact?: (kind: ArtifactKind, id: string) => void;
   /** The conversation so far. The viewers' History tab is read from it. */
   messages?: ChatMessage[];
   /** Whether the page has the canvas full screen, so the control can offer the way back. */
@@ -60,7 +66,11 @@ interface Viewer {
 }
 
 /** The viewer for a target: which tabs it has and what each one shows. */
-function viewerFor(target: CanvasTarget, messages: ChatMessage[]): Viewer {
+function viewerFor(
+  target: CanvasTarget,
+  messages: ChatMessage[],
+  onSelect?: (kind: ArtifactKind, id: string) => void,
+): Viewer {
   if (target.kind === 'results') {
     return {
       tabs: RESULTS_TABS,
@@ -69,7 +79,15 @@ function viewerFor(target: CanvasTarget, messages: ChatMessage[]): Viewer {
   }
   return {
     tabs: artifactTabs(target.kind),
-    render: (tab) => <ArtifactCanvas kind={target.kind} id={target.id} tab={tab} messages={messages} />,
+    render: (tab) => (
+      <ArtifactCanvas
+        kind={target.kind}
+        id={target.id}
+        tab={tab}
+        messages={messages}
+        onSelect={onSelect}
+      />
+    ),
   };
 }
 
@@ -130,6 +148,7 @@ export default function CanvasHost({
   onTogglePin,
   onFullScreen,
   onOpenArtifact,
+  onSelectArtifact,
   messages = NO_MESSAGES,
   isFullScreen = false,
 }: CanvasHostProps) {
@@ -143,7 +162,7 @@ export default function CanvasHost({
   // another that happens to share a tab name.
   const [tabByKind, setTabByKind] = useState<Record<string, string>>({});
 
-  const viewer = shown ? viewerFor(shown, messages) : null;
+  const viewer = shown ? viewerFor(shown, messages, onSelectArtifact) : null;
   // The artifact the full-screen control hands off to its own page, if any. While the page
   // has the canvas full screen the control is the way out, whatever is shown.
   const artifactToOpen =

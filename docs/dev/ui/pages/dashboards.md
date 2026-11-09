@@ -93,6 +93,7 @@ The grid identifies a panel by its `id`, both as the React key and as the layout
 - **Drag-resize.** Panels are draggable by their header and resizable by corner handles in edit mode.
 - **Configure a chart.** A visualization panel carries a sliders button in edit mode, linking to that visualization's own page in a new tab, since the dashboard's unsaved layout has to survive the trip. The panel header also shows the visualization's `description`, when it has one, as a small line under the title; Prospector writes one for every chart it creates.
 - **Add panel.** Modal with tabs: visualization, markdown, image, title, executiveSummary, aiQnA, aiAlerts, nlFilter.
+- **Pie style.** A pie draws as a plain pie unless its `chartOptions.pieStyle` says `donut` or `nightingale`; Prospector is told never to choose one of those unasked.
 - **NL filter.** The text input is translated to a Drill filter expression via `streamChat`. The expression is stored on the dashboard's filter set and applied to panel queries.
 - **AI Q&A.** A panel type that runs a streaming chat against the dashboard context.
 - **Refresh.** Manual refresh icon or an auto-interval; both re-execute all panel queries.

@@ -15,21 +15,29 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
-import { describe, it, expect, vi } from 'vitest';
-import { render, screen } from '@testing-library/react';
-import DashboardCanvas from './DashboardCanvas';
-import type { Dashboard, DashboardPanel } from '../../types';
+import { describe, it, expect, vi, beforeEach } from 'vitest';
+import { render, screen, waitFor } from '@testing-library/react';
+import userEvent from '@testing-library/user-event';
+import { QueryClient, QueryClientProvider } from '@tanstack/react-query';
+import type { ReactNode } from 'react';
+import DashboardCanvas, { INITIAL_PANELS } from './DashboardCanvas';
+import { getVisualization } from '../../api/visualizations';
+import type { Dashboard, DashboardPanel, Visualization } from '../../types';
 
-// The card is the dashboard page's own and covered there. Here it reports the size it was
-// given, which is what the canvas decides.
-vi.mock('../dashboard', () => ({
-  DashboardPanelCard: ({ panel, chartHeight }: { panel: DashboardPanel; chartHeight?: number }) => (
-    <div data-testid="panel" data-id={panel.id} data-chart-height={chartHeight} />
-  ),
+vi.mock('../../api/visualizations', () => ({ getVisualization: vi.fn() }));
+vi.mock('../../api/queries', () => ({
+  executeQuery: vi.fn().mockResolvedValue({ columns: ['a'], rows: [{ a: 1 }], rowCount: 1 }),
+}));
+// The thumbnail itself is ChartPreview's mini mode, covered with the chart.
+vi.mock('../visualization/ChartPreview', () => ({
+  default: ({ mini }: { mini?: boolean }) => <div data-testid="thumb" data-mini={String(!!mini)} />,
 }));
 
 function panel(over: Partial<DashboardPanel> = {}): DashboardPanel {
-  return { id: 'p1', type: 'visualization', x: 0, y: 0, width: 6, height: 4, ...over } as DashboardPanel;
+  return {
+    id: 'p1', type: 'visualization', visualizationId: 'v1',
+    x: 0, y: 0, width: 6, height: 4, ...over,
+  } as DashboardPanel;
 }
 
 function dashboard(panels: DashboardPanel[]): Dashboard {
@@ -38,27 +46,56 @@ function dashboard(panels: DashboardPanel[]): Dashboard {
   } as unknown as Dashboard;
 }
 
+function show(d: Dashboard, onOpenChart?: (id: string) => void): ReactNode {
+  const client = new QueryClient({ defaultOptions: { queries: { retry: false } } });
+  return render(
+    <QueryClientProvider client={client}>
+      <DashboardCanvas dashboard={d} onOpenChart={onOpenChart} />
+    </QueryClientProvider>
+  );
+}
+
 describe('DashboardCanvas', () => {
-  it('sizes each chart to fit inside its slot, so nothing is clipped off the bottom', () => {
-    render(<DashboardCanvas dashboard={dashboard([panel()])} />);
-    const card = screen.getByTestId('panel');
-    const slot = card.parentElement as HTMLElement;
-    const slotHeight = Number.parseInt(slot.style.height, 10);
-    const chartHeight = Number(card.getAttribute('data-chart-height'));
-    expect(chartHeight).toBeGreaterThan(0);
-    expect(chartHeight).toBeLessThan(slotHeight);
+  beforeEach(() => {
+    vi.mocked(getVisualization).mockImplementation(async (id: string) => ({
+      id, name: `Chart ${id}`, chartType: 'bar', config: {}, sql: 'SELECT 1',
+    } as unknown as Visualization));
   });
 
-  it('keeps a short panel shorter than a tall one, rather than one height for all', () => {
-    const { unmount } = render(<DashboardCanvas dashboard={dashboard([panel({ height: 2 })])} />);
-    const short = Number(screen.getByTestId('panel').getAttribute('data-chart-height'));
-    unmount();
-    render(<DashboardCanvas dashboard={dashboard([panel({ height: 6 })])} />);
-    const tall = Number(screen.getByTestId('panel').getAttribute('data-chart-height'));
+  it('shows each chart as a named thumbnail, not as a full panel', async () => {
+    show(dashboard([panel(), panel({ id: 'p2', visualizationId: 'v2' })]));
+    expect(await screen.findByText('Chart v1')).toBeInTheDocument();
+    expect(await screen.findByText('Chart v2')).toBeInTheDocument();
+    await waitFor(() => expect(screen.getAllByTestId('thumb')).toHaveLength(2));
+    // Mini mode: a thumbnail with the axes and legend dropped, not a shrunken chart.
+    screen.getAllByTestId('thumb').forEach((t) => expect(t).toHaveAttribute('data-mini', 'true'));
+  });
 
-    // A single big number does not deserve a chart's worth of room, but it still needs
-    // enough to show the number and its label.
-    expect(short).toBeGreaterThanOrEqual(80);
-    expect(short).toBeLessThan(tall);
+  it('opens a chart on the canvas when its tile is clicked', async () => {
+    const onOpenChart = vi.fn();
+    show(dashboard([panel()]), onOpenChart);
+    await userEvent.click(await screen.findByText('Chart v1'));
+    expect(onOpenChart).toHaveBeenCalledWith('v1');
+  });
+
+  it('leaves the tiles inert when there is nowhere to open a chart', async () => {
+    show(dashboard([panel()]));
+    await screen.findByText('Chart v1');
+    expect(screen.queryByRole('button', { name: /Chart v1/ })).not.toBeInTheDocument();
+  });
+
+  it('says what a panel is when it is not a chart', async () => {
+    show(dashboard([panel({ id: 'p9', type: 'executiveSummary', visualizationId: undefined })]));
+    expect(await screen.findByText('AI summary')).toBeInTheDocument();
+  });
+
+  it('holds back the rest until asked, so one dashboard does not fire every query at once', async () => {
+    const many = Array.from({ length: INITIAL_PANELS + 3 }, (_, i) =>
+      panel({ id: `p${i}`, visualizationId: `v${i}`, y: i }));
+    show(dashboard(many));
+    await waitFor(() => expect(screen.getAllByTestId('thumb')).toHaveLength(INITIAL_PANELS));
+
+    await userEvent.click(screen.getByRole('button', { name: `Show all ${many.length} panels` }));
+    await waitFor(() => expect(screen.getAllByTestId('thumb')).toHaveLength(many.length));
   });
 });
