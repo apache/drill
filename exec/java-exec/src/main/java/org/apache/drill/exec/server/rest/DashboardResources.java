@@ -710,6 +710,28 @@ public class DashboardResources {
     return new DashboardsResponse(dashboards);
   }
 
+  /**
+   * Gives every panel an id. The dashboard grid identifies a panel by its id: one without
+   * an id cannot be placed or drawn, so a dashboard full of them renders as nothing at all.
+   * A client may leave ids out -- Prospector's create_dashboard tool does -- so they are
+   * filled in here rather than trusted to each caller.
+   *
+   * @return whether any panel was missing an id
+   */
+  private static boolean assignPanelIds(List<DashboardPanel> panels) {
+    if (panels == null) {
+      return false;
+    }
+    boolean changed = false;
+    for (DashboardPanel panel : panels) {
+      if (panel.getId() == null || panel.getId().trim().isEmpty()) {
+        panel.setId(UUID.randomUUID().toString());
+        changed = true;
+      }
+    }
+    return changed;
+  }
+
   @POST
   @Consumes(MediaType.APPLICATION_JSON)
   @Produces(MediaType.APPLICATION_JSON)
@@ -725,6 +747,7 @@ public class DashboardResources {
 
     String id = UUID.randomUUID().toString();
     long now = Instant.now().toEpochMilli();
+    assignPanelIds(request.panels);
 
     Dashboard dashboard = new Dashboard(
         id,
@@ -777,6 +800,11 @@ public class DashboardResources {
             .build();
       }
 
+      // Dashboards stored before ids were filled in on write are repaired once, here.
+      if (assignPanelIds(dashboard.getPanels())) {
+        store.put(id, dashboard);
+      }
+
       return Response.ok(dashboard).build();
     } catch (Exception e) {
       logger.error("Error getting dashboard", e);
@@ -819,6 +847,7 @@ public class DashboardResources {
         dashboard.setDescription(request.description);
       }
       if (request.panels != null) {
+        assignPanelIds(request.panels);
         dashboard.setPanels(request.panels);
       }
       if (request.tabs != null) {

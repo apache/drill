@@ -24,8 +24,10 @@ import static org.junit.jupiter.api.Assertions.assertTrue;
 
 import java.util.ArrayList;
 import java.util.HashMap;
+import java.util.HashSet;
 import java.util.List;
 import java.util.Map;
+import java.util.Set;
 import java.util.UUID;
 import java.util.concurrent.TimeUnit;
 
@@ -468,6 +470,53 @@ public class TestDashboardResources extends ClusterTest {
         .post(RequestBody.create("", JSON_MEDIA_TYPE))
         .build()).execute()) {
       assertEquals(404, response.code());
+    }
+  }
+
+  /**
+   * Panels are identified by id in the dashboard grid, so a panel created without one cannot
+   * be drawn: the dashboard looks like it was never built.
+   */
+  @Test
+  public void testD_CreateFillsInMissingPanelIds() throws Exception {
+    String body = "{\"name\": \"No Panel Ids\", \"panels\": ["
+        + "{\"type\": \"visualization\", \"visualizationId\": \"viz-1\", "
+        + "\"x\": 0, \"y\": 0, \"width\": 6, \"height\": 4},"
+        + "{\"type\": \"visualization\", \"visualizationId\": \"viz-2\", "
+        + "\"x\": 6, \"y\": 0, \"width\": 6, \"height\": 4}]}";
+
+    String url = String.format("http://localhost:%d/api/v1/dashboards", portNumber);
+    Request request = new Request.Builder()
+        .url(url)
+        .post(RequestBody.create(body, JSON_MEDIA_TYPE))
+        .build();
+
+    String id;
+    try (Response response = httpClient.newCall(request).execute()) {
+      assertEquals(201, response.code());
+      JsonNode created = mapper.readTree(response.body().string());
+      id = created.get("id").asText();
+      assertPanelsHaveDistinctIds(created);
+    }
+
+    String getUrl = String.format("http://localhost:%d/api/v1/dashboards/%s", portNumber, id);
+    try (Response response = httpClient.newCall(
+        new Request.Builder().url(getUrl).build()).execute()) {
+      assertEquals(200, response.code());
+      // The ids were stored, not just handed back once.
+      assertPanelsHaveDistinctIds(mapper.readTree(response.body().string()));
+    }
+  }
+
+  private static void assertPanelsHaveDistinctIds(JsonNode dashboard) {
+    JsonNode panels = dashboard.get("panels");
+    assertEquals(2, panels.size());
+    Set<String> ids = new HashSet<>();
+    for (JsonNode panel : panels) {
+      JsonNode id = panel.get("id");
+      assertNotNull(id);
+      assertFalse(id.isNull(), "panel has no id: " + panel);
+      assertTrue(ids.add(id.asText()), "duplicate panel id: " + id.asText());
     }
   }
 }
