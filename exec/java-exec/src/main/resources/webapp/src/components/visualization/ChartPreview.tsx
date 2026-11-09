@@ -429,6 +429,9 @@ function hasSankeyCycle(links: { source: string; target: string }[]): boolean {
   return false;
 }
 
+/** Chart types whose dimensions name the slices rather than splitting series. */
+const LABEL_CHART_TYPES = ['pie', 'funnel', 'treemap', 'sunburst'];
+
 // eslint-disable-next-line @typescript-eslint/no-explicit-any
 const ChartPreviewComponent = forwardRef<any, ChartPreviewProps>(({
   chartType,
@@ -655,10 +658,16 @@ const ChartPreviewComponent = forwardRef<any, ChartPreviewProps>(({
     }
 
     const { xAxis, yAxis, metrics } = config;
-    // A dimension that repeats the x axis is not a grouping: it splits each category into one
-    // series per category, which draws every bar as a hairline. Charts generated from a
-    // description often arrive that way, so drop it here rather than in each chart type.
-    const dimensions = config.dimensions?.filter((d) => d !== xAxis);
+    // Pie, funnel, treemap and sunburst label their slices from dimensions rather than
+    // splitting series by them, so for those the x axis is the label field under another
+    // name: take it when no dimension is given, or they draw nothing at all. Everywhere
+    // else a dimension that repeats the x axis is not a grouping: it splits each category
+    // into one series per category, drawing every bar as a hairline. Charts generated from
+    // a description arrive both ways, so settle it here rather than in each chart type.
+    const labelled = LABEL_CHART_TYPES.includes(chartType);
+    const dimensions = labelled
+      ? (config.dimensions?.length ? config.dimensions : (xAxis ? [xAxis] : undefined))
+      : config.dimensions?.filter((d) => d !== xAxis);
 
     switch (chartType) {
       case 'bar': {

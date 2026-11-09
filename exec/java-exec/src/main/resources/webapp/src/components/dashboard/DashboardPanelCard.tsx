@@ -34,6 +34,7 @@ import {
   SearchOutlined,
   GlobalOutlined,
   WarningOutlined,
+  SlidersOutlined,
 } from '@ant-design/icons';
 import { getVisualization } from '../../api/visualizations';
 import { executeQuery } from '../../api/queries';
@@ -517,9 +518,21 @@ export default function DashboardPanelCard({
         <div className="dashboard-panel-header">
           {editMode && <DragOutlined className="drag-handle" />}
           {!isVisualization && <span style={{ marginRight: 4 }}>{getPanelIcon()}</span>}
-          <Text ellipsis style={{ flex: 1, color: 'inherit' }}>
-            {getPanelTitle()}
-          </Text>
+          <div style={{ flex: 1, minWidth: 0 }}>
+            <Text ellipsis style={{ display: 'block', color: 'inherit' }}>
+              {getPanelTitle()}
+            </Text>
+            {/* One quiet line saying what the chart shows, when the chart carries one. */}
+            {visualization?.description && (
+              <Text
+                type="secondary"
+                ellipsis={{ tooltip: visualization.description }}
+                style={{ display: 'block', fontSize: 11, fontWeight: 400 }}
+              >
+                {visualization.description}
+              </Text>
+            )}
+          </div>
           {missingColumnGroups.length > 0 && (
             <Tooltip
               title={
@@ -605,6 +618,20 @@ export default function DashboardPanelCard({
                 <GlobalOutlined style={{ cursor: 'pointer' }} />
               </Tooltip>
             </Popover>
+          )}
+          {editMode && isVisualization && panel.visualizationId && (
+            <Tooltip title="Edit chart settings">
+              <Button
+                type="text"
+                size="small"
+                icon={<SlidersOutlined />}
+                aria-label="Edit chart settings"
+                // A new tab: the dashboard is mid-edit and its unsaved layout must survive.
+                href={`/visualizations/${encodeURIComponent(panel.visualizationId)}`}
+                target="_blank"
+                rel="noreferrer"
+              />
+            </Tooltip>
           )}
           {isVisualization && (
             <Tooltip title="Refresh">

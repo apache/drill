@@ -28,11 +28,13 @@ import type { Dashboard, DashboardPanel } from '../../types';
 export const INITIAL_PANELS = 6;
 
 // A panel's grid height is in rows of 120px on the page; beside a chat each gets a
-// single-column slot, scaled down but kept within a range a chart can be read in.
-const panelHeight = (p: DashboardPanel) => Math.min(Math.max(p.height * 60, 240), 380);
+// single-column slot, scaled down but kept within a range a chart can be read in. The
+// floor stays low enough that a short panel -- a single number, a title -- still reads as
+// a short panel here, instead of every panel in the stack being the same tall box.
+const panelHeight = (p: DashboardPanel) => Math.min(Math.max(p.height * 55, 170), 380);
 
-/** The card's own chrome above the chart: title row and padding. */
-const CARD_CHROME = 64;
+/** The card's own chrome around the chart: title row, footer and padding. */
+const CARD_CHROME = 80;
 
 const byPosition = (a: DashboardPanel, b: DashboardPanel) => a.y - b.y || a.x - b.x;
 

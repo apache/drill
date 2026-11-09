@@ -49,8 +49,16 @@ describe('DashboardCanvas', () => {
     expect(chartHeight).toBeLessThan(slotHeight);
   });
 
-  it('keeps short panels tall enough for a readable chart', () => {
-    render(<DashboardCanvas dashboard={dashboard([panel({ height: 1 })])} />);
-    expect(Number(screen.getByTestId('panel').getAttribute('data-chart-height'))).toBeGreaterThanOrEqual(150);
+  it('keeps a short panel shorter than a tall one, rather than one height for all', () => {
+    const { unmount } = render(<DashboardCanvas dashboard={dashboard([panel({ height: 2 })])} />);
+    const short = Number(screen.getByTestId('panel').getAttribute('data-chart-height'));
+    unmount();
+    render(<DashboardCanvas dashboard={dashboard([panel({ height: 6 })])} />);
+    const tall = Number(screen.getByTestId('panel').getAttribute('data-chart-height'));
+
+    // A single big number does not deserve a chart's worth of room, but it still needs
+    // enough to show the number and its label.
+    expect(short).toBeGreaterThanOrEqual(80);
+    expect(short).toBeLessThan(tall);
   });
 });

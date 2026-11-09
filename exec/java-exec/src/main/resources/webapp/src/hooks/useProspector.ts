@@ -96,6 +96,12 @@ export const TOOL_DEFINITIONS: ToolDefinition[] = [
       type: 'object',
       properties: {
         name: { type: 'string' },
+        description: {
+          type: 'string',
+          description: 'One short line, under about 90 characters, saying what the chart '
+            + 'shows and what to look for. It is displayed under the chart title, so write '
+            + 'it for someone who is seeing the chart without having read the conversation.',
+        },
         chartType: {
           type: 'string',
           enum: ['bar', 'line', 'pie', 'scatter', 'table', 'heatmap', 'treemap', 'gauge', 'funnel', 'bigNumber'],
@@ -117,7 +123,10 @@ export const TOOL_DEFINITIONS: ToolDefinition[] = [
   },
   {
     name: 'create_dashboard',
-    description: 'Create a new dashboard, optionally with visualization panels',
+    description: 'Create a new dashboard from charts you have already created. Lead with an '
+      + 'executiveSummary panel across the full width, then the charts. The grid is 12 '
+      + 'columns wide and a row is one unit of height; lay panels out so they do not '
+      + 'overlap.',
     parameters: {
       type: 'object',
       properties: {
@@ -125,16 +134,23 @@ export const TOOL_DEFINITIONS: ToolDefinition[] = [
         description: { type: 'string' },
         panels: {
           type: 'array',
-          description: 'Array of panel objects with type, visualizationId, x, y, width, height',
+          description: 'Array of panel objects with type, x, y, width, height',
           items: {
             type: 'object',
             properties: {
-              type: { type: 'string', description: 'Panel type, e.g. "visualization"' },
+              type: {
+                type: 'string',
+                enum: ['visualization', 'executiveSummary', 'markdown'],
+                description: 'visualization shows a chart you created; executiveSummary is '
+                  + 'written for the reader from the dashboard\'s own data when they open it, '
+                  + 'and needs nothing but a position; markdown is fixed text you write.',
+              },
               visualizationId: { type: 'string', description: 'ID of the visualization to display' },
-              x: { type: 'number', description: 'Grid x position' },
+              content: { type: 'string', description: 'Markdown text, for a markdown panel' },
+              x: { type: 'number', description: 'Grid x position, 0 to 11' },
               y: { type: 'number', description: 'Grid y position' },
-              width: { type: 'number', description: 'Grid width' },
-              height: { type: 'number', description: 'Grid height' },
+              width: { type: 'number', description: 'Grid width in columns, 1 to 12' },
+              height: { type: 'number', description: 'Grid height in rows' },
             },
           },
         },
@@ -812,6 +828,7 @@ export function useProspector(
         case 'create_visualization': {
           const viz = await createVisualization({
             name: args.name,
+            description: args.description,
             chartType: args.chartType as ChartType,
             config: args.config as VisualizationConfig,
             sql: args.sql,
