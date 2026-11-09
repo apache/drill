@@ -23,7 +23,7 @@ import { QueryClient, QueryClientProvider } from '@tanstack/react-query';
 
 import { useProspector, TOOL_DEFINITIONS } from './useProspector';
 import { createVisualization } from '../api/visualizations';
-import { createDashboard } from '../api/dashboards';
+import { createDashboard, getDashboard, updateDashboard } from '../api/dashboards';
 import {
   addVisualization, addDashboard, addSavedQuery, getProject, createWikiPage, updateWikiPage,
 } from '../api/projects';
@@ -58,7 +58,7 @@ vi.mock('../api/queries', () => ({ executeQuery: vi.fn() }));
 vi.mock('../api/metadata', () => ({
   getSchemas: vi.fn(), getTables: vi.fn(), getColumns: vi.fn(), getFunctions: vi.fn(),
 }));
-vi.mock('../api/dashboards', () => ({ createDashboard: vi.fn() }));
+vi.mock('../api/dashboards', () => ({ createDashboard: vi.fn(), getDashboard: vi.fn(), updateDashboard: vi.fn() }));
 vi.mock('../api/savedQueries', () => ({ createSavedQuery: vi.fn() }));
 vi.mock('../api/workflows', async (importOriginal) => ({
   ...(await importOriginal<typeof import('../api/workflows')>()),
@@ -180,6 +180,55 @@ describe('create_dashboard tool', () => {
     expect(createDashboard).toHaveBeenCalledOnce();
     expect(addDashboard).not.toHaveBeenCalled();
     expect(out.addedToProject).toBe(false);
+  });
+});
+
+describe('dashboard update tools', () => {
+  const panels = [{ id: 'p1', type: 'visualization', visualizationId: 'v1', x: 0, y: 0, width: 12, height: 4 }];
+
+  beforeEach(() => {
+    vi.clearAllMocks();
+    vi.mocked(getDashboard).mockResolvedValue({
+      id: 'dash-1', name: 'Sales Overview', description: 'All of it', panels,
+    } as never);
+    vi.mocked(updateDashboard).mockResolvedValue({
+      id: 'dash-1', name: 'Sales Overview', panels,
+    } as never);
+  });
+
+  it('reads a dashboard back with the panels it holds', async () => {
+    const { result } = renderHook(() => useProspector(), { wrapper: Wrapper });
+    const out = JSON.parse(await result.current.executeToolCall(
+      { id: 'c', name: 'get_dashboard', arguments: JSON.stringify({ id: 'dash-1' }) },
+      ctx('proj-42'),
+    ));
+
+    // Without the panels coming back, an update could only guess at what it is replacing.
+    expect(out.panels).toEqual(panels);
+  });
+
+  it('changes the dashboard it was given rather than making a second one', async () => {
+    const { result } = renderHook(() => useProspector(), { wrapper: Wrapper });
+    const newPanels = [...panels, { id: 'p2', type: 'executiveSummary', x: 0, y: 4, width: 12, height: 3 }];
+    const out = JSON.parse(await result.current.executeToolCall(
+      { id: 'c', name: 'update_dashboard', arguments: JSON.stringify({ id: 'dash-1', panels: newPanels }) },
+      ctx('proj-42'),
+    ));
+
+    expect(updateDashboard).toHaveBeenCalledWith('dash-1', { panels: newPanels });
+    expect(createDashboard).not.toHaveBeenCalled();
+    expect(out.id).toBe('dash-1');
+  });
+
+  it('leaves out what it was not asked to change', async () => {
+    const { result } = renderHook(() => useProspector(), { wrapper: Wrapper });
+    await result.current.executeToolCall(
+      { id: 'c', name: 'update_dashboard', arguments: JSON.stringify({ id: 'dash-1', name: 'Renamed' }) },
+      ctx('proj-42'),
+    );
+
+    // A rename must not wipe the panels, which a PUT carrying `panels: undefined` would.
+    expect(updateDashboard).toHaveBeenCalledWith('dash-1', { name: 'Renamed' });
   });
 });
 

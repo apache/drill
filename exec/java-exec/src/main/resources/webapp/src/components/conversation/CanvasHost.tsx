@@ -70,6 +70,7 @@ function viewerFor(
   target: CanvasTarget,
   messages: ChatMessage[],
   onSelect?: (kind: ArtifactKind, id: string) => void,
+  onOpen?: (kind: ArtifactKind, id: string) => void,
 ): Viewer {
   if (target.kind === 'results') {
     return {
@@ -86,6 +87,7 @@ function viewerFor(
         tab={tab}
         messages={messages}
         onSelect={onSelect}
+        onOpen={onOpen}
       />
     ),
   };
@@ -162,7 +164,7 @@ export default function CanvasHost({
   // another that happens to share a tab name.
   const [tabByKind, setTabByKind] = useState<Record<string, string>>({});
 
-  const viewer = shown ? viewerFor(shown, messages, onSelectArtifact) : null;
+  const viewer = shown ? viewerFor(shown, messages, onSelectArtifact, onOpenArtifact) : null;
   // The artifact the full-screen control hands off to its own page, if any. While the page
   // has the canvas full screen the control is the way out, whatever is shown.
   const artifactToOpen =

@@ -35,6 +35,8 @@ const TOOL_ICONS: Record<string, React.ReactNode> = {
   get_schema_info: <DatabaseOutlined />,
   create_visualization: <BarChartOutlined />,
   create_dashboard: <DashboardOutlined />,
+  update_dashboard: <DashboardOutlined />,
+  get_dashboard: <DashboardOutlined />,
   save_query: <SaveOutlined />,
   get_available_functions: <FunctionOutlined />,
 };
@@ -45,6 +47,8 @@ const TOOL_LABELS: Record<string, string> = {
   get_schema_info: 'Schema Info',
   create_visualization: 'Create Chart',
   create_dashboard: 'Create Dashboard',
+  update_dashboard: 'Update Dashboard',
+  get_dashboard: 'Read Dashboard',
   save_query: 'Save Query',
   get_available_functions: 'List Functions',
 };
@@ -105,7 +109,7 @@ export default function ToolCallDisplay({ toolCalls, toolResults }: ToolCallDisp
                   <Space style={{ marginTop: 8 }}>
                     <Link to={viewPath}>
                       <Button size="small" type="primary" icon={<EyeOutlined />}>
-                        View {tc.name === 'create_dashboard' ? 'Dashboards' : 'Visualizations'}
+                        View {tc.name.endsWith('_dashboard') ? 'Dashboards' : 'Visualizations'}
                       </Button>
                     </Link>
                   </Space>

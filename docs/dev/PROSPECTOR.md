@@ -99,6 +99,8 @@ Prospector has access to the following tools:
 | `get_schema_info` | Browse schemas, tables, and columns |
 | `create_visualization` | Create chart visualizations, each with a one-line `description` shown under the chart's title |
 | `create_dashboard` | Create dashboards; panels may be `visualization`, `executiveSummary` or `markdown`, and a dashboard leads with an executive summary |
+| `get_dashboard` | Read a dashboard's name, description and panels back |
+| `update_dashboard` | Change an existing dashboard: rename it or replace its panel list. Changing a dashboard goes through this, never a second `create_dashboard` |
 | `save_query` | Save SQL queries. Inside a project the tool also adds the saved query to the project so it shows in the Saved Queries tab; only the project owner can, so a member's result carries `addedToProject: false` and a `projectError` that tells the model not to retry |
 | `create_workflow` | Create a scheduled workflow (query, schedule, actions). Always created paused; the user activates it from the Workflows page, or from the Activate control under the workflow's card on surfaces that render artifact cards (only the Conversations page today). The tool result points the model at the Workflows page, which exists everywhere. The query is given as `sql` (saved into the project by the tool) or `savedQueryId` |
 | `write_wiki_page` | Create a project wiki page (default folder `Reports`), or replace one by `pageId`. Optional `includeTranscript` appends the SQL run in the conversation; the Prospector provenance footer is always written |

@@ -30,7 +30,7 @@ import {
 import {
   addVisualization, addDashboard, addSavedQuery, getProject, createWikiPage, updateWikiPage,
 } from '../api/projects';
-import { createDashboard } from '../api/dashboards';
+import { createDashboard, getDashboard, updateDashboard } from '../api/dashboards';
 import { createSavedQuery } from '../api/savedQueries';
 import { createWorkflow, validationErrors } from '../api/workflows';
 import { buildReportMarkdown, REPORTS_FOLDER } from '../utils/report';
@@ -156,6 +156,42 @@ export const TOOL_DEFINITIONS: ToolDefinition[] = [
         },
       },
       required: ['name'],
+    },
+  },
+  {
+    name: 'get_dashboard',
+    description: 'Read a dashboard back: its name, description and the panels it holds, each '
+      + 'with its position. Call this before update_dashboard, so the panel list you send '
+      + 'back is the one the dashboard actually has.',
+    parameters: {
+      type: 'object',
+      properties: {
+        id: { type: 'string', description: 'The dashboard id' },
+      },
+      required: ['id'],
+    },
+  },
+  {
+    name: 'update_dashboard',
+    description: 'Change a dashboard that already exists: rename it, or give it a new set of '
+      + 'panels. Use this, never create_dashboard, to add a panel to or rearrange a dashboard '
+      + 'you or the user already has, because create_dashboard would make a second one beside '
+      + 'it. The panels you send replace the dashboard\'s panels, so read them with '
+      + 'get_dashboard first and send the whole list back, including the ones you are keeping.',
+    parameters: {
+      type: 'object',
+      properties: {
+        id: { type: 'string', description: 'The dashboard id' },
+        name: { type: 'string' },
+        description: { type: 'string' },
+        panels: {
+          type: 'array',
+          description: 'The dashboard\'s complete new panel list, in the same shape as '
+            + 'create_dashboard takes. Omit to leave the panels as they are.',
+          items: { type: 'object' },
+        },
+      },
+      required: ['id'],
     },
   },
   {
@@ -888,6 +924,31 @@ export function useProspector(
             addedToProject,
             ...(projectError ? { projectError } : {}),
             message: `Dashboard "${dashboard.name}" created successfully.`,
+            viewPath: '/dashboards',
+          });
+        }
+
+        case 'get_dashboard': {
+          const existing = await getDashboard(args.id);
+          return JSON.stringify({
+            id: existing.id,
+            name: existing.name,
+            description: existing.description,
+            panels: existing.panels,
+          });
+        }
+
+        case 'update_dashboard': {
+          const updated = await updateDashboard(args.id, {
+            ...(args.name ? { name: args.name } : {}),
+            ...(args.description ? { description: args.description } : {}),
+            ...(args.panels ? { panels: args.panels } : {}),
+          });
+          return JSON.stringify({
+            id: updated.id,
+            name: updated.name,
+            panelCount: updated.panels?.length ?? 0,
+            message: `Dashboard "${updated.name}" updated. It is the same dashboard, not a new one.`,
             viewPath: '/dashboards',
           });
         }

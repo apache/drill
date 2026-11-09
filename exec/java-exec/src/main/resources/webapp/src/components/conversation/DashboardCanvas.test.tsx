@@ -46,11 +46,11 @@ function dashboard(panels: DashboardPanel[]): Dashboard {
   } as unknown as Dashboard;
 }
 
-function show(d: Dashboard, onOpenChart?: (id: string) => void): ReactNode {
+function show(d: Dashboard, onOpenChart?: (id: string) => void, onOpenDashboard?: () => void): ReactNode {
   const client = new QueryClient({ defaultOptions: { queries: { retry: false } } });
   return render(
     <QueryClientProvider client={client}>
-      <DashboardCanvas dashboard={d} onOpenChart={onOpenChart} />
+      <DashboardCanvas dashboard={d} onOpenChart={onOpenChart} onOpenDashboard={onOpenDashboard} />
     </QueryClientProvider>
   );
 }
@@ -82,6 +82,13 @@ describe('DashboardCanvas', () => {
     show(dashboard([panel()]));
     await screen.findByText('Chart v1');
     expect(screen.queryByRole('button', { name: /Chart v1/ })).not.toBeInTheDocument();
+  });
+
+  it('offers one click through to the dashboard itself', async () => {
+    const onOpenDashboard = vi.fn();
+    show(dashboard([panel()]), undefined, onOpenDashboard);
+    await userEvent.click(screen.getByRole('button', { name: /open dashboard/i }));
+    expect(onOpenDashboard).toHaveBeenCalled();
   });
 
   it('says what a panel is when it is not a chart', async () => {

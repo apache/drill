@@ -247,7 +247,11 @@ function ChartViewer({ id, tab }: { id: string; tab: string }) {
   );
 }
 
-function DashboardViewer({ id, onSelect }: { id: string; onSelect?: (kind: ArtifactKind, id: string) => void }) {
+function DashboardViewer({ id, onSelect, onOpen }: {
+  id: string;
+  onSelect?: (kind: ArtifactKind, id: string) => void;
+  onOpen?: (kind: ArtifactKind, id: string) => void;
+}) {
   const query = useArtifact(['dashboard', id], () => getDashboard(id));
   return (
     <Resolved kind="dashboard" query={query}>
@@ -255,6 +259,7 @@ function DashboardViewer({ id, onSelect }: { id: string; onSelect?: (kind: Artif
         <DashboardCanvas
           dashboard={d}
           onOpenChart={onSelect ? (vizId) => onSelect('chart', vizId) : undefined}
+          onOpenDashboard={onOpen ? () => onOpen('dashboard', id) : undefined}
         />
       )}
     </Resolved>
@@ -354,6 +359,8 @@ interface ArtifactCanvasProps {
   messages?: ChatMessage[];
   /** Moves the canvas to another artifact: a dashboard's tiles open their own chart. */
   onSelect?: (kind: ArtifactKind, id: string) => void;
+  /** Leaves for this artifact's own page, the same hand-off the full-screen control makes. */
+  onOpen?: (kind: ArtifactKind, id: string) => void;
 }
 
 /**
@@ -362,13 +369,13 @@ interface ArtifactCanvasProps {
  * small summary where none does (workflow, data source). An id that no longer resolves shows
  * a deleted notice rather than throwing, since the thread outlives the artifacts it names.
  */
-export default function ArtifactCanvas({ kind, id, tab, messages = [], onSelect }: ArtifactCanvasProps): JSX.Element {
+export default function ArtifactCanvas({ kind, id, tab, messages = [], onSelect, onOpen }: ArtifactCanvasProps): JSX.Element {
   if (tab === 'history') {
     return <ArtifactHistory messages={messages} id={id} />;
   }
   switch (kind) {
     case 'chart': return <ChartViewer id={id} tab={tab} />;
-    case 'dashboard': return <DashboardViewer id={id} onSelect={onSelect} />;
+    case 'dashboard': return <DashboardViewer id={id} onSelect={onSelect} onOpen={onOpen} />;
     case 'query': return <QueryViewer id={id} />;
     case 'workflow': return <WorkflowViewer id={id} />;
     case 'wiki': return <WikiViewer id={id} />;

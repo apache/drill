@@ -32,6 +32,8 @@ const ACTION_LABELS: Record<string, string> = {
   execute_sql: 'Ran SQL',
   create_visualization: 'Created chart',
   create_dashboard: 'Created dashboard',
+  update_dashboard: 'Updated dashboard',
+  get_dashboard: 'Read dashboard',
   save_query: 'Saved query',
   create_workflow: 'Created workflow',
   write_wiki_page: 'Wrote wiki page',

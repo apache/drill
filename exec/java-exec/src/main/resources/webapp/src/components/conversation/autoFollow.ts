@@ -36,6 +36,7 @@ export interface CreatedArtifact {
 const ARTIFACT_TOOLS: Record<string, ArtifactKind> = {
   create_visualization: 'chart',
   create_dashboard: 'dashboard',
+  update_dashboard: 'dashboard',
   save_query: 'query',
   create_workflow: 'workflow',
   write_wiki_page: 'wiki',

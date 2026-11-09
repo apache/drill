@@ -18,6 +18,7 @@
 import { useMemo, useState } from 'react';
 import { useQuery } from '@tanstack/react-query';
 import { Button, Empty, Spin, Typography } from 'antd';
+import { ExportOutlined } from '@ant-design/icons';
 import ChartPreview from '../visualization/ChartPreview';
 import { getVisualization } from '../../api/visualizations';
 import { executeQuery } from '../../api/queries';
@@ -163,10 +164,13 @@ function Tile({ title, onOpen, children }: { title: string; onOpen?: () => void;
 export default function DashboardCanvas({
   dashboard,
   onOpenChart,
+  onOpenDashboard,
 }: {
   dashboard: Dashboard;
   /** Puts one of the dashboard's charts on the canvas. Without it the tiles are inert. */
   onOpenChart?: (visualizationId: string) => void;
+  /** Leaves for the dashboard's own page, where it is laid out as a dashboard. */
+  onOpenDashboard?: () => void;
 }) {
   const [showAll, setShowAll] = useState(false);
 
@@ -191,10 +195,23 @@ export default function DashboardCanvas({
   let budget = showAll ? Infinity : INITIAL_PANELS;
   return (
     <div style={{ padding: 12, height: '100%', overflow: 'auto' }}>
-      <Typography.Title level={5} style={{ marginTop: 0, marginBottom: 2 }}>{dashboard.name}</Typography.Title>
-      <Typography.Text type="secondary" style={{ fontSize: 12 }}>
-        {total} {total === 1 ? 'panel' : 'panels'} · open a tile to read it
-      </Typography.Text>
+      <div style={{ display: 'flex', alignItems: 'start', gap: 8 }}>
+        <div style={{ flex: 1, minWidth: 0 }}>
+          <Typography.Title level={5} style={{ marginTop: 0, marginBottom: 2 }} ellipsis>
+            {dashboard.name}
+          </Typography.Title>
+          <Typography.Text type="secondary" style={{ fontSize: 12 }}>
+            {total} {total === 1 ? 'panel' : 'panels'} · open a tile to read it
+          </Typography.Text>
+        </div>
+        {/* The tiles are a preview; this is the way to the dashboard itself, said plainly
+            rather than left to the full-screen icon in the canvas header. */}
+        {onOpenDashboard && (
+          <Button size="small" icon={<ExportOutlined />} onClick={onOpenDashboard}>
+            Open dashboard
+          </Button>
+        )}
+      </div>
       {ordered.map((section) => {
         const shown = section.panels.slice(0, Math.max(budget, 0));
         budget -= shown.length;
