@@ -15,7 +15,7 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
-import { Button, Collapse, Space, Tag } from 'antd';
+import { Button, Collapse, Space, Table, Tag, Typography } from 'antd';
 import { Link } from 'react-router-dom';
 import {
   CodeOutlined,
@@ -26,6 +26,7 @@ import {
   FunctionOutlined,
   EyeOutlined,
 } from '@ant-design/icons';
+import { Fragment } from 'react';
 import type { ToolCall } from '../../types/ai';
 import type { ChatMessage } from '../../types/ai';
 
@@ -66,6 +67,98 @@ function formatJson(str: string): string {
   }
 }
 
+function parse(str: string | undefined): Record<string, unknown> | null {
+  try {
+    const v = JSON.parse(str || '');
+    return v && typeof v === 'object' && !Array.isArray(v) ? v : null;
+  } catch {
+    return null;
+  }
+}
+
+/** A cell, or a field in the key/value list: anything not a string becomes readable text. */
+function show(v: unknown): string {
+  if (v === null || v === undefined) { return '—'; }
+  if (typeof v === 'object') { return JSON.stringify(v); }
+  return String(v);
+}
+
+/** Everything that is not the SQL or the rows: one line per field, not a JSON blob. */
+function Fields({ values }: { values: Record<string, unknown> }) {
+  const keys = Object.keys(values);
+  if (keys.length === 0) { return null; }
+  return (
+    <div style={{ display: 'grid', gridTemplateColumns: 'auto 1fr', gap: '2px 8px', margin: '4px 0' }}>
+      {keys.map((k) => (
+        <Fragment key={k}>
+          <Typography.Text type="secondary" style={{ fontSize: 11 }}>{k}</Typography.Text>
+          <Typography.Text style={{ fontSize: 11, wordBreak: 'break-word' }}>{show(values[k])}</Typography.Text>
+        </Fragment>
+      ))}
+    </div>
+  );
+}
+
+/** Query results as the table they are. Anything wider than the panel scrolls sideways. */
+function ResultTable({ columns, rows }: { columns: string[]; rows: Record<string, unknown>[] }) {
+  return (
+    <Table
+      size="small"
+      bordered
+      // Rows carry no id of their own, so number them; the columns are listed
+      // explicitly, so the added key is never drawn.
+      rowKey="__row"
+      dataSource={rows.map((r, i) => ({ ...r, __row: i }))}
+      columns={columns.map((c) => ({
+        title: c,
+        dataIndex: c,
+        key: c,
+        ellipsis: true,
+        render: (v: unknown) => show(v),
+      }))}
+      pagination={rows.length > 10 ? { pageSize: 10, size: 'small', showSizeChanger: false } : false}
+      scroll={{ x: 'max-content' }}
+      style={{ marginTop: 4 }}
+    />
+  );
+}
+
+/** SQL, or a tool's arguments, shown as what they are rather than as a JSON dump. */
+function ToolArguments({ args }: { args: string }) {
+  const parsed = parse(args);
+  if (!parsed) {
+    return <pre className="prospector-tool-json">{formatJson(args)}</pre>;
+  }
+  const { sql, ...rest } = parsed as { sql?: unknown };
+  return (
+    <>
+      {typeof sql === 'string' && <pre className="prospector-tool-sql">{sql.trim()}</pre>}
+      <Fields values={rest} />
+    </>
+  );
+}
+
+function ToolResult({ content }: { content: string }) {
+  const parsed = parse(content);
+  if (!parsed) {
+    return <pre className="prospector-tool-json">{formatJson(content)}</pre>;
+  }
+  const { columns, rows, ...rest } = parsed as { columns?: unknown; rows?: unknown };
+  const isTable = Array.isArray(columns) && Array.isArray(rows)
+    && columns.every((c) => typeof c === 'string');
+  return (
+    <>
+      <Fields values={rest} />
+      {isTable && (
+        <ResultTable columns={columns as string[]} rows={rows as Record<string, unknown>[]} />
+      )}
+      {!isTable && (columns !== undefined || rows !== undefined) && (
+        <pre className="prospector-tool-json">{formatJson(content)}</pre>
+      )}
+    </>
+  );
+}
+
 export default function ToolCallDisplay({ toolCalls, toolResults }: ToolCallDisplayProps) {
   const items = toolCalls.map((tc) => {
     const result = toolResults.find((r) => r.toolCallId === tc.id);
@@ -92,7 +185,7 @@ export default function ToolCallDisplay({ toolCalls, toolResults }: ToolCallDisp
         <div style={{ fontSize: 12 }}>
           <div style={{ marginBottom: 8 }}>
             <strong>Arguments:</strong>
-            <pre className="prospector-tool-json">{formatJson(tc.arguments)}</pre>
+            <ToolArguments args={tc.arguments} />
           </div>
           {result && (() => {
             let parsed: Record<string, unknown> | null = null;
@@ -102,9 +195,7 @@ export default function ToolCallDisplay({ toolCalls, toolResults }: ToolCallDisp
             return (
               <div>
                 <strong>Result:</strong>
-                <pre className="prospector-tool-json">
-                  {formatJson(result.content || '')}
-                </pre>
+                <ToolResult content={result.content || ''} />
                 {viewPath && !hasError && (
                   <Space style={{ marginTop: 8 }}>
                     <Link to={viewPath}>

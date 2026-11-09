@@ -1070,6 +1070,22 @@ html.dark .prospector-bubble-error {
   word-break: break-all;
 }
 
+/* SQL inside a tool call: read as code, wrapped rather than cut off. */
+.prospector-tool-sql {
+  background: var(--color-bg-tool-json);
+  border: 1px solid var(--color-border);
+  border-left: 3px solid var(--color-primary, #1677ff);
+  border-radius: 4px;
+  padding: 6px 8px;
+  font-size: 11px;
+  line-height: 1.5;
+  max-height: 220px;
+  overflow: auto;
+  margin: 4px 0;
+  white-space: pre-wrap;
+  word-break: normal;
+}
+
 /* Streaming cursor */
 .prospector-cursor {
   display: inline-block;

@@ -49,7 +49,7 @@ Renders one message. User messages: plain text. Assistant messages: `react-markd
 
 ### ToolCallDisplay
 
-Expandable card showing tool invocations (`execute_sql`, `create_visualization`, …) with JSON arguments and results. For tools that produce navigable resources (dashboards, visualizations), includes a "View" link.
+Expandable card showing tool invocations (`execute_sql`, `create_visualization`, …). Arguments and results are laid out rather than dumped as JSON: a `sql` argument is shown as code (wrapped, not escaped), every other field as a label/value line, and a result carrying `columns` and `rows` as a small table that scrolls sideways and paginates past ten rows. Anything that does not parse, or a result whose `columns`/`rows` are not a table, falls back to pretty-printed JSON. For tools that produce navigable resources (dashboards, visualizations), includes a "View" link.
 
 ### ChatMessageList
 
