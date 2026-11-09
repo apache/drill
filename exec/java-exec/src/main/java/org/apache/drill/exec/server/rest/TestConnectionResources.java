@@ -38,6 +38,7 @@ import jakarta.ws.rs.Produces;
 import jakarta.ws.rs.core.MediaType;
 
 import com.fasterxml.jackson.annotation.JsonCreator;
+import com.google.common.annotations.VisibleForTesting;
 import com.fasterxml.jackson.annotation.JsonProperty;
 import org.apache.drill.common.logical.StoragePluginConfig;
 import org.apache.drill.common.logical.security.CredentialsProvider;
@@ -165,20 +166,9 @@ public class TestConnectionResources {
         e.getClass().getName());
     }
 
-    // Get credentials
-    String username = null;
-    String password = null;
-    CredentialsProvider credentialsProvider = config.getCredentialsProvider();
-    if (credentialsProvider != null) {
-      Optional<UsernamePasswordCredentials> creds =
-        new UsernamePasswordCredentials.Builder()
-          .setCredentialsProvider(credentialsProvider)
-          .build();
-      if (creds.isPresent()) {
-        username = creds.get().getUsername();
-        password = creds.get().getPassword();
-      }
-    }
+    UsernamePasswordCredentials credentials = credentialsOf(config);
+    String username = credentials == null ? null : credentials.getUsername();
+    String password = credentials == null ? null : credentials.getPassword();
 
     // Attempt to connect
     DriverManager.setLoginTimeout(CONNECTION_TIMEOUT_SECONDS);
@@ -203,6 +193,45 @@ public class TestConnectionResources {
           logger.warn("Error closing test JDBC connection", e);
         }
       }
+    }
+  }
+
+  /**
+   * The credentials to connect with, or null when the config carries none.
+   * <p>
+   * A config whose credentials were given directly, as a username and password, reports no
+   * credentials provider at all: {@link StoragePluginConfig#getCredentialsProvider()}
+   * returns null for those so that they serialize back in the shape they arrived in. Their
+   * values are on the config itself, and without this fallback every such plugin would be
+   * tested as an anonymous user.
+   */
+  @VisibleForTesting
+  static UsernamePasswordCredentials credentialsOf(StoragePluginConfig config) {
+    CredentialsProvider credentialsProvider = config.getCredentialsProvider();
+    if (credentialsProvider != null) {
+      return new UsernamePasswordCredentials.Builder()
+        .setCredentialsProvider(credentialsProvider)
+        .build()
+        .orElse(null);
+    }
+    String username = readStringProperty(config, "getUsername");
+    String password = readStringProperty(config, "getPassword");
+    if (username == null && password == null) {
+      return null;
+    }
+    return new UsernamePasswordCredentials(username, password);
+  }
+
+  /**
+   * Read a String property from a config belonging to a module this one does not depend on.
+   * Returns null when the config has no such accessor or reading it fails.
+   */
+  private static String readStringProperty(StoragePluginConfig config, String getter) {
+    try {
+      return (String) config.getClass().getMethod(getter).invoke(config);
+    } catch (Exception e) {
+      logger.debug("Config {} has no readable {}", config.getClass().getSimpleName(), getter, e);
+      return null;
     }
   }
 
