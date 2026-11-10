@@ -27,11 +27,13 @@ import {
   Typography,
   Tooltip,
   Popconfirm,
+  Upload,
   message,
 } from 'antd';
 import {
   DatabaseOutlined,
   PlusOutlined,
+  UploadOutlined,
   DeleteOutlined,
   SettingOutlined,
 } from '@ant-design/icons';
@@ -39,6 +41,7 @@ import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
 import { removeDataset, getSchemaCache, refreshSchemaCache } from '../api/projects';
 import { useProjectContext } from '../contexts/ProjectContext';
 import { DatasetPickerModal } from '../components/project';
+import { useProjectFileUpload } from '../components/project/ProjectFileDropZone';
 
 const { Title } = Typography;
 
@@ -47,6 +50,7 @@ export default function ProjectDataSourcesPage() {
   const navigate = useNavigate();
   const queryClient = useQueryClient();
   const [pickerOpen, setPickerOpen] = useState(false);
+  const uploadFile = useProjectFileUpload(projectId!);
 
   const removeDatasetMutation = useMutation({
     mutationFn: (datasetId: string) => removeDataset(projectId!, datasetId),
@@ -100,6 +104,15 @@ export default function ProjectDataSourcesPage() {
               >
                 Refresh schema cache
               </Button>
+              <Upload
+                showUploadList={false}
+                beforeUpload={(file) => {
+                  void uploadFile(file);
+                  return false;
+                }}
+              >
+                <Button icon={<UploadOutlined />}>Upload file</Button>
+              </Upload>
               <Button
                 type="primary"
                 icon={<PlusOutlined />}

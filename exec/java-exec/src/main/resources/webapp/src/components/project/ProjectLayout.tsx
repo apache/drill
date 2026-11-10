@@ -18,6 +18,7 @@
 import { useParams, Outlet } from 'react-router-dom';
 import { Spin, Empty, Button } from 'antd';
 import { useNavigate } from 'react-router-dom';
+import ProjectFileDropZone from './ProjectFileDropZone';
 import { ProjectContextProvider, useProjectContext } from '../../contexts/ProjectContext';
 
 function ProjectLayoutInner() {
@@ -44,7 +45,9 @@ function ProjectLayoutInner() {
 
   return (
     <div style={{ flex: 1, overflow: 'auto', display: 'flex', flexDirection: 'column' }}>
-      <Outlet />
+      <ProjectFileDropZone projectId={project.id}>
+        <Outlet />
+      </ProjectFileDropZone>
     </div>
   );
 }
