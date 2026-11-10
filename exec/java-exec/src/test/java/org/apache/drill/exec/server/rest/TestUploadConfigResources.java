@@ -32,7 +32,9 @@ import okhttp3.OkHttpClient;
 import okhttp3.Request;
 import okhttp3.RequestBody;
 import okhttp3.Response;
+import jakarta.annotation.security.RolesAllowed;
 import org.apache.drill.exec.ExecConstants;
+import org.apache.drill.exec.server.rest.auth.DrillUserPrincipal;
 import org.apache.drill.test.ClusterFixtureBuilder;
 import org.apache.drill.test.ClusterTest;
 import org.junit.Before;
@@ -132,5 +134,51 @@ public class TestUploadConfigResources extends ClusterTest {
     assertNull(UploadConfigResources.multiNodeWarning("file:///", 1));
     assertNull(UploadConfigResources.multiNodeWarning("s3a://bucket", 3));
     assertNotNull(UploadConfigResources.multiNodeWarning("file:///", 2));
+  }
+
+  @Test
+  public void testPutRejectsMissingPlugin() throws Exception {
+    JsonNode body = call("PUT", "/config", "{\"plugin\":\"nosuchplugin\",\"workspace\":\"tmp\"}", 404);
+    assertTrue(body.get("message").asText().contains("nosuchplugin"));
+  }
+
+  @Test
+  public void testPutRejectsMissingWorkspace() throws Exception {
+    JsonNode body = call("PUT", "/config", "{\"plugin\":\"dfs\",\"workspace\":\"nosuchws\"}", 404);
+    assertTrue(body.get("message").asText().contains("nosuchws"));
+  }
+
+  @Test
+  public void testPutRejectsBlankOrAbsentInput() throws Exception {
+    call("PUT", "/config", "{\"workspace\":\"tmp\"}", 400);
+    call("PUT", "/config", "{\"plugin\":\"dfs\"}", 400);
+    call("PUT", "/config", "{\"plugin\":\"  \",\"workspace\":\"tmp\"}", 400);
+    call("PUT", "/config", "{\"plugin\":\"dfs\",\"workspace\":\"\"}", 400);
+  }
+
+  /**
+   * The harness requests as the anonymous user, so the role split is pinned on the
+   * annotations Jersey enforces: status is open to any authenticated user, the rest
+   * inherits the admin-only class annotation.
+   */
+  @Test
+  public void testRoleSplitBetweenStatusAndConfig() throws Exception {
+    Class<?> c = UploadConfigResources.class;
+    assertEquals(DrillUserPrincipal.ADMIN_ROLE,
+        c.getAnnotation(RolesAllowed.class).value()[0]);
+    assertEquals(DrillUserPrincipal.AUTHENTICATED_ROLE,
+        c.getMethod("getStatus").getAnnotation(RolesAllowed.class).value()[0]);
+    assertNull(c.getMethod("getConfig").getAnnotation(RolesAllowed.class));
+    assertNull(c.getMethod("putConfig", UploadConfigResources.UploadConfig.class)
+        .getAnnotation(RolesAllowed.class));
+  }
+
+  @Test
+  public void testStoredEntryWithUnknownPropertyStillReads() throws Exception {
+    UploadConfigResources.UploadConfig read = new ObjectMapper().readValue(
+        "{\"plugin\":\"dfs\",\"workspace\":\"tmp\",\"maxSizeBytes\":7,\"futureField\":true}",
+        UploadConfigResources.UploadConfig.class);
+    assertEquals("dfs", read.plugin);
+    assertEquals(7, read.maxSizeBytes);
   }
 }

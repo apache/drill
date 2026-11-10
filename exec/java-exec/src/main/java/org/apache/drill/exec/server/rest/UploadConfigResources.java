@@ -18,6 +18,7 @@
 package org.apache.drill.exec.server.rest;
 
 import com.fasterxml.jackson.annotation.JsonCreator;
+import com.fasterxml.jackson.annotation.JsonIgnoreProperties;
 import com.fasterxml.jackson.annotation.JsonProperty;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import io.swagger.v3.oas.annotations.Operation;
@@ -66,6 +67,7 @@ public class UploadConfigResources {
   @Inject
   PersistentStoreProvider storeProvider;
 
+  @JsonIgnoreProperties(ignoreUnknown = true)
   public static class UploadConfig {
     @JsonProperty
     public String plugin;
