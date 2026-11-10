@@ -32,6 +32,7 @@ import type { SchemaInfo, TableInfo, ColumnInfo, FileInfo, NestedFieldInfo, SubT
 import { isFileBasedPlugin, getMultiTableConfig, getHomogeneousDataFormat } from './icons';
 import { usePlugins } from './hooks';
 import { buildPluginNode } from './TreeNodeBuilder';
+import { getUploadStatus } from '../../api/uploads';
 import ContextMenu from './ContextMenu';
 import type { NodeType } from './ContextMenu';
 import { useFavorites } from './useFavorites';
@@ -1174,6 +1175,20 @@ export default function SchemaExplorer({ onInsertText, onSelectQuery, onOpenInNe
     [],
   );
 
+  // The schema uploaded files sit under, so their nodes can offer Delete and Download
+  const { data: uploadStatus } = useReactQuery({
+    queryKey: ['uploadStatus'],
+    queryFn: getUploadStatus,
+    enabled: !!projectId,
+  });
+  const uploadSchema = uploadStatus?.configured && uploadStatus.plugin && uploadStatus.workspace
+    ? `${uploadStatus.plugin}.${uploadStatus.workspace}`
+    : undefined;
+
+  const handleUploadedFileDeleted = useCallback(() => {
+    queryClient.invalidateQueries({ queryKey: ['schemaCache', projectId] });
+  }, [queryClient, projectId]);
+
   // ---------- Title renderer that wraps each node in a ContextMenu ----------
 
   const titleRender = useCallback(
@@ -1224,12 +1239,15 @@ export default function SchemaExplorer({ onInsertText, onSelectQuery, onOpenInNe
           onToggleFavorite={toggleFavorite}
           dataFormat={dataFormat}
           onOpenInNewTab={onOpenInNewTab}
+          projectId={projectId}
+          uploadSchema={uploadSchema}
+          onFileDeleted={handleUploadedFileDeleted}
         >
           <span>{nodeData.title as React.ReactNode}</span>
         </ContextMenu>
       );
     },
-    [onInsertText, handleRefreshNode, handleShowStats, handleShowFileInfo, handleEditPlugin, handleProfileData, lookupFileInfo, isFavorite, toggleFavorite, onOpenInNewTab],
+    [onInsertText, handleRefreshNode, handleShowStats, handleShowFileInfo, handleEditPlugin, handleProfileData, lookupFileInfo, isFavorite, toggleFavorite, onOpenInNewTab, projectId, uploadSchema, handleUploadedFileDeleted],
   );
 
   // ---------- Render ----------

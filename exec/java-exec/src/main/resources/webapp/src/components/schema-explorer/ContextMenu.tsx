@@ -16,7 +16,7 @@
  * limitations under the License.
  */
 import { useCallback } from 'react';
-import { Dropdown, message } from 'antd';
+import { Dropdown, Modal, message } from 'antd';
 import type { MenuProps } from 'antd';
 import {
   CopyOutlined,
@@ -30,8 +30,12 @@ import {
   SettingOutlined,
   ProfileOutlined,
   ApartmentOutlined,
+  DeleteOutlined,
+  DownloadOutlined,
 } from '@ant-design/icons';
 import type { FileInfo, ColumnInfo } from '../../types';
+import { deleteProjectFile, downloadProjectFileUrl } from '../../api/uploads';
+import { isInFolder } from './datasetAllowList';
 import { buildSessionizeSql, isPacketCaptureFormat } from '../../utils/sessionize';
 
 export type NodeType = 'plugin' | 'schema' | 'table' | 'file' | 'column';
@@ -55,6 +59,25 @@ export interface ContextMenuProps {
   /** File extension, or the shared format of a folder's files; enables format-specific items */
   dataFormat?: string;
   onOpenInNewTab?: (sql: string, tabName?: string) => void;
+  /** The current project; uploaded files live in a folder of this name */
+  projectId?: string;
+  /** The configured upload target as "<plugin>.<workspace>" */
+  uploadSchema?: string;
+  /** Called after an uploaded file has been deleted */
+  onFileDeleted?: () => void;
+}
+
+/**
+ * For a file node inside this project's upload folder, the file's name relative to that folder;
+ * undefined for every other node.
+ */
+function uploadedFileName(nodeKey: string, projectId?: string, uploadSchema?: string): string | undefined {
+  const prefix = `file:${uploadSchema}:`;
+  if (!projectId || !uploadSchema || !nodeKey.startsWith(prefix)) {
+    return undefined;
+  }
+  const path = nodeKey.slice(prefix.length);
+  return path !== projectId && isInFolder(path, projectId) ? path.slice(projectId.length + 1) : undefined;
 }
 
 function copyToClipboard(text: string) {
@@ -82,7 +105,12 @@ export default function ContextMenu({
   onToggleFavorite,
   dataFormat,
   onOpenInNewTab,
+  projectId,
+  uploadSchema,
+  onFileDeleted,
 }: ContextMenuProps) {
+  const uploadedName = nodeType === 'file' ? uploadedFileName(nodeKey, projectId, uploadSchema) : undefined;
+
   const handleMenuClick = useCallback(
     (info: { key: string }) => {
       switch (info.key) {
@@ -153,9 +181,39 @@ export default function ContextMenu({
           }
           break;
         }
+        case 'download-file':
+          if (projectId && uploadedName) {
+            const link = document.createElement('a');
+            link.href = downloadProjectFileUrl(projectId, uploadedName);
+            link.download = uploadedName;
+            link.click();
+          }
+          break;
+        case 'delete-file':
+          if (projectId && uploadedName) {
+            Modal.confirm({
+              title: 'Delete file?',
+              content: `Delete ${uploadedName} from this project? This cannot be undone.`,
+              okText: 'Delete',
+              okButtonProps: { danger: true },
+              cancelText: 'Cancel',
+              onOk: async () => {
+                try {
+                  await deleteProjectFile(projectId, uploadedName);
+                  message.success(`Deleted ${uploadedName}`);
+                  onRefreshNode?.(`schema:${uploadSchema}`);
+                  onFileDeleted?.();
+                } catch (error) {
+                  const reason = error instanceof Error && error.message ? `: ${error.message}` : '';
+                  message.error(`Could not delete ${uploadedName}${reason}`);
+                }
+              },
+            });
+          }
+          break;
       }
     },
-    [qualifiedName, nodeKey, columnNames, fileInfo, columnInfos, onInsertText, onRefreshNode, onShowStats, onShowFileInfo, onEditPlugin, onProfileData, onToggleFavorite, onOpenInNewTab],
+    [projectId, uploadSchema, uploadedName, onFileDeleted, qualifiedName, nodeKey, columnNames, fileInfo, columnInfos, onInsertText, onRefreshNode, onShowStats, onShowFileInfo, onEditPlugin, onProfileData, onToggleFavorite, onOpenInNewTab],
   );
 
   const items: MenuProps['items'] = [];
@@ -206,6 +264,11 @@ export default function ContextMenu({
       items.push({ key: 'file-info', label: 'Get Info', icon: <InfoCircleOutlined /> });
     }
     items.push({ key: 'refresh', label: 'Refresh Columns', icon: <ReloadOutlined /> });
+    if (uploadedName) {
+      items.push({ type: 'divider' });
+      items.push({ key: 'download-file', label: 'Download', icon: <DownloadOutlined /> });
+      items.push({ key: 'delete-file', label: 'Delete', icon: <DeleteOutlined />, danger: true });
+    }
   }
 
   return (
