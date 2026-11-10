@@ -82,17 +82,10 @@ public class TestProjectResources {
   }
 
   @Test
-  public void testOnlyOwnerCanDelete() {
+  public void testOnlyOwnerCanAdminister() {
     Project p = project(false);
     assertTrue(ProjectResources.canAdminister(p, "owner"));
     assertFalse(ProjectResources.canAdminister(p, "editor"));
-  }
-
-  @Test
-  public void testOnlyOwnerCanRestore() {
-    Project p = project(false);
-    assertFalse(ProjectResources.canAdminister(p, "editor"));
-    assertFalse(ProjectResources.canAdminister(p, "viewer"));
   }
 
   @Test

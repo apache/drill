@@ -823,9 +823,9 @@ public class ProjectResources {
             .build();
       }
 
-      if (!canWrite(project, getCurrentUser())) {
+      if (!canAdminister(project, getCurrentUser())) {
         return Response.status(Response.Status.FORBIDDEN)
-            .entity(new MessageResponse("You do not have write access to this project"))
+            .entity(new MessageResponse("Only the owner can purge this project"))
             .build();
       }
 
