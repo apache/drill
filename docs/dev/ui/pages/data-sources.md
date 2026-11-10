@@ -40,6 +40,7 @@ Lists every configured storage plugin. Enable / disable, edit, authorize OAuth, 
 - Authorize opens a popup; on close, the page refetches plugins so the new credentials are visible.
 - Delete shows a confirmation: deleting a plugin orphans any project datasets pointing at it, so the cleanup endpoint is called too.
 - Editing or creating opens [DataSourceEditPage](#datasourceeditpage).
+- `UploadTargetCard` (admin) sets the cluster-wide upload target: a plugin and writable workspace, saved with `PUT /api/v1/uploads/config`. A returned `warning` (local `file:` target on a multi-Drillbit cluster) is shown, not treated as a failure. See [`../../FileUploads.md`](../../FileUploads.md).
 
 ### Quirks
 

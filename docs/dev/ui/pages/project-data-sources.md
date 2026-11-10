@@ -31,6 +31,10 @@ Manage which datasets are bound to the project: tables, schemas, plugins, and sa
 - Empty state: "No datasets added to this project yet."
 - "Add Datasets" button opens the picker.
 
+## File upload
+
+The header has an **Upload file** button (AntD `Upload`, `beforeUpload` hands the file to `useProjectFileUpload`), the discoverable twin of dragging a file anywhere in the project. The first upload adds a `folder` dataset ("Uploaded files") to the list; it is an ordinary row and can be removed like any other, which only drops the reference. Files themselves are deleted from the schema explorer. Full behavior: [`../../FileUploads.md`](../../FileUploads.md).
+
 ## Chrome
 
 Breadcrumb: `Projects > <Project Name> > Data Sources`. Toolbar: Add Datasets.

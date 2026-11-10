@@ -29,6 +29,10 @@ Widths come from `index.css` (the `conversations-*` classes), not inline styles.
 - Auto-follow: the canvas settles once, when a turn ends (`isStreaming` going true to false), on the last artifact that turn created (`nextCanvasTarget`). It does not step through a multi-artifact turn, and a conversation that was only loaded does not move it. A pin holds the view while Prospector works (`CanvasHost` freezes what it shows), and unpinning catches up to the latest target, whether a query result or a finished turn's last artifact. Clicking a card is an explicit request, so it opens the artifact and releases the pin.
 - Analytics feature slug: `project_chat`.
 
+## File drops
+
+The composer accepts dropped files (`ChatInput` `onFileDropped`, wired to `useConversationFileDrop` in `ConversationView`). Each file is uploaded into the project through the same endpoint as every other drop surface; once the uploads finish, one ordinary user message is sent naming each file and the table path it can be queried by (several files dropped together share one message), so Prospector reads it with `execute_sql`. A failed or declined upload sends nothing. The drop is marked handled so the project-wide overlay does not upload it a second time. See [`../../FileUploads.md`](../../FileUploads.md).
+
 ## Canvas
 
 `CanvasHost` (`components/conversation/CanvasHost.tsx`) shows one target at a time. A target is either `results` (the rows of a bare `execute_sql`, via `ResultsCanvas`, tabs Results and SQL) or a project artifact by kind and id (`ArtifactCanvas`: `chart`, `dashboard`, `query`, `workflow`, `wiki`, `datasource`).

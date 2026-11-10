@@ -605,7 +605,8 @@ public class MetadataResources {
   @Produces(MediaType.APPLICATION_JSON)
   @Operation(summary = "List files in schema/workspace",
       description = "Returns a list of files and folders in the specified schema (for file-based plugins like dfs). "
-          + "Only shows directories and files with extensions recognized by the plugin's format configurations.")
+          + "Only shows directories and files with extensions recognized by the plugin's format configurations, "
+          + "except in the configured uploads workspace, which lists every file.")
   public FilesResponse getFiles(
       @Parameter(description = "Schema name (e.g., dfs.tmp)") @PathParam("schema") String schema,
       @Parameter(description = "Subdirectory path") @QueryParam("path") @DefaultValue("") String subPath) {

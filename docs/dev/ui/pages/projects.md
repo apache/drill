@@ -45,6 +45,10 @@ Query keys: `['projects']`, `['project-favorites']`. Mutations invalidate both a
 - Editing the appearance immediately updates the sidebar's project glyph because both read the same color via `usePinnedRecentProjects` / `getProjects` cache.
 - Import accepts a JSON blob produced by Export.
 
+## File drops
+
+`ProjectLayout` wraps every project page in `ProjectFileDropZone`. Dragging files from outside the browser over any project page shows a "Drop to add to <project>" overlay; dropping uploads each file into the project via `useProjectFileUpload` (a name collision asks "Replace existing file?", no configured target says so). In-app drags (tree nodes) are ignored. A nested drop target that takes the files itself, such as the Prospector composer, marks the event with `markDropHandled` so the zone resets its overlay without uploading twice. See [`../../FileUploads.md`](../../FileUploads.md).
+
 ## Chrome
 
 Registers a breadcrumb (`Home`) and a toolbar action for "New Project". No inspector tabs, no left rail.

@@ -31,6 +31,7 @@ In `src/components/sqllab/`:
 - `ResultsGrid` — AG Grid table for results. Pagination, sort, column visibility, JSON-cell expander, CSV/clipboard export.
 - `SchemaExplorer` — nested schema/table tree. Filter, drag-to-insert, peek-rows preview. Renders into the Left Rail. See [Sampling dynamic schemas](#sampling-dynamic-schemas).
   - Right-click menu (`ContextMenu`): Copy Name, favorites, Generate SELECT * / DESCRIBE / USE, statistics, profiling, Get Info, refresh. Format-specific items are driven by the `dataFormat` prop (a file's extension, or the format shared by every file in a folder): packet captures (`.pcap`, `.pcapng`) get **Sessionize TCP Streams**, which opens a new tab with `SELECT * FROM table(... (type => 'pcap', sessionizeTCPStreams => true))` built by `utils/sessionize.ts`. It always uses `*` because sessions have different columns than packets.
+  - **Delete** and **Download** appear on file nodes inside the current project's uploads folder (the configured upload schema), and only for flat names. Delete confirms by name, calls `DELETE /api/v1/projects/{id}/files/{name}` and then refreshes the tree and schema cache; Download links to `.../content`. See [`../../FileUploads.md`](../../FileUploads.md).
 - `QueryToolbar` — Run / Run Selection / Cancel buttons, schema/auto-limit dropdowns, format SQL.
 - `VisualizationBuilder` — chart-config panel that drives ChartPreview. Lives next to ResultsGrid as the "Visualization" sub-tab.
 - `NotebookPanel` — collapsible right-side markdown notebook for query narratives. 

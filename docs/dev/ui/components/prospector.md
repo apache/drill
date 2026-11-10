@@ -157,6 +157,10 @@ Other AI endpoints in this module:
 - `UsageEvent` — `{ promptTokens?, responseTokens?, totalTokens?, costUsd?, currency? }`
 - `ToolCall` — `{ id, name, arguments }` (arguments is a JSON string)
 
+## File drops (ChatInput)
+
+`ChatInput` takes an optional `onFileDropped(file)`. When present the composer accepts drags that carry `Files`, calls `markDropHandled` on the event (so `ProjectFileDropZone` above it resets without uploading again), and hands each file to the callback. When omitted the composer takes no drops. The Conversations page passes `useConversationFileDrop(projectId, sendMessage)`, which uploads and then sends a message naming the file and its query path; there is no Prospector tool for uploads. See [`../../FileUploads.md`](../../FileUploads.md).
+
 ## Context (AiModalContext)
 
 **File:** `src/contexts/AiModalContext.tsx`
