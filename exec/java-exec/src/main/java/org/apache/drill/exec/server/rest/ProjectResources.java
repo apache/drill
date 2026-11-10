@@ -881,7 +881,7 @@ public class ProjectResources {
         project.setUpdatedAt(Instant.now().toEpochMilli());
         store.put(id, project);
 
-        scanDatasetSchema(id, datasetRef);
+        scanDatasetSchema(id, project, datasetRef.getSchema());
 
         return Response.ok(project).build();
       }
@@ -956,7 +956,7 @@ public class ProjectResources {
       for (DatasetRef d : project.getDatasets()) {
         String schema = d.getSchema();
         if (schema != null && scanned.add(schema)) {
-          scanDatasetSchema(id, d);
+          scanDatasetSchema(id, project, schema);
         }
       }
       ProjectSchemaCacheEntry entry = schemaCache().getEntry(id);
@@ -2051,25 +2051,38 @@ public class ProjectResources {
   }
 
   /**
-   * Scans the schema one dataset reference points at. A {@code folder} reference names
-   * a directory of files, which INFORMATION_SCHEMA does not list, so it scans with
-   * {@link ProjectSchemaCache#fileScan} instead.
+   * Scans one schema a project's datasets point at. The scan covers every reference on
+   * that schema at once: INFORMATION_SCHEMA does not list the files in a {@code folder}
+   * reference, and the cache holds one entry per schema path, so scanning per reference
+   * would let one reference's tables evict another's.
    */
-  private void scanDatasetSchema(String projectId, DatasetRef ref) {
-    String schema = ref == null ? null : ref.getSchema();
+  private void scanDatasetSchema(String projectId, Project project, String schema) {
     if (schema == null || !ProjectSchemaCache.isScannable(storageRegistry, schema)) {
       return;
     }
-    final String folder = ProjectFileResources.FOLDER_DATASET_TYPE.equals(ref.getType())
-        ? ref.getTable() : null;
+    final List<String> folders = uploadFolders(project, schema);
     try {
-      schemaCache().scan(projectId, schema, s -> folder == null
-          ? ProjectSchemaCache.infoSchemaScan(s, workManager, webUserConnection)
-          : ProjectSchemaCache.fileScan(s, folder, workManager, webUserConnection));
+      schemaCache().scan(projectId, schema,
+          s -> ProjectSchemaCache.combinedScan(s, folders, workManager, webUserConnection));
     } catch (Exception e) {
       // Best-effort: a scan failure must never fail the triggering request.
       logger.warn("Schema scan failed for project {} schema {}: {}", projectId, schema, e.getMessage());
     }
+  }
+
+  /** The folders every {@code folder} reference on {@code schema} points at. */
+  private static List<String> uploadFolders(Project project, String schema) {
+    List<String> folders = new ArrayList<>();
+    if (project == null || project.getDatasets() == null) {
+      return folders;
+    }
+    for (DatasetRef d : project.getDatasets()) {
+      if (ProjectFileResources.FOLDER_DATASET_TYPE.equals(d.getType())
+          && schema.equals(d.getSchema()) && d.getTable() != null) {
+        folders.add(d.getTable());
+      }
+    }
+    return folders;
   }
 
   private PersistentStore<UserFavorites> getFavoritesStore() {

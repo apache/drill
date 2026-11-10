@@ -325,7 +325,7 @@ public class ProjectFileResources {
     }
 
     registerFolderDataset(store, id, cfg);
-    refreshFolderSchema(id, cfg);
+    cacheUploadedFile(id, cfg, name);
     logger.info("User '{}' uploaded '{}' into project {} at {}", user, name, id, target);
     return written;
   }
@@ -440,7 +440,7 @@ public class ProjectFileResources {
       logger.error("Failed to delete '{}' at {}", loc.name, loc.target, e);
       return error(Response.Status.INTERNAL_SERVER_ERROR, "Failed to delete the file");
     }
-    refreshFolderSchema(id, loc.cfg);
+    uncacheDeletedFile(id, loc.cfg, loc.name);
     logger.info("User '{}' deleted '{}' from project {} at {}", loc.user, loc.name, id,
         loc.target);
     return Response.noContent().build();
@@ -642,20 +642,53 @@ public class ProjectFileResources {
   }
 
   /**
-   * Re-scans the project's folder after a write or a delete, so the file is in
-   * autocomplete and in the AI assistant's context without waiting out
-   * {@link ProjectSchemaCache#STALE_INTERVAL_MS}. Best-effort: a scan failure must
-   * never fail the upload or delete that has already happened on disk.
+   * Puts the file just written into the project's schema cache, so it is in autocomplete
+   * and in the AI assistant's context without waiting out
+   * {@link ProjectSchemaCache#STALE_INTERVAL_MS}.
+   *
+   * <p>Only this one file is probed. Re-scanning the whole folder here would run one
+   * query per file it holds, on the upload's own request thread and inside the cache's
+   * monitor, so a project with a few hundred files would pay seconds on every upload and
+   * delete and would stall every other project's scanning while it did. The whole-folder
+   * {@link ProjectSchemaCache#fileScan} stays the scanner for the dataset-scan path,
+   * where a sweep is what is being asked for.
+   *
+   * <p>Best-effort: a cache failure must never fail a write that has already landed.
    */
-  private void refreshFolderSchema(String id, UploadConfig cfg) {
-    String schema = cfg.plugin + "." + cfg.workspace;
-    try {
-      ProjectSchemaCache.get(storeProvider, workManager).scan(id, schema,
-          s -> ProjectSchemaCache.fileScan(s, id, workManager, webUserConnection));
-    } catch (Exception e) {
-      logger.warn("Could not refresh the schema cache for project {} schema {}: {}",
-          id, schema, e.getMessage());
+  private void cacheUploadedFile(String id, UploadConfig cfg, String name) {
+    String schema = uploadSchema(cfg);
+    if (!ProjectSchemaCache.isScannable(storageRegistry, schema)) {
+      return;
     }
+    try {
+      ProjectSchemaCache cache = ProjectSchemaCache.get(storeProvider, workManager);
+      // Probed before the merge takes the cache's monitor, never while holding it.
+      cache.putTable(id, schema,
+          ProjectSchemaCache.fileEntry(schema, id + "/" + name, workManager,
+              webUserConnection));
+    } catch (Exception e) {
+      logger.warn("Could not cache the uploaded file '{}' for project {} schema {}: {}",
+          name, id, schema, e.getMessage());
+    }
+  }
+
+  /** Drops a deleted file from the project's schema cache. No query is needed. */
+  private void uncacheDeletedFile(String id, UploadConfig cfg, String name) {
+    String schema = uploadSchema(cfg);
+    if (!ProjectSchemaCache.isScannable(storageRegistry, schema)) {
+      return;
+    }
+    try {
+      ProjectSchemaCache.get(storeProvider, workManager)
+          .removeTable(id, schema, id + "/" + name);
+    } catch (Exception e) {
+      logger.warn("Could not drop the deleted file '{}' from the schema cache for "
+          + "project {} schema {}: {}", name, id, schema, e.getMessage());
+    }
+  }
+
+  private static String uploadSchema(UploadConfig cfg) {
+    return cfg.plugin + "." + cfg.workspace;
   }
 
   // ==================== Small helpers ====================

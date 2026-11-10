@@ -592,11 +592,14 @@ public class TestProjectFileResources extends ClusterTest {
 
   // ==================== Schema cache ====================
   //
-  // ProjectSchemaCache.fileScan is exercised from here rather than from
+  // ProjectSchemaCache's file scanning is exercised from here rather than from
   // TestProjectSchemaCache: it needs a live Drillbit to run SHOW FILES and the
   // per-file probe, and TestProjectSchemaCache is a store-only unit test with no
   // cluster. The upload and delete fixtures above are also what makes a real file
   // appear in a project folder, which is what the scan is for.
+  //
+  // Two paths reach the cache and the tests keep them apart. An upload merges the one
+  // file it wrote; a POST to /schema-cache/refresh runs the whole-folder scan.
 
   /** The project's cached {@code dfs.tmp} schema, as the REST endpoint reports it. */
   private static JsonNode cachedUploadSchema(String projectId) throws Exception {
@@ -608,6 +611,34 @@ public class TestProjectFileResources extends ClusterTest {
       assertEquals(200, r.code());
       return MAPPER.readTree(r.body().string()).path("schemas").path("dfs.tmp");
     }
+  }
+
+  /** Runs the whole-folder scan: the dataset-scan path, not the upload path. */
+  private static void rescan(String projectId) throws Exception {
+    Request request = new Request.Builder()
+        .url("http://localhost:" + portNumber + "/api/v1/projects/" + projectId
+            + "/schema-cache/refresh")
+        .post(RequestBody.create("", JSON))
+        .build();
+    try (Response r = client.newCall(request).execute()) {
+      assertEquals(r.body().string(), 200, r.code());
+    }
+  }
+
+  /**
+   * The cached tables that belong to this project's upload folder, by name. The scan
+   * covers all of {@code dfs.tmp}, which other tests in this class also write to, so
+   * the project's own prefix is what makes an assertion about "its files" exact.
+   */
+  private static List<String> cachedFileNames(String projectId) throws Exception {
+    List<String> names = new ArrayList<>();
+    for (JsonNode t : cachedUploadSchema(projectId).path("tables")) {
+      if (t.path("name").asText().startsWith(projectId + "/")) {
+        names.add(t.path("name").asText());
+      }
+    }
+    Collections.sort(names);
+    return names;
   }
 
   private static List<String> cachedTableNames(String projectId) throws Exception {
@@ -642,10 +673,11 @@ public class TestProjectFileResources extends ClusterTest {
     String id = seedWritableProject();
     upload(id, "one.csvh", "a,b\n1,2\n", false, 201);
     upload(id, "two.csvh", "a,b\n3,4\n", false, 201);
+    rescan(id);
 
     // Names are the paths relative to the cached schema, so they are queryable as
     // dfs.tmp.`<project id>/one.csvh`.
-    assertEquals(Arrays.asList(id + "/one.csvh", id + "/two.csvh"), cachedTableNames(id));
+    assertEquals(Arrays.asList(id + "/one.csvh", id + "/two.csvh"), cachedFileNames(id));
     assertEquals("FILE", cachedTable(id, id + "/one.csvh").path("type").asText());
   }
 
@@ -654,9 +686,10 @@ public class TestProjectFileResources extends ClusterTest {
     configureUploads(1000);
     String id = seedWritableProject();
     upload(id, "headers.csvh", "a,b\n1,2\n", false, 201);
+    rescan(id);
 
-    JsonNode table = cachedTable(id, id + "/headers.csvh");
-    assertEquals(Arrays.asList("a", "b"), columnNames(table));
+    assertEquals(Arrays.asList("a", "b"),
+        columnNames(cachedTable(id, id + "/headers.csvh")));
   }
 
   /**
@@ -670,41 +703,12 @@ public class TestProjectFileResources extends ClusterTest {
     String id = seedWritableProject();
     upload(id, "notes.docx", "PK\u0003\u0004 not really a document", false, 201);
     upload(id, "good.csvh", "a,b\n1,2\n", false, 201);
+    rescan(id);
 
-    assertEquals(Arrays.asList(id + "/good.csvh", id + "/notes.docx"), cachedTableNames(id));
+    assertEquals(Arrays.asList(id + "/good.csvh", id + "/notes.docx"), cachedFileNames(id));
     assertEquals(Collections.<String>emptyList(),
         columnNames(cachedTable(id, id + "/notes.docx")));
     assertEquals(Arrays.asList("a", "b"), columnNames(cachedTable(id, id + "/good.csvh")));
-  }
-
-  /**
-   * The second upload lands inside the staleness window of the first scan, so only a
-   * refresh on write can put it in the entry.
-   */
-  @Test
-  public void testUploadRefreshesTheCache() throws Exception {
-    configureUploads(1000);
-    String id = seedWritableProject();
-    upload(id, "first.csvh", "a\n1\n", false, 201);
-    assertEquals(Collections.singletonList(id + "/first.csvh"), cachedTableNames(id));
-
-    upload(id, "second.csvh", "a\n2\n", false, 201);
-    assertEquals(Arrays.asList(id + "/first.csvh", id + "/second.csvh"),
-        cachedTableNames(id));
-  }
-
-  @Test
-  public void testDeleteRefreshesTheCache() throws Exception {
-    configureUploads(1000);
-    String id = seedWritableProject();
-    upload(id, "keep.csvh", "a\n1\n", false, 201);
-    upload(id, "drop.csvh", "a\n2\n", false, 201);
-    assertEquals(2, cachedTableNames(id).size());
-
-    try (Response r = send("DELETE", id, "drop.csvh", "")) {
-      assertEquals(204, r.code());
-    }
-    assertEquals(Collections.singletonList(id + "/keep.csvh"), cachedTableNames(id));
   }
 
   /**
@@ -715,15 +719,15 @@ public class TestProjectFileResources extends ClusterTest {
   public void testFileScanDescendsIntoSubdirectories() throws Exception {
     configureUploads(1000);
     String id = seedWritableProject();
+    upload(id, "top.csvh", "a\n1\n", false, 201);
     File sub = new File(projectFolder(id), "nested");
     assertTrue(sub.mkdirs());
     Files.write(new File(sub, "deep.csvh").toPath(),
         "a,b\n1,2\n".getBytes(StandardCharsets.UTF_8));
-
-    upload(id, "top.csvh", "a\n1\n", false, 201);
+    rescan(id);
 
     assertEquals(Arrays.asList(id + "/nested/deep.csvh", id + "/top.csvh"),
-        cachedTableNames(id));
+        cachedFileNames(id));
     assertEquals(Arrays.asList("a", "b"),
         columnNames(cachedTable(id, id + "/nested/deep.csvh")));
   }
@@ -740,9 +744,121 @@ public class TestProjectFileResources extends ClusterTest {
     upload(id, "real.csvh", "a\n1\n", false, 201);
     Files.write(new File(projectFolder(id), "real.csvh.upload-" + UUID.randomUUID()).toPath(),
         "a\n9\n".getBytes(StandardCharsets.UTF_8));
+    rescan(id);
 
-    // The overwrite rescans, so the leftover is in the folder when the scan runs.
-    upload(id, "real.csvh", "a\n2\n", true, 201);
-    assertEquals(Collections.singletonList(id + "/real.csvh"), cachedTableNames(id));
+    assertEquals(Collections.singletonList(id + "/real.csvh"), cachedFileNames(id));
+  }
+
+  /**
+   * The staging rule may only match what a staged write produces. Nothing in safeName
+   * stops a client naming a file this way, and such a file is queryable, so hiding it
+   * from autocomplete and from the AI assistant with no diagnostic would be a silent
+   * loss.
+   */
+  @Test
+  public void testScanKeepsAFileWhoseNameResemblesAStagedUpload() throws Exception {
+    configureUploads(1000);
+    String id = seedWritableProject();
+    upload(id, "notes.upload-draft.csvh", "a,b\n1,2\n", false, 201);
+    rescan(id);
+
+    assertEquals(Collections.singletonList(id + "/notes.upload-draft.csvh"),
+        cachedFileNames(id));
+    assertEquals(Arrays.asList("a", "b"),
+        columnNames(cachedTable(id, id + "/notes.upload-draft.csvh")));
+  }
+
+  /**
+   * One schema, two kinds of reference. The cache holds a single entry per schema path,
+   * so a scan has to cover both: a scanner chosen per reference would let the schema
+   * reference's views evict the uploaded files, taking them out of autocomplete and the
+   * AI assistant's context until the next upload put one back.
+   */
+  @Test
+  public void testFolderAndSchemaRefsOnOneSchemaAreScannedTogether() throws Exception {
+    configureUploads(1000);
+    String id = seedWritableProject();
+    upload(id, "both.csvh", "a,b\n1,2\n", false, 201);
+
+    String view = "v_" + id.replace("-", "").substring(0, 12);
+    run("CREATE VIEW dfs.tmp.`%s` AS SELECT 1 AS x", view);
+    try {
+      // A second reference on dfs.tmp, which INFORMATION_SCHEMA is the only way to read.
+      Request addRef = new Request.Builder()
+          .url("http://localhost:" + portNumber + "/api/v1/projects/" + id + "/datasets")
+          .post(RequestBody.create(
+              "{\"type\":\"schema\",\"schema\":\"dfs.tmp\",\"label\":\"tmp\"}", JSON))
+          .build();
+      try (Response r = client.newCall(addRef).execute()) {
+        assertEquals(r.body().string(), 200, r.code());
+      }
+
+      // Adding the reference scanned the schema. Both halves must be in the one entry.
+      assertEquals(Collections.singletonList(id + "/both.csvh"), cachedFileNames(id));
+      assertTrue(cachedTableNames(id).toString(), cachedTableNames(id).contains(view));
+
+      // And again through the refresh endpoint, which dedupes by schema.
+      rescan(id);
+      assertEquals(Collections.singletonList(id + "/both.csvh"), cachedFileNames(id));
+      assertTrue(cachedTableNames(id).toString(), cachedTableNames(id).contains(view));
+    } finally {
+      run("DROP VIEW dfs.tmp.`%s`", view);
+    }
+  }
+
+  /**
+   * The upload path does not re-scan the folder: it merges the one file it wrote. The
+   * discriminator is a file put into the folder behind Drill's back, which a whole-folder
+   * scan would pick up and a merge cannot.
+   */
+  @Test
+  public void testUploadRefreshesTheCache() throws Exception {
+    configureUploads(1000);
+    String id = seedWritableProject();
+    upload(id, "first.csvh", "a\n1\n", false, 201);
+    assertEquals(Collections.singletonList(id + "/first.csvh"), cachedFileNames(id));
+
+    Files.write(new File(projectFolder(id), "sideways.csvh").toPath(),
+        "a\n3\n".getBytes(StandardCharsets.UTF_8));
+
+    // The second upload lands inside the staleness window of the first, so only a cache
+    // update on write can put it in the entry.
+    upload(id, "second.csvh", "a\n2\n", false, 201);
+    assertEquals(Arrays.asList(id + "/first.csvh", id + "/second.csvh"),
+        cachedFileNames(id));
+
+    // The file nobody uploaded appears only once the folder is actually scanned.
+    rescan(id);
+    assertEquals(Arrays.asList(id + "/first.csvh", id + "/second.csvh",
+        id + "/sideways.csvh"), cachedFileNames(id));
+  }
+
+  /** An overwrite re-probes the file in place rather than adding a second entry. */
+  @Test
+  public void testOverwriteReplacesTheCachedColumns() throws Exception {
+    configureUploads(1000);
+    String id = seedWritableProject();
+    upload(id, "shifting.csvh", "a,b\n1,2\n", false, 201);
+    assertEquals(Arrays.asList("a", "b"),
+        columnNames(cachedTable(id, id + "/shifting.csvh")));
+
+    upload(id, "shifting.csvh", "c,d,e\n1,2,3\n", true, 201);
+    assertEquals(Collections.singletonList(id + "/shifting.csvh"), cachedFileNames(id));
+    assertEquals(Arrays.asList("c", "d", "e"),
+        columnNames(cachedTable(id, id + "/shifting.csvh")));
+  }
+
+  @Test
+  public void testDeleteRefreshesTheCache() throws Exception {
+    configureUploads(1000);
+    String id = seedWritableProject();
+    upload(id, "keep.csvh", "a\n1\n", false, 201);
+    upload(id, "drop.csvh", "a\n2\n", false, 201);
+    assertEquals(2, cachedFileNames(id).size());
+
+    try (Response r = send("DELETE", id, "drop.csvh", "")) {
+      assertEquals(204, r.code());
+    }
+    assertEquals(Collections.singletonList(id + "/keep.csvh"), cachedFileNames(id));
   }
 }

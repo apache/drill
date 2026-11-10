@@ -167,6 +167,70 @@ public class TestProjectSchemaCache {
     assertEquals(ProjectSchemaCache.MAX_TABLES_PER_SCHEMA, s.getTables().size());
   }
 
+  /**
+   * The upload path's incremental merge. It must not claim the schema was scanned: a
+   * project that has never had a full scan still needs one, and {@code read} decides
+   * that from {@code scannedAt}.
+   */
+  @Test
+  public void testPutTableAddsOneTableWithoutClaimingAScan() {
+    cache.putTable("p1", "dfs.tmp", table("dfs.tmp", "p1/sales.csv", "FILE", "id", "INT"));
+
+    CachedSchema s = cache.peek("p1", "dfs.tmp");
+    assertNotNull(s);
+    assertEquals(1, s.getTables().size());
+    assertEquals("p1/sales.csv", s.getTables().get(0).getName());
+    assertEquals(0L, s.getScannedAt());
+
+    AtomicInteger calls = new AtomicInteger();
+    cache.read("p1", "dfs.tmp", scannerReturning(
+        List.of(table("dfs.tmp", "p1/sales.csv", "FILE", "id", "INT")), calls));
+    assertEquals(1, calls.get());
+  }
+
+  /** An overwrite re-probes a file that is already cached; it must not double it. */
+  @Test
+  public void testPutTableReplacesTheTableOfTheSameName() {
+    cache.putTable("p1", "dfs.tmp", table("dfs.tmp", "p1/sales.csv", "FILE", "a", "INT"));
+    cache.putTable("p1", "dfs.tmp", table("dfs.tmp", "p1/sales.csv", "FILE", "b", "VARCHAR"));
+
+    CachedSchema s = cache.peek("p1", "dfs.tmp");
+    assertEquals(1, s.getTables().size());
+    assertEquals(1, s.getTables().get(0).getColumns().size());
+    assertEquals("b", s.getTables().get(0).getColumns().get(0).getName());
+  }
+
+  @Test
+  public void testPutTableHonoursTheCap() {
+    AtomicInteger calls = new AtomicInteger();
+    java.util.List<CachedTable> many = new java.util.ArrayList<>();
+    for (int i = 0; i < ProjectSchemaCache.MAX_TABLES_PER_SCHEMA; i++) {
+      many.add(table("dfs.tmp", "t" + i, "FILE", "id", "INT"));
+    }
+    cache.scan("p1", "dfs.tmp", scannerReturning(many, calls));
+
+    cache.putTable("p1", "dfs.tmp", table("dfs.tmp", "p1/one-too-many.csv", "FILE"));
+    CachedSchema s = cache.peek("p1", "dfs.tmp");
+    assertEquals(ProjectSchemaCache.MAX_TABLES_PER_SCHEMA, s.getTables().size());
+    assertTrue(s.isTruncated());
+  }
+
+  @Test
+  public void testRemoveTableDropsOneTableAndLeavesTheRest() {
+    cache.putTable("p1", "dfs.tmp", table("dfs.tmp", "p1/keep.csv", "FILE", "a", "INT"));
+    cache.putTable("p1", "dfs.tmp", table("dfs.tmp", "p1/drop.csv", "FILE", "a", "INT"));
+
+    cache.removeTable("p1", "dfs.tmp", "p1/drop.csv");
+    assertEquals(1, cache.peek("p1", "dfs.tmp").getTables().size());
+    assertEquals("p1/keep.csv", cache.peek("p1", "dfs.tmp").getTables().get(0).getName());
+
+    // Unknown names, schemas and projects are all no-ops.
+    cache.removeTable("p1", "dfs.tmp", "p1/never-there.csv");
+    cache.removeTable("p1", "mysql", "p1/keep.csv");
+    cache.removeTable("no-such-project", "dfs.tmp", "p1/keep.csv");
+    assertEquals(1, cache.peek("p1", "dfs.tmp").getTables().size());
+  }
+
   @Test
   public void testRemoveAndRemoveProject() {
     AtomicInteger calls = new AtomicInteger();

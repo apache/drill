@@ -39,6 +39,9 @@ import java.util.List;
 import java.util.Map;
 import java.util.Objects;
 import java.util.Set;
+import java.util.concurrent.CountDownLatch;
+import java.util.concurrent.TimeUnit;
+import java.util.regex.Pattern;
 
 /**
  * Per-project cache of the schemas/tables/columns a project's data sources expose.
@@ -57,6 +60,27 @@ public class ProjectSchemaCache {
 
   /** How far {@link #fileScan} descends into a folder's subdirectories. */
   public static final int MAX_FOLDER_DEPTH = 10;
+
+  /** Cap on the {@code SHOW FILES} queries one {@link #fileScan} may issue. */
+  public static final int MAX_FOLDER_LISTINGS = 100;
+
+  /**
+   * Deadline for one query {@link #fileScan} issues. Scanning holds this class's monitor
+   * on a request thread, and a query submitted through {@link RestQueryRunner} otherwise
+   * waits without one, so a single stuck file would block every project's scanning.
+   */
+  private static final long FILE_SCAN_TIMEOUT_MS = 30_000L;
+
+  /** The {@code type} given to a cached file. */
+  private static final String FILE_TABLE_TYPE = "FILE";
+
+  /**
+   * The name of a staged upload: {@link ProjectFileResources#STAGING_SUFFIX} followed by
+   * a UUID, at the end of the name.
+   */
+  private static final Pattern STAGING_FILE = Pattern.compile(
+      Pattern.quote(ProjectFileResources.STAGING_SUFFIX)
+          + "[0-9a-fA-F]{8}-[0-9a-fA-F]{4}-[0-9a-fA-F]{4}-[0-9a-fA-F]{4}-[0-9a-fA-F]{12}$");
 
   private static final Set<String> EXCLUDED_PLUGINS = new HashSet<>(Arrays.asList(
       "cp", "sys", "information_schema"));
@@ -277,6 +301,26 @@ public class ProjectSchemaCache {
   }
 
   /**
+   * The one scanner for a schema, whichever dataset references point at it. A schema can
+   * be referenced both as a plain schema and as one or more upload folders, and the cache
+   * holds a single entry per schema path, so the two must be scanned together: picking
+   * one scanner per schema would let whichever reference was seen first decide the
+   * entry's content and drop the other's tables.
+   */
+  public static List<CachedTable> combinedScan(String schemaPath, List<String> folders,
+      WorkManager workManager, WebUserConnection conn) throws Exception {
+    List<CachedTable> tables = new ArrayList<>(infoSchemaScan(schemaPath, workManager, conn));
+    if (folders != null) {
+      for (String folder : folders) {
+        if (folder != null && !folder.isEmpty()) {
+          tables.addAll(fileScan(schemaPath, folder, workManager, conn));
+        }
+      }
+    }
+    return tables;
+  }
+
+  /**
    * Scans the files inside one folder of a file system schema, which
    * {@link #infoSchemaScan} cannot see: INFORMATION_SCHEMA lists a workspace's views
    * and nothing else. {@code SHOW FILES} enumerates the folder, descending into
@@ -297,37 +341,58 @@ public class ProjectSchemaCache {
   public static List<CachedTable> fileScan(String schemaPath, String folder,
       WorkManager workManager, WebUserConnection conn) throws Exception {
     List<String> relativePaths = new ArrayList<>();
-    collectFiles(schemaPath, folder, relativePaths, 0, workManager, conn);
+    collectFiles(schemaPath, folder, relativePaths, 0, new int[] {MAX_FOLDER_LISTINGS},
+        workManager, conn);
 
     List<CachedTable> tables = new ArrayList<>();
     for (String relativePath : relativePaths) {
-      CachedTable t = new CachedTable();
-      t.setSchema(schemaPath);
-      t.setName(relativePath);
-      t.setType("FILE");
-      t.setColumns(tables.size() < MAX_TABLES_PER_SCHEMA
-          ? probeColumns(schemaPath, relativePath, workManager, conn)
-          : new ArrayList<>());
-      tables.add(t);
+      tables.add(tables.size() < MAX_TABLES_PER_SCHEMA
+          ? fileEntry(schemaPath, relativePath, workManager, conn)
+          : unprobedFileEntry(schemaPath, relativePath));
     }
     return tables;
   }
 
   /**
+   * The cached table for one file, with the columns its probe reports. Static and
+   * unsynchronized on purpose: the probe is a query, and callers run it before taking
+   * the cache's monitor through {@link #putTable}.
+   */
+  public static CachedTable fileEntry(String schemaPath, String relativePath,
+      WorkManager workManager, WebUserConnection conn) {
+    CachedTable t = unprobedFileEntry(schemaPath, relativePath);
+    t.setColumns(probeColumns(schemaPath, relativePath, workManager, conn));
+    return t;
+  }
+
+  private static CachedTable unprobedFileEntry(String schemaPath, String relativePath) {
+    CachedTable t = new CachedTable();
+    t.setSchema(schemaPath);
+    t.setName(relativePath);
+    t.setType(FILE_TABLE_TYPE);
+    t.setColumns(new ArrayList<>());
+    return t;
+  }
+
+  /**
    * Appends the paths of the files under {@code folder}, relative to {@code schemaPath},
-   * recursing into subdirectories. Returns early once one more than
-   * {@link #MAX_TABLES_PER_SCHEMA} paths have been collected, or past
-   * {@link #MAX_FOLDER_DEPTH}: without the depth bound a deep tree of empty directories
-   * (or a symlink loop) would keep issuing {@code SHOW FILES} without ever reaching the
-   * file cap.
+   * recursing into subdirectories. Three things bound the walk, because each listing is
+   * a query: it stops one past {@link #MAX_TABLES_PER_SCHEMA} collected paths, past
+   * {@link #MAX_FOLDER_DEPTH} levels, and once {@code listingBudget} is spent. The file
+   * cap alone bounds neither depth nor breadth, since a directory holding no files never
+   * advances the count.
    */
   private static void collectFiles(String schemaPath, String folder, List<String> into,
-      int depth, WorkManager workManager, WebUserConnection conn) throws Exception {
-    if (into.size() > MAX_TABLES_PER_SCHEMA || depth > MAX_FOLDER_DEPTH) {
+      int depth, int[] listingBudget, WorkManager workManager, WebUserConnection conn)
+      throws Exception {
+    if (into.size() > MAX_TABLES_PER_SCHEMA || depth > MAX_FOLDER_DEPTH
+        || listingBudget[0] <= 0) {
       return;
     }
+    listingBudget[0]--;
     QueryResult result = runQuery(
-        "SHOW FILES IN " + quoteTablePath(schemaPath, folder), workManager, conn);
+        "SHOW FILES IN " + quoteTablePath(schemaPath, folder), workManager, conn,
+        FILE_SCAN_TIMEOUT_MS);
     for (Map<String, String> row : result.rows) {
       String name = row.get("name");
       if (name == null || name.isEmpty() || isSkippedFile(name)) {
@@ -335,11 +400,12 @@ public class ProjectSchemaCache {
       }
       String relativePath = folder + "/" + name;
       if ("true".equalsIgnoreCase(row.get("isDirectory"))) {
-        collectFiles(schemaPath, relativePath, into, depth + 1, workManager, conn);
+        collectFiles(schemaPath, relativePath, into, depth + 1, listingBudget,
+            workManager, conn);
       } else {
         into.add(relativePath);
       }
-      if (into.size() > MAX_TABLES_PER_SCHEMA) {
+      if (into.size() > MAX_TABLES_PER_SCHEMA || listingBudget[0] <= 0) {
         return;
       }
     }
@@ -349,9 +415,13 @@ public class ProjectSchemaCache {
    * Files the scan has no reason to spend a probe on: the staging file a failed upload
    * can leave behind, and the hidden files a file system keeps beside a write (such as
    * the local {@code .crc} sidecars), which Drill itself ignores when reading a folder.
+   *
+   * <p>The staging rule matches only what a staged write produces, the suffix followed
+   * by a UUID at the end of the name. Nothing stops a client uploading a file called
+   * {@code notes.upload-draft.csv}, and that is a real file the user wants to query.
    */
   private static boolean isSkippedFile(String name) {
-    return name.startsWith(".") || name.contains(ProjectFileResources.STAGING_SUFFIX);
+    return name.startsWith(".") || STAGING_FILE.matcher(name).find();
   }
 
   /** The columns {@code SELECT * ... LIMIT 1} reports, or none when the probe fails. */
@@ -361,7 +431,7 @@ public class ProjectSchemaCache {
     try {
       QueryResult result = runQuery(
           "SELECT * FROM " + quoteTablePath(schemaPath, relativePath) + " LIMIT 1",
-          workManager, conn);
+          workManager, conn, FILE_SCAN_TIMEOUT_MS);
       List<String> names = new ArrayList<>(result.columns);
       for (int i = 0; i < names.size(); i++) {
         CachedColumn c = new CachedColumn();
@@ -395,13 +465,104 @@ public class ProjectSchemaCache {
 
   private static QueryResult runQuery(String sql, WorkManager workManager,
       WebUserConnection conn) throws Exception {
+    return runQuery(sql, workManager, conn, 0L);
+  }
+
+  /**
+   * Runs one scanning query. A positive {@code timeoutMs} gives it a deadline, enforced
+   * by cancelling it through its own runner from a watchdog on the Drillbit's shared
+   * executor; {@link RestQueryRunner#run()} then returns once Drill has finished
+   * cancelling, and the caller sees the cancellation as a failed query. The watchdog
+   * holds its thread only for as long as the query runs.
+   */
+  private static QueryResult runQuery(String sql, WorkManager workManager,
+      WebUserConnection conn, long timeoutMs) throws Exception {
     WebUserConnection fresh = new WebUserConnection(conn.webSessionResources);
     QueryWrapper wrapper = new RestQueryBuilder()
         .query(sql)
         .queryType("SQL")
         .rowLimit("10000")
         .build();
-    return new RestQueryRunner(wrapper, workManager, fresh).run();
+    RestQueryRunner runner = new RestQueryRunner(wrapper, workManager, fresh);
+    if (timeoutMs <= 0) {
+      return runner.run();
+    }
+    CountDownLatch finished = new CountDownLatch(1);
+    workManager.getContext().getExecutor().execute(() -> {
+      try {
+        if (!finished.await(timeoutMs, TimeUnit.MILLISECONDS)) {
+          logger.warn("Cancelling a schema scan query that exceeded {} ms: {}",
+              timeoutMs, sql);
+          runner.cancel();
+        }
+      } catch (InterruptedException e) {
+        Thread.currentThread().interrupt();
+      }
+    });
+    try {
+      return runner.run();
+    } finally {
+      finished.countDown();
+    }
+  }
+
+  // ---- incremental updates ----
+
+  /**
+   * Merges one table into a schema's cached tables, replacing any table of the same
+   * name. Used by the upload path, which knows exactly which file changed and so has no
+   * reason to rescan the folder: a whole-folder scan runs one query per file, and on an
+   * upload request that would mean the user waits for the folder while every other
+   * project's scanning waits for this class's monitor.
+   *
+   * <p>{@code scannedAt} is deliberately not bumped. A merge adds one file's worth of
+   * knowledge; it is not the full scan that {@link #read} measures staleness against, and
+   * a schema this project has never scanned stays stale so the next read still scans it.
+   */
+  public synchronized void putTable(String projectId, String schemaPath, CachedTable table) {
+    if (table == null || table.getName() == null) {
+      return;
+    }
+    ProjectSchemaCacheEntry entry = getEntry(projectId);
+    if (entry == null) {
+      entry = new ProjectSchemaCacheEntry();
+      entry.setProjectId(projectId);
+    }
+    CachedSchema schema = entry.getSchemas().get(schemaPath);
+    if (schema == null) {
+      schema = new CachedSchema();
+      schema.setSchemaPath(schemaPath);
+      entry.getSchemas().put(schemaPath, schema);
+    }
+    List<CachedTable> tables = schema.getTables();
+    for (int i = 0; i < tables.size(); i++) {
+      if (table.getName().equals(tables.get(i).getName())) {
+        tables.set(i, table);
+        store.put(projectId, entry);
+        return;
+      }
+    }
+    if (tables.size() >= MAX_TABLES_PER_SCHEMA) {
+      schema.setTruncated(true);
+    } else {
+      tables.add(table);
+    }
+    store.put(projectId, entry);
+  }
+
+  /** Drops one table from a schema's cached tables. The counterpart of {@link #putTable}. */
+  public synchronized void removeTable(String projectId, String schemaPath, String tableName) {
+    ProjectSchemaCacheEntry entry = getEntry(projectId);
+    if (entry == null || tableName == null) {
+      return;
+    }
+    CachedSchema schema = entry.getSchemas().get(schemaPath);
+    if (schema == null) {
+      return;
+    }
+    if (schema.getTables().removeIf(t -> tableName.equals(t.getName()))) {
+      store.put(projectId, entry);
+    }
   }
 
   @FunctionalInterface
