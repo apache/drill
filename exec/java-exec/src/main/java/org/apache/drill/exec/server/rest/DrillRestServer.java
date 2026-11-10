@@ -105,6 +105,7 @@ public class DrillRestServer extends ResourceConfig {
     register(DashboardResources.class);
     register(ProspectorResources.class);
     register(AiConfigResources.class);
+    register(UploadConfigResources.class);
     register(AiPricingResources.class);
     register(AiAnalyticsResources.class);
     register(ProjectResources.class);
