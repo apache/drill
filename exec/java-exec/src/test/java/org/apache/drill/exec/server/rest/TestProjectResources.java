@@ -80,4 +80,35 @@ public class TestProjectResources {
     assertNotNull(p.getViewers());
     assertEquals(Collections.emptyList(), p.getViewers());
   }
+
+  @Test
+  public void testOnlyOwnerCanDelete() {
+    Project p = project(false);
+    assertTrue(ProjectResources.canAdminister(p, "owner"));
+    assertFalse(ProjectResources.canAdminister(p, "editor"));
+  }
+
+  @Test
+  public void testOnlyOwnerCanRestore() {
+    Project p = project(false);
+    assertFalse(ProjectResources.canAdminister(p, "editor"));
+    assertFalse(ProjectResources.canAdminister(p, "viewer"));
+  }
+
+  @Test
+  public void testEditorCannotChangeSharing() {
+    Project p = project(false);
+    assertTrue(ProjectResources.changesSharing(p, true, null, null));
+    assertTrue(ProjectResources.changesSharing(p, null, Arrays.asList("editor", "x"), null));
+    assertTrue(ProjectResources.changesSharing(p, null, null, Collections.<String>emptyList()));
+  }
+
+  @Test
+  public void testEditorCanChangeContentFields() {
+    Project p = project(false);
+    assertTrue(ProjectResources.canWrite(p, "editor"));
+    assertFalse(ProjectResources.changesSharing(p, null, null, null));
+    // Resending unchanged sharing values is not a change.
+    assertFalse(ProjectResources.changesSharing(p, false, Arrays.asList("editor"), Arrays.asList("viewer")));
+  }
 }

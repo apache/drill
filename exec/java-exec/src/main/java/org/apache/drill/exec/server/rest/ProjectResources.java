@@ -634,6 +634,13 @@ public class ProjectResources {
             .build();
       }
 
+      if (!canAdminister(project, getCurrentUser())
+          && changesSharing(project, request.isPublic, request.sharedWith, request.viewers)) {
+        return Response.status(Response.Status.FORBIDDEN)
+            .entity(new MessageResponse("Only the owner can change sharing for this project"))
+            .build();
+      }
+
       if (request.name != null) {
         project.setName(request.name.trim());
       }
@@ -690,9 +697,9 @@ public class ProjectResources {
             .build();
       }
 
-      if (!canWrite(project, getCurrentUser())) {
+      if (!canAdminister(project, getCurrentUser())) {
         return Response.status(Response.Status.FORBIDDEN)
-            .entity(new MessageResponse("You do not have write access to this project"))
+            .entity(new MessageResponse("Only the owner can delete this project"))
             .build();
       }
 
@@ -779,9 +786,9 @@ public class ProjectResources {
             .build();
       }
 
-      if (!canWrite(project, getCurrentUser())) {
+      if (!canAdminister(project, getCurrentUser())) {
         return Response.status(Response.Status.FORBIDDEN)
-            .entity(new MessageResponse("You do not have write access to this project"))
+            .entity(new MessageResponse("Only the owner can restore this project"))
             .build();
       }
 
@@ -1541,6 +1548,25 @@ public class ProjectResources {
   public static boolean canWrite(Project project, String user) {
     return project.getOwner().equals(user)
         || project.getSharedWith().contains(user);
+  }
+
+  /**
+   * Owner-only operations: deleting, restoring and changing who a project is shared with.
+   * Editors may change content ({@link #canWrite}) but not these.
+   */
+  public static boolean canAdminister(Project project, String user) {
+    return project.getOwner().equals(user);
+  }
+
+  /**
+   * True if applying these (nullable) sharing fields would alter the project's visibility or
+   * collaborator lists. Null means "not supplied". Lists compare as sets.
+   */
+  public static boolean changesSharing(
+      Project project, Boolean isPublic, List<String> sharedWith, List<String> viewers) {
+    return (isPublic != null && isPublic != project.isPublic())
+        || (sharedWith != null && !new HashSet<>(sharedWith).equals(new HashSet<>(project.getSharedWith())))
+        || (viewers != null && !new HashSet<>(viewers).equals(new HashSet<>(project.getViewers())));
   }
 
   /**
