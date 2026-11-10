@@ -615,6 +615,10 @@ public class MetadataResources {
     // Collect recognized extensions from the plugin's format configs
     Set<String> recognizedExtensions = getRecognizedExtensions(schema);
 
+    // The configured upload workspace lists every file, so an upload whose
+    // extension no format claims is still visible (and deletable).
+    boolean listEveryFile = isUploadTarget(schema);
+
     // Build a properly-quoted compound schema path:
     //   dfs.tmp + myFolder → dfs.`tmp`.`myFolder`
     String formattedPath;
@@ -639,7 +643,7 @@ public class MetadataResources {
         boolean isFile = "true".equalsIgnoreCase(row.get("isFile"));
 
         // Filter: always show directories, but only show files with recognized extensions
-        if (isFile && !recognizedExtensions.isEmpty() && !hasRecognizedExtension(name, recognizedExtensions)) {
+        if (isFile && !listEveryFile && !recognizedExtensions.isEmpty() && !hasRecognizedExtension(name, recognizedExtensions)) {
           continue;
         }
 
@@ -671,6 +675,12 @@ public class MetadataResources {
     }
 
     return new FilesResponse(files, subPath);
+  }
+
+  private boolean isUploadTarget(String schema) {
+    UploadConfigResources.UploadConfig target = UploadConfigResources.current(storeProvider);
+    return target != null && schema != null
+        && schema.equals(target.plugin + "." + target.workspace);
   }
 
   @GET

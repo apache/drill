@@ -361,6 +361,46 @@ public class TestMetadataResources extends ClusterTest {
   }
 
   @Test
+  public void testUploadsWorkspaceListsUnrecognizedExtensions() throws Exception {
+    java.io.File tmpDir = dirTestWatcher.getDfsTestTmpDir();
+    java.io.File rootDir = dirTestWatcher.getRootDir();
+    java.io.File inUploads = new java.io.File(tmpDir, "notes.docx");
+    java.io.File elsewhere = new java.io.File(rootDir, "notes.docx");
+    java.nio.file.Files.writeString(inUploads.toPath(), "not readable by drill");
+    java.nio.file.Files.writeString(elsewhere.toPath(), "not readable by drill");
+
+    try {
+      // Before any upload target exists, the unrecognized file stays hidden everywhere.
+      assertFalse(listsFile("dfs.tmp", "notes.docx"));
+
+      Request put = new Request.Builder().url(url("/api/v1/uploads/config"))
+          .put(RequestBody.create("{\"plugin\":\"dfs\",\"workspace\":\"tmp\"}", JSON)).build();
+      try (Response response = httpClient.newCall(put).execute()) {
+        assertEquals(200, response.code());
+      }
+
+      assertTrue(listsFile("dfs.tmp", "notes.docx"),
+          "Every file in the upload workspace must be listed");
+      assertFalse(listsFile("dfs.root", "notes.docx"),
+          "Other workspaces keep the extension filter");
+    } finally {
+      UploadConfigResources.clearForTest(cluster.drillbit().getContext().getStoreProvider());
+      inUploads.delete();
+      elsewhere.delete();
+    }
+  }
+
+  private boolean listsFile(String schema, String name) throws Exception {
+    JsonNode json = mapper.readTree(get("/api/v1/metadata/schemas/" + schema + "/files"));
+    for (JsonNode file : json.get("files")) {
+      if (name.equals(file.get("name").asText())) {
+        return true;
+      }
+    }
+    return false;
+  }
+
+  @Test
   public void testHasRecognizedExtension() {
     Set<String> extensions = new HashSet<>(Arrays.asList("json", "csv", "parquet"));
 
