@@ -22,6 +22,7 @@ import { Alert, Button, Empty, Spin, message } from 'antd';
 import { ExpandOutlined, PlusOutlined } from '@ant-design/icons';
 import { useProjectContext } from '../contexts/ProjectContext';
 import { useProspector, conversationBufferKey } from '../hooks/useProspector';
+import { useConversationFileDrop } from '../hooks/useConversationFileDrop';
 import {
   createConversation,
   deleteConversation,
@@ -158,6 +159,10 @@ function ConversationView({ projectId, conversationId, record, onNew }: Conversa
   const seed = seedFromState(location.state);
   const seedSent = useRef(false);
   const { sendMessage } = prospector;
+  const handleFileDropped = useConversationFileDrop(
+    projectId,
+    useCallback((text: string) => sendMessage(text, context), [sendMessage, context]),
+  );
   useEffect(() => {
     if (!seed || !isLoaded || seedSent.current) {
       return;
@@ -237,6 +242,7 @@ function ConversationView({ projectId, conversationId, record, onNew }: Conversa
             clearIcon={<PlusOutlined />}
             onOpenArtifact={handleOpenCard}
             liveArtifact={liveArtifact}
+            onFileDropped={handleFileDropped}
           />
         </div>
       </div>

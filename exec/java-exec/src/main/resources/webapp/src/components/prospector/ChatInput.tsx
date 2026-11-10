@@ -16,10 +16,16 @@
  * limitations under the License.
  */
 import { useState, useCallback } from 'react';
+import type { DragEvent } from 'react';
 import { Input, Button, Space } from 'antd';
 import { SendOutlined, StopOutlined } from '@ant-design/icons';
 
 const { TextArea } = Input;
+
+/** True only for drags that carry files from outside the browser, not in-app drags. */
+function carriesFiles(e: DragEvent): boolean {
+  return Array.from(e.dataTransfer?.types ?? []).includes('Files');
+}
 
 interface ChatInputProps {
   onSend: (message: string) => void;
@@ -27,9 +33,11 @@ interface ChatInputProps {
   isStreaming: boolean;
   disabled?: boolean;
   placeholder?: string;
+  /** Called with each file dropped on the composer. Omitted: the composer takes no drops. */
+  onFileDropped?: (file: File) => void;
 }
 
-export default function ChatInput({ onSend, onStop, isStreaming, disabled, placeholder }: ChatInputProps) {
+export default function ChatInput({ onSend, onStop, isStreaming, disabled, placeholder, onFileDropped }: ChatInputProps) {
   const [value, setValue] = useState('');
 
   const handleSend = useCallback(() => {
@@ -50,8 +58,23 @@ export default function ChatInput({ onSend, onStop, isStreaming, disabled, place
     [handleSend],
   );
 
+  const handleDragOver = (e: DragEvent) => {
+    if (onFileDropped && carriesFiles(e)) {
+      e.preventDefault(); // required for the browser to allow a drop
+    }
+  };
+  const handleDrop = (e: DragEvent) => {
+    if (!onFileDropped || !carriesFiles(e)) {
+      return;
+    }
+    e.preventDefault();
+    // Handled here; stop the project-wide drop zone from uploading the same file again.
+    e.stopPropagation();
+    Array.from(e.dataTransfer.files).forEach((f) => onFileDropped(f));
+  };
+
   return (
-    <div className="prospector-chat-input">
+    <div className="prospector-chat-input" onDragOver={handleDragOver} onDrop={handleDrop}>
       <Space.Compact style={{ width: '100%' }}>
         <TextArea
           value={value}

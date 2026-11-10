@@ -21,6 +21,7 @@ import { useQueryClient } from '@tanstack/react-query';
 import {
   uploadProjectFile,
   getUploadStatus,
+  type UploadedFile,
   UploadCollisionError,
   UploadNotConfiguredError,
 } from '../api/uploads';
@@ -28,26 +29,34 @@ import {
 const NOT_CONFIGURED_MSG =
   'File uploads are not set up on this cluster. Ask an administrator to configure an upload target.';
 
-/** Returns a function that uploads a file into the project and reports the outcome to the user. */
-export function useProjectFileUpload(projectId: string): (file: File) => Promise<void> {
+/**
+ * Returns a function that uploads a file into the project and reports the outcome to the user.
+ * It resolves with the stored file, or undefined when nothing was uploaded (a failure, or a
+ * replace the user declined).
+ */
+export function useProjectFileUpload(projectId: string): (file: File) => Promise<UploadedFile | undefined> {
   const queryClient = useQueryClient();
 
   return useCallback(
-    async function upload(file: File): Promise<void> {
-      const attempt = async (overwrite: boolean): Promise<void> => {
+    async function upload(file: File): Promise<UploadedFile | undefined> {
+      const attempt = async (overwrite: boolean): Promise<UploadedFile | undefined> => {
         try {
           const result = await uploadProjectFile(projectId, file, overwrite ? { overwrite: true } : undefined);
           message.success(`Added ${file.name} as ${result.path}`);
           queryClient.invalidateQueries({ queryKey: ['schemaCache', projectId] });
           queryClient.invalidateQueries({ queryKey: ['project', projectId] });
+          return result;
         } catch (error) {
           if (error instanceof UploadCollisionError) {
-            Modal.confirm({
-              title: 'Replace existing file?',
-              content: `A file named ${file.name} is already in this project. Replace it with the one you dropped?`,
-              okText: 'Replace',
-              cancelText: 'Cancel',
-              onOk: () => attempt(true),
+            return new Promise<UploadedFile | undefined>((resolve) => {
+              Modal.confirm({
+                title: 'Replace existing file?',
+                content: `A file named ${file.name} is already in this project. Replace it with the one you dropped?`,
+                okText: 'Replace',
+                cancelText: 'Cancel',
+                onOk: async () => resolve(await attempt(true)),
+                onCancel: () => resolve(undefined),
+              });
             });
           } else if (error instanceof UploadNotConfiguredError) {
             message.error(NOT_CONFIGURED_MSG);
@@ -56,18 +65,19 @@ export function useProjectFileUpload(projectId: string): (file: File) => Promise
             message.error(`Could not upload ${file.name}${reason}`);
           }
         }
+        return undefined;
       };
 
       try {
         const status = await getUploadStatus();
         if (!status.configured) {
           message.error(NOT_CONFIGURED_MSG);
-          return;
+          return undefined;
         }
       } catch {
         // Status is only a pre-check; the upload itself reports a real problem.
       }
-      await attempt(false);
+      return attempt(false);
     },
     [projectId, queryClient],
   );

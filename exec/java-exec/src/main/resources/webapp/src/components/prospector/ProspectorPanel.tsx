@@ -38,6 +38,8 @@ interface ProspectorPanelProps {
   onOpenArtifact?: (kind: ArtifactKind, id: string) => void;
   /** The artifact on the canvas now, so its card can show as live. */
   liveArtifact?: { kind: ArtifactKind; id: string } | null;
+  /** Make the composer take dropped files, handing each to this. Omitted: it takes none. */
+  onFileDropped?: (file: File) => void;
 }
 
 export default function ProspectorPanel({
@@ -47,6 +49,7 @@ export default function ProspectorPanel({
   clearIcon = <DeleteOutlined />,
   onOpenArtifact,
   liveArtifact,
+  onFileDropped,
 }: ProspectorPanelProps) {
   const {
     messages,
@@ -146,6 +149,7 @@ export default function ProspectorPanel({
           onSend={handleSend}
           onStop={stopStreaming}
           isStreaming={isStreaming}
+          onFileDropped={onFileDropped}
         />
       </div>
       <SaveReportModal
