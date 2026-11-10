@@ -89,11 +89,11 @@ Nothing looks at the file's extension. Drill decides at query time what it can r
 
 ### Delete: `DELETE /api/v1/projects/{id}/files/{name}`
 
-Needs `canWrite`. `204` on success, `404` if the file is not there. Removes only that file's entry from the schema cache.
+Needs `canWrite`. `204` on success. Failures: `400` bad name, `403` no write access, `404` project or file missing, `409` (`code: NOT_CONFIGURED`) no usable target, `500` delete failed. Removes only that file's entry from the schema cache.
 
 ### Download: `GET /api/v1/projects/{id}/files/{name}/content`
 
-Needs `canRead`. Streams the bytes through the Drillbit as `application/octet-stream` with a `Content-Disposition: attachment` header, so one path serves local disk and S3. A missing file is `404`.
+Needs `canRead`. Streams the bytes through the Drillbit as `application/octet-stream` with a `Content-Disposition: attachment` header, so one path serves local disk and S3. Failures: `200` on success, `400` bad name, `403` no read access, `404` project or file missing, `409` (`code: NOT_CONFIGURED`) no usable target, `500` the file could not be opened.
 
 Delete and download share a locator that applies the same name, traversal and target checks as upload. Their refusal bodies are fixed text so a missing file never reveals whether the project folder exists.
 
@@ -111,7 +111,9 @@ Delete and download share a locator that applies the same name, traversal and ta
 `INFORMATION_SCHEMA` lists a workspace's views and nothing else, so `ProjectSchemaCache.infoSchemaScan` cannot see files. Without more, an uploaded file would appear in the schema tree (which uses `SHOW FILES`) but not in autocomplete or in Prospector's context. Three pieces close that:
 
 - **`putTable` / `removeTable` (the write path).** After an upload, `ProjectFileResources` probes only the file just written (`ProjectSchemaCache.fileEntry`, a `SELECT * ... LIMIT 1`) and merges it with `putTable`. After a delete it calls `removeTable` for that one entry. Neither rescans the folder, because a whole-folder scan runs one query per file on the request thread inside the cache's monitor. `putTable` deliberately does not bump `scannedAt`. Both are best-effort: a cache failure is logged and never fails a write that has already landed.
-- **`fileScan` (the sweep).** Used on the dataset-scan path, where a sweep is what is being asked for. It lists with `SHOW FILES`, descends into subdirectories, and probes each file. Bounds: 500 probes (`MAX_TABLES_PER_SCHEMA`, enumeration stops one past it), 100 `SHOW FILES` listings (`MAX_FOLDER_LISTINGS`) and 10 levels of depth (`MAX_FOLDER_DEPTH`), with a 30 second deadline on each query. When any bound is hit the result is marked truncated rather than cached as if it were the whole folder. A query that hits its deadline fails the scan instead of caching a partial result.
+- **`fileScan` (the sweep).** Used on the dataset-scan path, where a sweep is what is being asked for. It lists with `SHOW FILES`, descends into subdirectories, and probes each file. Bounds: 500 probes (`MAX_TABLES_PER_SCHEMA`, enumeration stops one past it), 100 `SHOW FILES` listings (`MAX_FOLDER_LISTINGS`) and 10 levels of depth (`MAX_FOLDER_DEPTH`), with a 30 second deadline on each query. When any bound is hit the result is marked truncated rather than cached as if it were the whole folder. A `SHOW FILES` listing that hits its deadline fails the scan instead of caching a partial result. A per-file probe that hits it does not: the probe's failure is swallowed and the file is cached as a table with no columns, indistinguishable from an unreadable file (the same holds for the single-file probe after an upload). A slow file can therefore produce an empty-schema entry.
+
+`fileScan` skips dotfiles and `.upload-<uuid>` staging orphans, so they never reach the cache or autocomplete. The schema tree still lists them, because the extension-filter exemption applies to the whole uploads workspace. An administrator hunting orphans will find them in the tree, not in the cache.
 - **`combinedScan`.** A schema can be referenced both as a plain schema and as one or more upload folders, and the cache holds a single entry per schema path, so the two are scanned together: `infoSchemaScan` plus a `fileScan` per folder.
 
 A file Drill cannot parse (an unreadable file, or one no format plugin claims) is cached as a table with no columns. It does not fail the scan.

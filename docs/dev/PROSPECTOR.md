@@ -207,7 +207,7 @@ guessing.
 - **`projectId` is client-supplied, so the load path authorizes it.** `loadProject`
   enforces exactly what `GET /api/v1/projects/{id}` enforces — soft-deleted projects
   (`deletedAt > 0`) are invisible, and the requester must satisfy
-  `ProjectResources.canRead` (owner, or public, or in `sharedWith`). Saved queries are
+  `ProjectResources.canRead` (owner, or public, or in `sharedWith` or `viewers`). Saved queries are
   authorized individually via `SavedQueryResources.canRead` (owner or public), because a
   readable project can reference another user's private query. Both predicates are reused
   from the resource that owns them rather than copied: a divergent second copy is how
@@ -228,6 +228,8 @@ data sources (datasets) it has added, in a `PersistentStore` named
 three consumers: Prospector's system prompt, the schema tree, and SQL
 autocomplete, so all three read pre-scanned metadata instead of issuing live
 `INFORMATION_SCHEMA` queries.
+
+Files in a project's upload folder are not visible to `INFORMATION_SCHEMA`; they enter the cache through a separate file-scan path, described in [FileUploads.md](FileUploads.md#schema-cache).
 
 - **Populated on add.** When a dataset is added to a project (`POST
   /api/v1/projects/{id}/datasets`), its schema is scanned inline (two
@@ -263,7 +265,7 @@ autocomplete, so all three read pre-scanned metadata instead of issuing live
 - **Access control.** The cache is per-project — the same schema added to two
   projects is scanned and stored twice, so a cached entry never crosses a
   project boundary. It is served only to a requester who passes the same
-  `canRead(project)` check (owner, public, or `sharedWith`) enforced by the
+  `canRead(project)` check (owner, public, `sharedWith` or `viewers`) enforced by the
   project's own endpoints.
 
 ## REST API Reference

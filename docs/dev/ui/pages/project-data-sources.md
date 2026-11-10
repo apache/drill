@@ -33,7 +33,7 @@ Manage which datasets are bound to the project: tables, schemas, plugins, and sa
 
 ## File upload
 
-The header has an **Upload file** button (AntD `Upload`, `beforeUpload` hands the file to `useProjectFileUpload`), the discoverable twin of dragging a file anywhere in the project. The first upload adds a `folder` dataset ("Uploaded files") to the list; it is an ordinary row and can be removed like any other, which only drops the reference. Files themselves are deleted from the schema explorer. Full behavior: [`../../FileUploads.md`](../../FileUploads.md).
+The header has an **Upload file** button (AntD `Upload`, `beforeUpload` hands the file to `useProjectFileUpload`), the discoverable twin of dragging a file anywhere in the project. The first upload adds a `folder` dataset ("Uploaded files") to the list; it is an ordinary row and can be removed like any other, which only drops the reference; the next upload adds it back, because the server only checks whether any folder reference exists. Files themselves are deleted from the schema explorer. Full behavior: [`../../FileUploads.md`](../../FileUploads.md).
 
 ## Chrome
 
