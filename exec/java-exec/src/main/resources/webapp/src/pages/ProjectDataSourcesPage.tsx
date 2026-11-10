@@ -41,7 +41,7 @@ import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
 import { removeDataset, getSchemaCache, refreshSchemaCache } from '../api/projects';
 import { useProjectContext } from '../contexts/ProjectContext';
 import { DatasetPickerModal } from '../components/project';
-import { useProjectFileUpload } from '../components/project/ProjectFileDropZone';
+import { useProjectFileUpload } from '../hooks/useProjectFileUpload';
 
 const { Title } = Typography;
 

@@ -117,4 +117,12 @@ describe('ProjectFileDropZone', () => {
     await waitFor(() => expect(uploadProjectFile).toHaveBeenCalledTimes(2));
     expect(uploadProjectFile).toHaveBeenLastCalledWith('p1', file, { overwrite: true });
   });
+
+  it('shows the server reason when the upload fails for another reason', async () => {
+    vi.mocked(uploadProjectFile).mockRejectedValue(new Error('File too large'));
+    const { zone } = setup();
+    fireEvent.drop(zone, fileDrag);
+    expect(await screen.findByText(/Could not upload sales\.csv: File too large/)).toBeTruthy();
+    expect(uploadProjectFile).toHaveBeenCalledTimes(1);
+  });
 });
