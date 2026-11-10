@@ -56,6 +56,7 @@ import java.util.Arrays;
 import java.util.HashMap;
 import java.util.HashSet;
 import java.util.Iterator;
+import java.util.LinkedHashSet;
 import java.util.List;
 import java.util.Map;
 import java.util.Set;
@@ -2070,11 +2071,16 @@ public class ProjectResources {
     }
   }
 
-  /** The folders every {@code folder} reference on {@code schema} points at. */
+  /**
+   * The distinct folders the {@code folder} references on {@code schema} point at.
+   * Distinct because nothing stops a project holding two references to one folder, and
+   * scanning it twice would both double the probes and put two tables of the same name
+   * in the entry.
+   */
   private static List<String> uploadFolders(Project project, String schema) {
-    List<String> folders = new ArrayList<>();
+    Set<String> folders = new LinkedHashSet<>();
     if (project == null || project.getDatasets() == null) {
-      return folders;
+      return new ArrayList<>(folders);
     }
     for (DatasetRef d : project.getDatasets()) {
       if (ProjectFileResources.FOLDER_DATASET_TYPE.equals(d.getType())
@@ -2082,7 +2088,7 @@ public class ProjectResources {
         folders.add(d.getTable());
       }
     }
-    return folders;
+    return new ArrayList<>(folders);
   }
 
   private PersistentStore<UserFavorites> getFavoritesStore() {

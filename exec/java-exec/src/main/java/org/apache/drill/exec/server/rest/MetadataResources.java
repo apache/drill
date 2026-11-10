@@ -52,6 +52,7 @@ import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.Collection;
 import java.util.HashSet;
+import java.util.LinkedHashSet;
 import java.util.List;
 import java.util.Locale;
 import java.util.Map;
@@ -855,13 +856,15 @@ public class MetadataResources {
       // Every reference on the tracked schema is scanned together: INFORMATION_SCHEMA
       // does not list the files in a folder reference, and the cache holds one entry
       // per schema path, so scanning per reference would lose one or the other's tables.
-      final List<String> folders = new ArrayList<>();
+      // Distinct folders only: two references on one folder would scan it twice.
+      Set<String> folderSet = new LinkedHashSet<>();
       for (ProjectResources.DatasetRef d : project.getDatasets()) {
         if (ProjectFileResources.FOLDER_DATASET_TYPE.equals(d.getType())
             && trackedSchema.equals(d.getSchema()) && d.getTable() != null) {
-          folders.add(d.getTable());
+          folderSet.add(d.getTable());
         }
       }
+      final List<String> folders = new ArrayList<>(folderSet);
       final String scanSchema = trackedSchema;
       return ProjectSchemaCache.get(storeProvider, workManager)
           .read(projectId, scanSchema,

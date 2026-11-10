@@ -168,6 +168,28 @@ public class TestProjectSchemaCache {
   }
 
   /**
+   * A scanner that had to stop early is as much a truncation as overflowing the cap, and
+   * the table count cannot show it: a folder scan that runs out of listings, or hits its
+   * depth limit, comes back under the cap with files missing. Left unmarked, the entry
+   * would read as a complete picture of the schema.
+   */
+  @Test
+  public void testScannerThatStoppedEarlyMarksTheSchemaTruncated() {
+    AtomicInteger calls = new AtomicInteger();
+    CachedSchema s = cache.scan("p1", "dfs.tmp", scannerReturning(
+        new ProjectSchemaCache.PartialTables(
+            List.of(table("dfs.tmp", "p1/one.csv", "FILE", "id", "INT"))),
+        calls));
+    assertTrue(s.isTruncated());
+    assertEquals(1, s.getTables().size());
+
+    // And a scanner that finished does not.
+    CachedSchema full = cache.scan("p2", "dfs.tmp", scannerReturning(
+        List.of(table("dfs.tmp", "p2/one.csv", "FILE", "id", "INT")), calls));
+    assertFalse(full.isTruncated());
+  }
+
+  /**
    * The upload path's incremental merge. It must not claim the schema was scanned: a
    * project that has never had a full scan still needs one, and {@code read} decides
    * that from {@code scannedAt}.

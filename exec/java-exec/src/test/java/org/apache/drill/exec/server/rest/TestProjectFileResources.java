@@ -807,6 +807,31 @@ public class TestProjectFileResources extends ClusterTest {
   }
 
   /**
+   * Nothing stops a project holding two references to one upload folder. Scanning it
+   * once per reference would double the probes and put two tables of the same name in
+   * the entry, which is a worse answer than either reference alone.
+   */
+  @Test
+  public void testTwoReferencesToOneFolderScanItOnce() throws Exception {
+    configureUploads(1000);
+    String id = seedWritableProject();
+    upload(id, "once.csvh", "a,b\n1,2\n", false, 201);
+
+    Request addRef = new Request.Builder()
+        .url("http://localhost:" + portNumber + "/api/v1/projects/" + id + "/datasets")
+        .post(RequestBody.create("{\"type\":\"folder\",\"schema\":\"dfs.tmp\",\"table\":\""
+            + id + "\",\"label\":\"Uploaded files again\"}", JSON))
+        .build();
+    try (Response r = client.newCall(addRef).execute()) {
+      assertEquals(r.body().string(), 200, r.code());
+    }
+    assertEquals(2, folderRefs(id).size());
+
+    rescan(id);
+    assertEquals(Collections.singletonList(id + "/once.csvh"), cachedFileNames(id));
+  }
+
+  /**
    * The upload path does not re-scan the folder: it merges the one file it wrote. The
    * discriminator is a file put into the folder behind Drill's back, which a whole-folder
    * scan would pick up and a merge cannot.

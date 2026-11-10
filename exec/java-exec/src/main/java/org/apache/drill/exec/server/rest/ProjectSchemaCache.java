@@ -46,8 +46,14 @@ import java.util.regex.Pattern;
 /**
  * Per-project cache of the schemas/tables/columns a project's data sources expose.
  * Keyed by project id in the {@code drill.sqllab.schema_cache} PersistentStore.
- * All scanning is synchronous on the calling request thread (Drill's query
- * connection is request-scoped, so there is no background executor).
+ *
+ * <p>All scanning is synchronous on the calling request thread, and holds this class's
+ * monitor while it runs. That is a deliberate bound on scope rather than a limit of the
+ * connection: a scan runs its queries on a fresh {@link WebUserConnection} built from
+ * the caller's {@link WebSessionResources}, which belong to the HTTP session and outlive
+ * the request. Scans are therefore kept short rather than moved off-thread — the write
+ * path updates one table at a time, and the whole-schema sweep is bounded and reached
+ * only by an explicit refresh or a stale metadata read.
  */
 public class ProjectSchemaCache {
 
@@ -67,9 +73,14 @@ public class ProjectSchemaCache {
   /**
    * Deadline for one query {@link #fileScan} issues. Scanning holds this class's monitor
    * on a request thread, and a query submitted through {@link RestQueryRunner} otherwise
-   * waits without one, so a single stuck file would block every project's scanning.
+   * waits without one, so a single stuck file would block every project's scanning. A
+   * query that hits the deadline is cancelled and its result rejected, so the scan fails
+   * rather than caching a part of a folder as if it were all of it.
    */
   private static final long FILE_SCAN_TIMEOUT_MS = 30_000L;
+
+  /** The {@code queryState} of a query that ran to the end of its results. */
+  private static final String COMPLETED = "COMPLETED";
 
   /** The {@code type} given to a cached file. */
   private static final String FILE_TABLE_TYPE = "FILE";
@@ -186,7 +197,9 @@ public class ProjectSchemaCache {
       tables = new ArrayList<>();
     }
 
-    boolean truncated = false;
+    // A scanner that had to stop early says so by returning a PartialTables, which is
+    // as much a truncation as overflowing the cap below.
+    boolean truncated = tables instanceof PartialTables;
     if (tables.size() > MAX_TABLES_PER_SCHEMA) {
       tables = new ArrayList<>(tables.subList(0, MAX_TABLES_PER_SCHEMA));
       truncated = true;
@@ -310,14 +323,17 @@ public class ProjectSchemaCache {
   public static List<CachedTable> combinedScan(String schemaPath, List<String> folders,
       WorkManager workManager, WebUserConnection conn) throws Exception {
     List<CachedTable> tables = new ArrayList<>(infoSchemaScan(schemaPath, workManager, conn));
+    boolean partial = false;
     if (folders != null) {
       for (String folder : folders) {
         if (folder != null && !folder.isEmpty()) {
-          tables.addAll(fileScan(schemaPath, folder, workManager, conn));
+          List<CachedTable> files = fileScan(schemaPath, folder, workManager, conn);
+          partial |= files instanceof PartialTables;
+          tables.addAll(files);
         }
       }
     }
-    return tables;
+    return partial ? new PartialTables(tables) : tables;
   }
 
   /**
@@ -341,8 +357,8 @@ public class ProjectSchemaCache {
   public static List<CachedTable> fileScan(String schemaPath, String folder,
       WorkManager workManager, WebUserConnection conn) throws Exception {
     List<String> relativePaths = new ArrayList<>();
-    collectFiles(schemaPath, folder, relativePaths, 0, new int[] {MAX_FOLDER_LISTINGS},
-        workManager, conn);
+    boolean complete = collectFiles(schemaPath, folder, relativePaths, 0,
+        new int[] {MAX_FOLDER_LISTINGS}, workManager, conn);
 
     List<CachedTable> tables = new ArrayList<>();
     for (String relativePath : relativePaths) {
@@ -350,7 +366,7 @@ public class ProjectSchemaCache {
           ? fileEntry(schemaPath, relativePath, workManager, conn)
           : unprobedFileEntry(schemaPath, relativePath));
     }
-    return tables;
+    return complete ? tables : new PartialTables(tables);
   }
 
   /**
@@ -376,23 +392,28 @@ public class ProjectSchemaCache {
 
   /**
    * Appends the paths of the files under {@code folder}, relative to {@code schemaPath},
-   * recursing into subdirectories. Three things bound the walk, because each listing is
-   * a query: it stops one past {@link #MAX_TABLES_PER_SCHEMA} collected paths, past
-   * {@link #MAX_FOLDER_DEPTH} levels, and once {@code listingBudget} is spent. The file
-   * cap alone bounds neither depth nor breadth, since a directory holding no files never
-   * advances the count.
+   * recursing into subdirectories, and returns whether the whole folder was listed.
+   * Three things bound the walk, because each listing is a query: it stops one past
+   * {@link #MAX_TABLES_PER_SCHEMA} collected paths, past {@link #MAX_FOLDER_DEPTH}
+   * levels, and once {@code listingBudget} is spent. The file cap alone bounds neither
+   * depth nor breadth, since a directory holding no files never advances the count.
+   *
+   * <p>Each of the three is reported as an incomplete listing, so the schema is marked
+   * truncated instead of a part of the folder being cached as all of it. Only the cap
+   * shows up in the table count; the other two would otherwise leave no trace at all.
    */
-  private static void collectFiles(String schemaPath, String folder, List<String> into,
+  private static boolean collectFiles(String schemaPath, String folder, List<String> into,
       int depth, int[] listingBudget, WorkManager workManager, WebUserConnection conn)
       throws Exception {
     if (into.size() > MAX_TABLES_PER_SCHEMA || depth > MAX_FOLDER_DEPTH
         || listingBudget[0] <= 0) {
-      return;
+      return false;
     }
     listingBudget[0]--;
     QueryResult result = runQuery(
         "SHOW FILES IN " + quoteTablePath(schemaPath, folder), workManager, conn,
         FILE_SCAN_TIMEOUT_MS);
+    boolean complete = true;
     for (Map<String, String> row : result.rows) {
       String name = row.get("name");
       if (name == null || name.isEmpty() || isSkippedFile(name)) {
@@ -400,15 +421,16 @@ public class ProjectSchemaCache {
       }
       String relativePath = folder + "/" + name;
       if ("true".equalsIgnoreCase(row.get("isDirectory"))) {
-        collectFiles(schemaPath, relativePath, into, depth + 1, listingBudget,
+        complete &= collectFiles(schemaPath, relativePath, into, depth + 1, listingBudget,
             workManager, conn);
       } else {
         into.add(relativePath);
       }
       if (into.size() > MAX_TABLES_PER_SCHEMA || listingBudget[0] <= 0) {
-        return;
+        return false;
       }
     }
+    return complete;
   }
 
   /**
@@ -471,9 +493,14 @@ public class ProjectSchemaCache {
   /**
    * Runs one scanning query. A positive {@code timeoutMs} gives it a deadline, enforced
    * by cancelling it through its own runner from a watchdog on the Drillbit's shared
-   * executor; {@link RestQueryRunner#run()} then returns once Drill has finished
-   * cancelling, and the caller sees the cancellation as a failed query. The watchdog
-   * holds its thread only for as long as the query runs.
+   * executor. The watchdog holds its thread only for as long as the query runs.
+   *
+   * <p>A cancelled query does not fail: Drill delivers its partial results with
+   * {@code queryState} {@code CANCELED} and no error, which the runner returns like any
+   * other result. Caching that would be worse than failing — a truncated
+   * {@code SHOW FILES} reads as a complete listing, so files would silently vanish from
+   * the cache with {@code truncated} false and the staleness clock reset. So when a
+   * deadline is set, anything but a completed query is turned into a failure.
    */
   private static QueryResult runQuery(String sql, WorkManager workManager,
       WebUserConnection conn, long timeoutMs) throws Exception {
@@ -499,11 +526,17 @@ public class ProjectSchemaCache {
         Thread.currentThread().interrupt();
       }
     });
+    QueryResult result;
     try {
-      return runner.run();
+      result = runner.run();
     } finally {
       finished.countDown();
     }
+    if (!COMPLETED.equals(result.queryState)) {
+      throw new DrillRuntimeException("Schema scan query did not complete (state "
+          + result.queryState + "): " + sql);
+    }
+    return result;
   }
 
   // ---- incremental updates ----
@@ -562,6 +595,19 @@ public class ProjectSchemaCache {
     }
     if (schema.getTables().removeIf(t -> tableName.equals(t.getName()))) {
       store.put(projectId, entry);
+    }
+  }
+
+  /**
+   * The tables a scanner found when a bound stopped it before the end of its source.
+   * A list subtype, so {@link TableScanner} keeps returning one value and {@link #scan}
+   * can mark a schema truncated for a reason the table count cannot show.
+   */
+  public static class PartialTables extends ArrayList<CachedTable> {
+    private static final long serialVersionUID = 1L;
+
+    public PartialTables(List<CachedTable> tables) {
+      super(tables);
     }
   }
 
