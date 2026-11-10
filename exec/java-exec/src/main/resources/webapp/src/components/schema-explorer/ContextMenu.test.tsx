@@ -121,6 +121,53 @@ describe('ContextMenu uploaded-file items', () => {
     expect(onFileDeleted).toHaveBeenCalled();
   });
 
+  /**
+   * Firefox only follows a click on an anchor that is in the document, so a detached
+   * anchor made Download a silent no-op there. The assertion is taken at click time:
+   * afterwards the link is removed again.
+   */
+  it('puts the download link in the document before clicking it', () => {
+    let attachedAtClick: boolean | null = null;
+    let href: string | null = null;
+    const click = vi.spyOn(HTMLAnchorElement.prototype, 'click')
+      .mockImplementation(function (this: HTMLAnchorElement) {
+        attachedAtClick = document.body.contains(this);
+        href = this.getAttribute('href');
+      });
+    try {
+      openMenu(upload);
+      fireEvent.click(screen.getByText('Download'));
+      expect(click).toHaveBeenCalledTimes(1);
+      expect(attachedAtClick).toBe(true);
+      expect(href).toBe('/dl/proj-a/data.csv');
+      expect(document.querySelector('a[href="/dl/proj-a/data.csv"]')).toBeNull();
+    } finally {
+      click.mockRestore();
+    }
+  });
+
+  /**
+   * An axios failure's own message is "Request failed with status code 403". The reason
+   * the server gave is in the response body, which is what the user needs to see.
+   */
+  it('reports the server reason for a refused delete, not the axios boilerplate', async () => {
+    vi.mocked(deleteProjectFile).mockRejectedValue(
+      Object.assign(new Error('Request failed with status code 403'), {
+        isAxiosError: true,
+        response: {
+          status: 403,
+          data: { message: 'You do not have write access to this project' },
+        },
+      }),
+    );
+    openMenu(upload);
+    fireEvent.click(screen.getByRole('menuitem', { name: /Delete/ }));
+    fireEvent.click(await screen.findByRole('button', { name: /^Delete$/ }));
+    expect(await screen.findByText(
+      'Could not delete data.csv: You do not have write access to this project',
+    )).toBeTruthy();
+  });
+
   it('reports a failed delete and leaves the tree and cache alone', async () => {
     vi.mocked(deleteProjectFile).mockRejectedValue(new Error('boom'));
     const onRefreshNode = vi.fn();

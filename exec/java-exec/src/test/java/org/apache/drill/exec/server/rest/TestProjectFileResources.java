@@ -82,10 +82,15 @@ public class TestProjectFileResources extends ClusterTest {
 
   /** Points the cluster's upload target at {@code dfs.tmp} with the given size cap. */
   private static void configureUploads(long maxSizeBytes) throws Exception {
+    configureUploads("dfs", "tmp", maxSizeBytes);
+  }
+
+  private static void configureUploads(String plugin, String workspace, long maxSizeBytes)
+      throws Exception {
     Request request = new Request.Builder()
         .url("http://localhost:" + portNumber + "/api/v1/uploads/config")
-        .put(RequestBody.create("{\"plugin\":\"dfs\",\"workspace\":\"tmp\",\"maxSizeBytes\":"
-            + maxSizeBytes + "}", JSON))
+        .put(RequestBody.create("{\"plugin\":\"" + plugin + "\",\"workspace\":\"" + workspace
+            + "\",\"maxSizeBytes\":" + maxSizeBytes + "}", JSON))
         .build();
     try (Response r = client.newCall(request).execute()) {
       assertEquals(r.body().string(), 200, r.code());
@@ -873,6 +878,147 @@ public class TestProjectFileResources extends ClusterTest {
     assertEquals(Collections.singletonList(id + "/shifting.csvh"), cachedFileNames(id));
     assertEquals(Arrays.asList("c", "d", "e"),
         columnNames(cachedTable(id, id + "/shifting.csvh")));
+  }
+
+  // ==================== Review fixes ====================
+
+  /**
+   * The 201's {@code tablePath} is the field a client may put in a query. {@code schema}
+   * names the directory with the project id unquoted, and a project id is a UUID, so
+   * {@code dfs.tmp.3fa85f64-5717-...} is not valid Drill SQL: the hyphens parse as
+   * subtraction and the first segment starts with a digit. The assertion is that the
+   * field parses and reads the file, not merely that it has the right spelling.
+   */
+  @Test
+  public void testUploadResponseCarriesAQueryableTablePath() throws Exception {
+    configureUploads(1000);
+    String id = seedWritableProject();
+
+    JsonNode body = upload(id, "queryable.csvh", "a,b\n7,8\n", false, 201);
+    String tablePath = body.get("tablePath").asText();
+    assertEquals("dfs.`tmp`.`" + id + "/queryable.csvh`", tablePath);
+    assertEquals("7", queryBuilder().sql("SELECT a FROM " + tablePath).singletonString());
+
+    // And the shape the two broken consumers interpolated instead does not parse.
+    String schema = body.get("schema").asText();
+    assertEquals("dfs.tmp." + id, schema);
+    boolean parsed;
+    try {
+      queryBuilder().sql("SELECT * FROM " + schema + ".`queryable.csvh`").run();
+      parsed = true;
+    } catch (Exception expected) {
+      parsed = false;
+    }
+    assertFalse("the unquoted directory path should not parse", parsed);
+  }
+
+  /**
+   * An administrator who repoints the cluster target leaves every project that has
+   * already uploaded holding a reference to the old schema. Matching on the dataset type
+   * alone meant those projects never gained one for the new schema: later uploads landed
+   * where the project could not see them while the tree went on showing the dead folder.
+   */
+  @Test
+  public void testRepointedTargetGivesTheProjectAReferenceToTheNewFolder() throws Exception {
+    configureUploads(1000);
+    String id = seedWritableProject();
+    upload(id, "before.csvh", "a\n1\n", false, 201);
+    assertEquals(1, folderRefs(id).size());
+    assertEquals("dfs.tmp", folderRefs(id).get(0).getSchema());
+
+    cluster.defineWorkspace("dfs", "moved",
+        new File(dirTestWatcher.getRootDir(), "moved").getAbsolutePath(), null);
+    try {
+      configureUploads("dfs", "moved", 1000);
+      upload(id, "after.csvh", "a\n2\n", false, 201);
+
+      List<String> schemas = folderRefs(id).stream().map(DatasetRef::getSchema)
+          .sorted().collect(Collectors.toList());
+      assertEquals(Arrays.asList("dfs.moved", "dfs.tmp"), schemas);
+      for (DatasetRef ref : folderRefs(id)) {
+        assertEquals(id, ref.getTable());
+      }
+
+      // A second upload onto the new target still reuses its one reference.
+      upload(id, "again.csvh", "a\n3\n", false, 201);
+      assertEquals(2, folderRefs(id).size());
+    } finally {
+      configureUploads(1000);
+    }
+  }
+
+  /**
+   * {@code writable} is a Drill planner concept, not a file system permission, so
+   * nothing in {@code fs.create} refuses a write to a workspace an administrator has
+   * since marked read-only. The setting is validated when it is saved; this is the
+   * re-check at upload time.
+   */
+  @Test
+  public void testRefusesAnUploadOntoAWorkspaceThatIsNoLongerWritable() throws Exception {
+    String location = new File(dirTestWatcher.getRootDir(), "flipped").getAbsolutePath();
+    cluster.defineWorkspace("dfs", "flipped", location, null);
+    configureUploads("dfs", "flipped", 1000);
+    String id = seedWritableProject();
+    try {
+      // The administrator marks the configured workspace read-only after the fact.
+      cluster.defineImmutableWorkspace("dfs", "flipped", location, null, null);
+      JsonNode body = upload(id, "nope.csvh", "a\n1\n", false, 409);
+      assertEquals("NOT_CONFIGURED", body.get("code").asText());
+      assertTrue(body.get("message").asText(),
+          body.get("message").asText().contains("not writable"));
+      assertFalse(new File(new File(location), id).exists());
+      assertTrue(folderRefs(id).isEmpty());
+    } finally {
+      cluster.defineWorkspace("dfs", "flipped", location, null);
+      configureUploads(1000);
+    }
+  }
+
+  /**
+   * A project id becomes a path component without ever passing {@link
+   * ProjectFileResources#safeName}. Most ids are UUIDs, but a scratch project's id is a
+   * fixed prefix plus the owner's principal name, so a principal carrying {@code ..}
+   * reaches here without a crafted request.
+   */
+  @Test
+  public void testRejectsAProjectIdThatCannotBeAFolderName() throws Exception {
+    configureUploads(1000);
+    String id = "scratch_a..b";
+    projectStore().put(id, new Project(id, "Scratch", null, null,
+        DrillUserPrincipal.ANONYMOUS_USER, false, null, null, null, null, null, null,
+        null, false, 1L, 1L, null, null, 0L));
+
+    JsonNode body = upload(id, "a.csvh", "a\n1\n", false, 400);
+    assertTrue(body.get("message").asText(),
+        body.get("message").asText().contains("project id"));
+    assertFalse(projectFolder(id).exists());
+    assertTrue(folderRefs(id).isEmpty());
+
+    // Delete and download share the locator, so they refuse it too.
+    try (Response r = send("DELETE", id, "a.csvh", "")) {
+      assertEquals(400, r.code());
+    }
+    try (Response r = send("GET", id, "a.csvh", "/content")) {
+      assertEquals(400, r.code());
+    }
+  }
+
+  /** And the resolver refuses the ids that cannot travel through a URL path at all. */
+  @Test
+  public void testProjectDirRefusesAnIdThatEscapesTheWorkspace() {
+    UploadConfigResources.UploadConfig cfg =
+        new UploadConfigResources.UploadConfig("dfs", "rel", 100L);
+    FileSystemConfig fsConfig = new FileSystemConfig("file:///",
+        Collections.<String, String>emptyMap(),
+        Collections.singletonMap("rel", new WorkspaceConfig("/uploads", true, null, false)),
+        Collections.<String, FormatPluginConfig>emptyMap(), null);
+
+    for (String id : Arrays.asList("a/b", "..", ".", "../../etc", "a\\b", "",
+        "scratch_../evil")) {
+      assertNull(id, ProjectFileResources.projectDir(cfg, fsConfig, id));
+    }
+    assertEquals("file:/uploads/p1",
+        ProjectFileResources.projectDir(cfg, fsConfig, "p1").toUri().toString());
   }
 
   @Test

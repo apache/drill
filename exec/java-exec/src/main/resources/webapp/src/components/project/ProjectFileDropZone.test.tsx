@@ -39,6 +39,26 @@ vi.mock('../../api/uploads', async (orig) => ({
 const file = new File(['a,b'], 'sales.csv', { type: 'text/csv' });
 const fileDrag = { dataTransfer: { types: ['Files'], files: [file] } };
 
+/**
+ * The 201 body the server actually sends, for project `p1` with the cluster target at
+ * `dfs.uploads`: `path` is the bare file name, `schema` the project's folder with the id
+ * unquoted, and `tablePath` the only field that is valid Drill SQL.
+ */
+const uploaded = {
+  name: 'sales.csv',
+  path: 'sales.csv',
+  schema: 'dfs.uploads.p1',
+  tablePath: 'dfs.`uploads`.`p1/sales.csv`',
+};
+
+/** An axios rejection: the message is boilerplate and the reason is in the body. */
+function axiosFailure(status: number, serverMessage: string) {
+  return Object.assign(new Error(`Request failed with status code ${status}`), {
+    isAxiosError: true,
+    response: { status, data: { message: serverMessage } },
+  });
+}
+
 function setup() {
   const client = new QueryClient();
   const invalidate = vi.spyOn(client, 'invalidateQueries');
@@ -79,11 +99,13 @@ describe('ProjectFileDropZone', () => {
   });
 
   it('uploads the dropped file and reports the new table path', async () => {
-    vi.mocked(uploadProjectFile).mockResolvedValue({ name: 'sales.csv', path: 'dfs.up.sales' });
+    vi.mocked(uploadProjectFile).mockResolvedValue(uploaded);
     const { zone, invalidate } = setup();
     fireEvent.dragEnter(zone, fileDrag);
     fireEvent.drop(zone, fileDrag);
-    expect(await screen.findByText(/dfs\.up\.sales/)).toBeTruthy();
+    // The quoted, queryable path, not the bare file name the old toast showed.
+    expect(await screen.findByText('Added sales.csv as dfs.`uploads`.`p1/sales.csv`'))
+      .toBeTruthy();
     expect(uploadProjectFile).toHaveBeenCalledWith('p1', file, undefined);
     expect(invalidate).toHaveBeenCalledWith({ queryKey: ['schemaCache', 'p1'] });
     expect(invalidate).toHaveBeenCalledWith({ queryKey: ['project', 'p1'] });
@@ -109,7 +131,7 @@ describe('ProjectFileDropZone', () => {
   it('asks before overwriting when the name is taken', async () => {
     vi.mocked(uploadProjectFile)
       .mockRejectedValueOnce(new UploadCollisionError('exists'))
-      .mockResolvedValueOnce({ name: 'sales.csv', path: 'dfs.up.sales' });
+      .mockResolvedValueOnce(uploaded);
     const { zone } = setup();
     fireEvent.drop(zone, fileDrag);
     expect(await screen.findByText(/sales\.csv/, { selector: '.ant-modal-confirm-content *, .ant-modal-confirm-content' })).toBeTruthy();
@@ -127,8 +149,28 @@ describe('ProjectFileDropZone', () => {
     expect(uploadProjectFile).toHaveBeenCalledTimes(1);
   });
 
+  it('shows the server reason, not the axios boilerplate, when a write is refused', async () => {
+    vi.mocked(uploadProjectFile).mockRejectedValue(
+      axiosFailure(403, 'You do not have write access to this project'),
+    );
+    const { zone } = setup();
+    fireEvent.drop(zone, fileDrag);
+    expect(await screen.findByText(
+      'Could not upload sales.csv: You do not have write access to this project',
+    )).toBeTruthy();
+  });
+
+  it('shows the size the server refused the file against', async () => {
+    vi.mocked(uploadProjectFile).mockRejectedValue(
+      axiosFailure(413, 'File exceeds the maximum upload size of 10 bytes'),
+    );
+    const { zone } = setup();
+    fireEvent.drop(zone, fileDrag);
+    expect(await screen.findByText(/maximum upload size of 10 bytes/)).toBeTruthy();
+  });
+
   it('uploads once and clears the overlay when a file is dropped on a composer inside the zone', async () => {
-    vi.mocked(uploadProjectFile).mockResolvedValue({ name: 'sales.csv', path: 'dfs.up.sales' });
+    vi.mocked(uploadProjectFile).mockResolvedValue(uploaded);
     const onFileDropped = vi.fn();
     render(
       <QueryClientProvider client={new QueryClient()}>

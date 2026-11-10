@@ -115,6 +115,13 @@ public class ProjectFileResources {
   static final String CODE_EXISTS = "EXISTS";
   static final String CODE_NOT_CONFIGURED = "NOT_CONFIGURED";
 
+  /**
+   * A project id that cannot be a path component. Scratch project ids carry the owner's
+   * principal name, so this is reachable without a crafted request.
+   */
+  private static final String INVALID_PROJECT_ID =
+      "Invalid project id: it cannot be used as a folder name";
+
   private static final String NOT_CONFIGURED =
       "No upload folder is configured for this cluster. "
           + "An administrator must set one before files can be uploaded.";
@@ -145,10 +152,22 @@ public class ProjectFileResources {
     @JsonProperty
     public final String schema;
 
-    public UploadResponse(String name, String path, String schema) {
+    /**
+     * The one field a client can put in a query: the file-level table path, quoted the
+     * way {@link ProjectSchemaCache#quoteTablePath} quotes it, e.g.
+     * {@code dfs.`uploads`.`3fa85f64-5717-.../sales.csv`}. {@link #schema} names the
+     * project's folder and leaves the id unquoted, so it is not valid Drill SQL on its
+     * own: a project id is a UUID, whose hyphens parse as subtraction and whose first
+     * segment may begin with a digit.
+     */
+    @JsonProperty
+    public final String tablePath;
+
+    public UploadResponse(String name, String path, String schema, String tablePath) {
       this.name = name;
       this.path = path;
       this.schema = schema;
+      this.tablePath = tablePath;
     }
   }
 
@@ -228,18 +247,34 @@ public class ProjectFileResources {
     return name;
   }
 
+  /** The configured upload target's workspace, or null when it no longer exists. */
+  static WorkspaceConfig uploadWorkspace(UploadConfig cfg, FileSystemConfig fsConfig) {
+    Map<String, WorkspaceConfig> workspaces = fsConfig.getWorkspaces();
+    return workspaces == null ? null : workspaces.get(cfg.workspace);
+  }
+
   /**
    * The folder holding one project's uploaded files: {@code <workspace>/<projectId>}
    * under the target plugin's connection. Scheme-agnostic; the connection supplies it.
+   *
+   * <p>The project id passes the same two guards every file name passes. Most ids are
+   * UUIDs, but a scratch project's id is a fixed prefix plus the owner's principal name
+   * ({@code ProjectResources.getOrCreateScratch}), and a principal carrying a {@code /}
+   * would nest the folder while one carrying {@code ..} would leave the workspace
+   * altogether. An id that fails either guard yields null, the same as a workspace that
+   * has gone away, and the callers refuse the request.
    */
   public static Path projectDir(UploadConfig cfg, FileSystemConfig fsConfig, String projectId) {
-    Map<String, WorkspaceConfig> workspaces = fsConfig.getWorkspaces();
-    WorkspaceConfig ws = workspaces == null ? null : workspaces.get(cfg.workspace);
-    if (ws == null || ws.getLocation() == null) {
+    WorkspaceConfig ws = uploadWorkspace(cfg, fsConfig);
+    if (ws == null || ws.getLocation() == null || safeName(projectId) == null) {
       return null;
     }
-    return new Path(new Path(fsConfig.getConnection()),
-        new Path(ws.getLocation(), projectId));
+    Path base = new Path(new Path(fsConfig.getConnection()), ws.getLocation());
+    try {
+      return resolveInside(base, projectId);
+    } catch (IllegalArgumentException e) {
+      return null;
+    }
   }
 
   /**
@@ -288,6 +323,10 @@ public class ProjectFileResources {
       return error(Response.Status.FORBIDDEN, "You do not have write access to this project");
     }
 
+    if (safeName(id) == null) {
+      return error(Response.Status.BAD_REQUEST, INVALID_PROJECT_ID);
+    }
+
     if (part == null || partMeta == null) {
       return error(Response.Status.BAD_REQUEST, "No file part named 'file' was supplied");
     }
@@ -313,6 +352,14 @@ public class ProjectFileResources {
       return error(Response.Status.CONFLICT, CODE_NOT_CONFIGURED, NOT_CONFIGURED
           + " The configured workspace '" + cfg.workspace + "' no longer exists.");
     }
+    // Re-checked here, not only when the setting was saved. "writable" is a Drill
+    // planner concept and not a file system permission, so nothing in fs.create would
+    // refuse a write to a workspace an administrator has since marked read-only.
+    WorkspaceConfig ws = uploadWorkspace(cfg, fsConfig);
+    if (ws == null || !ws.isWritable()) {
+      return error(Response.Status.CONFLICT, CODE_NOT_CONFIGURED, NOT_CONFIGURED
+          + " The configured workspace '" + cfg.workspace + "' is not writable.");
+    }
 
     Path target;
     try {
@@ -321,9 +368,11 @@ public class ProjectFileResources {
       return error(Response.Status.BAD_REQUEST, e.getMessage());
     }
 
-    String schema = cfg.plugin + "." + cfg.workspace + "." + id;
+    UploadResponse created = new UploadResponse(name, name,
+        cfg.plugin + "." + cfg.workspace + "." + id,
+        ProjectSchemaCache.quoteTablePath(uploadSchema(cfg), id + "/" + name));
     Response written = writeAsUser(user, fsPlugin, fsConfig, dir, target, part,
-        cfg.maxSizeBytes, overwrite, name, schema);
+        cfg.maxSizeBytes, overwrite, name, created);
     if (written.getStatus() != Response.Status.CREATED.getStatusCode()) {
       return written;
     }
@@ -371,6 +420,11 @@ public class ProjectFileResources {
     } else if (!ProjectResources.canRead(project, loc.user)) {
       loc.refusal = error(Response.Status.FORBIDDEN,
           "You do not have access to this project");
+      return loc;
+    }
+
+    if (safeName(id) == null) {
+      loc.refusal = error(Response.Status.BAD_REQUEST, INVALID_PROJECT_ID);
       return loc;
     }
 
@@ -523,9 +577,10 @@ public class ProjectFileResources {
    */
   private Response writeAsUser(String user, FileSystemPlugin fsPlugin, FileSystemConfig fsConfig,
       Path dir, Path target, InputStream part, long maxSizeBytes, boolean overwrite,
-      String name, String schema) {
+      String name, UploadResponse created) {
     PrivilegedExceptionAction<Response> write =
-        () -> write(fsPlugin, fsConfig, dir, target, part, maxSizeBytes, overwrite, name, schema);
+        () -> write(fsPlugin, fsConfig, dir, target, part, maxSizeBytes, overwrite, name,
+            created);
     try {
       if (workManager.getContext().getConfig().getBoolean(ExecConstants.IMPERSONATION_ENABLED)) {
         return ImpersonationUtil.createProxyUgi(user).doAs(write);
@@ -543,7 +598,7 @@ public class ProjectFileResources {
 
   private Response write(FileSystemPlugin fsPlugin, FileSystemConfig fsConfig,
       Path dir, Path target, InputStream part, long maxSizeBytes, boolean overwrite,
-      String name, String schema) throws IOException {
+      String name, UploadResponse created) throws IOException {
     // Resolved inside the doAs so the file system is the uploading user's, not the
     // process user's: FileSystem instances are cached per UGI.
     FileSystem fs = FileSystem.get(URI.create(fsConfig.getConnection()), fsPlugin.getFsConf());
@@ -577,7 +632,7 @@ public class ProjectFileResources {
     commit(fs, staged, target, overwrite, name);
 
     return Response.status(Response.Status.CREATED)
-        .entity(new UploadResponse(name, name, schema))
+        .entity(created)
         .build();
   }
 
@@ -624,21 +679,33 @@ public class ProjectFileResources {
   /**
    * Gives the project its one {@code folder} dataset reference, so the uploaded files
    * show up as a queryable table. Serialised on the interned id like the other project
-   * mutations, and a no-op once the project already has a folder reference.
+   * mutations, and a no-op once the project already has a folder reference
+   * <em>on this folder</em>.
+   *
+   * <p>The match is on type, schema and table together, not type alone. An administrator
+   * who repoints the cluster target from {@code dfs.uploads} to {@code s3.uploads} leaves
+   * every project that has already uploaded holding a reference to the old schema; if
+   * type alone were enough, those projects would never gain one for the new schema, so
+   * their later uploads would land somewhere the project cannot see while the tree went
+   * on showing the dead folder. A project may therefore hold one reference per folder it
+   * has uploaded into, and {@code uploadFolders} in {@code ProjectResources} already
+   * scans a schema's folder references together.
    */
   private void registerFolderDataset(PersistentStore<Project> store, String id, UploadConfig cfg) {
+    String schema = uploadSchema(cfg);
     synchronized (id.intern()) {
       Project project = store.get(id);
       if (project == null) {
         return;
       }
       boolean hasFolder = project.getDatasets().stream()
-          .anyMatch(d -> FOLDER_DATASET_TYPE.equals(d.getType()));
+          .anyMatch(d -> FOLDER_DATASET_TYPE.equals(d.getType())
+              && schema.equals(d.getSchema()) && id.equals(d.getTable()));
       if (hasFolder) {
         return;
       }
       project.getDatasets().add(new DatasetRef(UUID.randomUUID().toString(),
-          FOLDER_DATASET_TYPE, cfg.plugin + "." + cfg.workspace, id, null,
+          FOLDER_DATASET_TYPE, schema, id, null,
           FOLDER_DATASET_LABEL));
       project.setUpdatedAt(Instant.now().toEpochMilli());
       store.put(id, project);

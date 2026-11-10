@@ -24,6 +24,20 @@ vi.mock('./useProjectFileUpload', () => ({ useProjectFileUpload: vi.fn() }));
 
 const file = new File(['a,b'], 'sales.csv', { type: 'text/csv' });
 
+/**
+ * The 201 body the server actually sends, for project `proj` with the cluster target at
+ * `dfs.uploads`: `path` is the bare file name and `schema` is the project's folder with
+ * the id unquoted. `tablePath` is the only field that is valid Drill SQL.
+ */
+function uploaded(name: string) {
+  return {
+    name,
+    path: name,
+    schema: 'dfs.uploads.proj',
+    tablePath: `dfs.\`uploads\`.\`proj/${name}\``,
+  };
+}
+
 describe('useConversationFileDrop', () => {
   const upload = vi.fn();
   const sendMessage = vi.fn();
@@ -34,7 +48,7 @@ describe('useConversationFileDrop', () => {
   });
 
   it('sends a message naming the file and its table path', async () => {
-    upload.mockResolvedValue({ name: 'sales.csv', path: 'proj.sales.csv', schema: 'dfs.uploads.`proj`.`sales.csv`' });
+    upload.mockResolvedValue(uploaded('sales.csv'));
     const { result } = renderHook(() => useConversationFileDrop('proj', sendMessage));
 
     await act(() => result.current(file));
@@ -43,7 +57,9 @@ describe('useConversationFileDrop', () => {
     expect(sendMessage).toHaveBeenCalledTimes(1);
     const text = sendMessage.mock.calls[0][0] as string;
     expect(text).toContain('sales.csv');
-    expect(text).toContain('dfs.uploads.`proj`.`sales.csv`');
+    // The quoted, file-level path, not the folder: `dfs.uploads.proj` does not parse.
+    expect(text).toContain('dfs.`uploads`.`proj/sales.csv`');
+    expect(text).not.toContain('dfs.uploads.proj.');
   });
 
   it('sends nothing when the upload did not complete', async () => {
@@ -56,7 +72,7 @@ describe('useConversationFileDrop', () => {
   });
 
   it('sends one message for several files dropped together', async () => {
-    upload.mockImplementation(async (f: File) => ({ name: f.name, path: `p.${f.name}`, schema: `dfs.\`${f.name}\`` }));
+    upload.mockImplementation(async (f: File) => uploaded(f.name));
     const { result } = renderHook(() => useConversationFileDrop('proj', sendMessage));
     const other = new File(['x'], 'costs.csv', { type: 'text/csv' });
 
@@ -68,6 +84,6 @@ describe('useConversationFileDrop', () => {
     const text = sendMessage.mock.calls[0][0] as string;
     expect(text).toContain('sales.csv');
     expect(text).toContain('costs.csv');
-    expect(text).toContain('dfs.`costs.csv`');
+    expect(text).toContain('dfs.`uploads`.`proj/costs.csv`');
   });
 });

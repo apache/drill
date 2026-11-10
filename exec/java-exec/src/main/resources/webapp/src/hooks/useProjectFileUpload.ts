@@ -18,6 +18,7 @@
 import { useCallback } from 'react';
 import { message, Modal } from 'antd';
 import { useQueryClient } from '@tanstack/react-query';
+import { getErrorMessage } from '../api/client';
 import {
   uploadProjectFile,
   getUploadStatus,
@@ -42,7 +43,9 @@ export function useProjectFileUpload(projectId: string): (file: File) => Promise
       const attempt = async (overwrite: boolean): Promise<UploadedFile | undefined> => {
         try {
           const result = await uploadProjectFile(projectId, file, overwrite ? { overwrite: true } : undefined);
-          message.success(`Added ${file.name} as ${result.path}`);
+          // tablePath, not path: path is the bare file name, and the point of the toast
+          // is to hand the user something they can paste into a query.
+          message.success(`Added ${file.name} as ${result.tablePath}`);
           queryClient.invalidateQueries({ queryKey: ['schemaCache', projectId] });
           queryClient.invalidateQueries({ queryKey: ['project', projectId] });
           return result;
@@ -61,8 +64,10 @@ export function useProjectFileUpload(projectId: string): (file: File) => Promise
           } else if (error instanceof UploadNotConfiguredError) {
             message.error(NOT_CONFIGURED_MSG);
           } else {
-            const reason = error instanceof Error && error.message ? `: ${error.message}` : '';
-            message.error(`Could not upload ${file.name}${reason}`);
+            // getErrorMessage, not error.message: axios reports "Request failed with
+            // status code 403" and buries the server's reason in response.data.message.
+            const reason = getErrorMessage(error);
+            message.error(`Could not upload ${file.name}${reason ? `: ${reason}` : ''}`);
           }
         }
         return undefined;

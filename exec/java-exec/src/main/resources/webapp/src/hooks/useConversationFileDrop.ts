@@ -21,9 +21,9 @@ import { useProjectFileUpload } from './useProjectFileUpload';
 
 function describe(files: UploadedFile[]): string {
   if (files.length === 1) {
-    return `I added the file ${files[0].name} to this project. You can query it as ${files[0].schema}. Take a look at it.`;
+    return `I added the file ${files[0].name} to this project. You can query it as ${files[0].tablePath}. Take a look at it.`;
   }
-  const list = files.map((f) => `${f.name} (query it as ${f.schema})`).join(', ');
+  const list = files.map((f) => `${f.name} (query it as ${f.tablePath})`).join(', ');
   return `I added these files to this project: ${list}. Take a look at them.`;
 }
 

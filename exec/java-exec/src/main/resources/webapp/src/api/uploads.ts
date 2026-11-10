@@ -36,10 +36,18 @@ export interface SaveUploadConfigResult {
   warning?: string;
 }
 
+/** The 201 body of POST /api/v1/projects/{id}/files. */
 export interface UploadedFile {
   name: string;
+  /** The file name inside the project folder, not a schema-qualified path. */
   path: string;
-  schema?: unknown;
+  /**
+   * The project's folder as `<plugin>.<workspace>.<projectId>`. A project id is a UUID,
+   * so this is not valid Drill SQL on its own. Use `tablePath` for anything queryable.
+   */
+  schema?: string;
+  /** The backtick-quoted, file-level table path, e.g. dfs.`uploads`.`<id>/sales.csv`. */
+  tablePath: string;
 }
 
 /** GET /api/v1/uploads/status, open to any authenticated user. */

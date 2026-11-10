@@ -79,6 +79,17 @@ public class ProjectSchemaCache {
    */
   private static final long FILE_SCAN_TIMEOUT_MS = 30_000L;
 
+  /**
+   * Wall-clock budget for one {@link #fileScan}, covering its listings and its probes
+   * together. {@link #FILE_SCAN_TIMEOUT_MS} bounds a single query; nothing bounded the
+   * sweep as a whole, so a folder of merely slow files could hold this class's monitor
+   * for minutes (up to 100 listings plus 500 probes, each allowed 30 s) while every other
+   * project's schema read waited. When the budget is spent the scan returns what it has
+   * as {@link PartialTables}, so the schema is marked truncated rather than cached as if
+   * it were the whole folder.
+   */
+  public static final long FILE_SCAN_BUDGET_MS = 60_000L;
+
   /** The {@code queryState} of a query that ran to the end of its results. */
   private static final String COMPLETED = "COMPLETED";
 
@@ -171,8 +182,30 @@ public class ProjectSchemaCache {
 
   public CachedSchema read(String projectId, String schemaPath, TableScanner scanner) {
     CachedSchema existing = peek(projectId, schemaPath);
-    if (existing != null
-        && System.currentTimeMillis() - existing.getScannedAt() < STALE_INTERVAL_MS) {
+    if (isFresh(existing)) {
+      return existing;
+    }
+    return scanIfStale(projectId, schemaPath, scanner);
+  }
+
+  private static boolean isFresh(CachedSchema schema) {
+    return schema != null
+        && System.currentTimeMillis() - schema.getScannedAt() < STALE_INTERVAL_MS;
+  }
+
+  /**
+   * The monitor-holding half of {@link #read}. Staleness is tested a second time with the
+   * monitor held, because {@link #read} tests it without one: N readers that all saw the
+   * same stale schema would otherwise queue on the monitor and each run a full sweep in
+   * turn. Here the first one scans and the rest are served its result.
+   *
+   * <p>{@link #scan} itself does not re-check, so an explicit refresh always rescans; it
+   * is the staleness-driven path, and only that path, which collapses.
+   */
+  private synchronized CachedSchema scanIfStale(String projectId, String schemaPath,
+      TableScanner scanner) {
+    CachedSchema existing = peek(projectId, schemaPath);
+    if (isFresh(existing)) {
       return existing;
     }
     return scan(projectId, schemaPath, scanner);
@@ -356,13 +389,26 @@ public class ProjectSchemaCache {
    */
   public static List<CachedTable> fileScan(String schemaPath, String folder,
       WorkManager workManager, WebUserConnection conn) throws Exception {
+    return fileScan(schemaPath, folder, workManager, conn,
+        System.currentTimeMillis() + FILE_SCAN_BUDGET_MS);
+  }
+
+  /**
+   * {@link #fileScan} with an explicit wall-clock deadline, in {@code System
+   * .currentTimeMillis()} terms. Package-visible so a test can hand it a deadline that
+   * has already passed; production callers take {@link #FILE_SCAN_BUDGET_MS}.
+   */
+  static List<CachedTable> fileScan(String schemaPath, String folder,
+      WorkManager workManager, WebUserConnection conn, long deadline) throws Exception {
     List<String> relativePaths = new ArrayList<>();
     boolean complete = collectFiles(schemaPath, folder, relativePaths, 0,
-        new int[] {MAX_FOLDER_LISTINGS}, workManager, conn);
+        new int[] {MAX_FOLDER_LISTINGS}, deadline, workManager, conn);
 
     List<CachedTable> tables = new ArrayList<>();
     for (String relativePath : relativePaths) {
-      tables.add(tables.size() < MAX_TABLES_PER_SCHEMA
+      boolean expired = System.currentTimeMillis() >= deadline;
+      complete &= !expired;
+      tables.add(!expired && tables.size() < MAX_TABLES_PER_SCHEMA
           ? fileEntry(schemaPath, relativePath, workManager, conn)
           : unprobedFileEntry(schemaPath, relativePath));
     }
@@ -393,20 +439,22 @@ public class ProjectSchemaCache {
   /**
    * Appends the paths of the files under {@code folder}, relative to {@code schemaPath},
    * recursing into subdirectories, and returns whether the whole folder was listed.
-   * Three things bound the walk, because each listing is a query: it stops one past
+   * Four things bound the walk, because each listing is a query: it stops one past
    * {@link #MAX_TABLES_PER_SCHEMA} collected paths, past {@link #MAX_FOLDER_DEPTH}
-   * levels, and once {@code listingBudget} is spent. The file cap alone bounds neither
-   * depth nor breadth, since a directory holding no files never advances the count.
+   * levels, once {@code listingBudget} is spent, and once {@code deadline} has passed.
+   * The file cap alone bounds neither depth nor breadth, since a directory holding no
+   * files never advances the count, and none of the three counted bounds puts a limit on
+   * how long the walk may take.
    *
-   * <p>Each of the three is reported as an incomplete listing, so the schema is marked
+   * <p>Each of the four is reported as an incomplete listing, so the schema is marked
    * truncated instead of a part of the folder being cached as all of it. Only the cap
-   * shows up in the table count; the other two would otherwise leave no trace at all.
+   * shows up in the table count; the others would otherwise leave no trace at all.
    */
   private static boolean collectFiles(String schemaPath, String folder, List<String> into,
-      int depth, int[] listingBudget, WorkManager workManager, WebUserConnection conn)
-      throws Exception {
+      int depth, int[] listingBudget, long deadline, WorkManager workManager,
+      WebUserConnection conn) throws Exception {
     if (into.size() > MAX_TABLES_PER_SCHEMA || depth > MAX_FOLDER_DEPTH
-        || listingBudget[0] <= 0) {
+        || listingBudget[0] <= 0 || System.currentTimeMillis() >= deadline) {
       return false;
     }
     listingBudget[0]--;
@@ -422,11 +470,12 @@ public class ProjectSchemaCache {
       String relativePath = folder + "/" + name;
       if ("true".equalsIgnoreCase(row.get("isDirectory"))) {
         complete &= collectFiles(schemaPath, relativePath, into, depth + 1, listingBudget,
-            workManager, conn);
+            deadline, workManager, conn);
       } else {
         into.add(relativePath);
       }
-      if (into.size() > MAX_TABLES_PER_SCHEMA || listingBudget[0] <= 0) {
+      if (into.size() > MAX_TABLES_PER_SCHEMA || listingBudget[0] <= 0
+          || System.currentTimeMillis() >= deadline) {
         return false;
       }
     }
@@ -475,8 +524,12 @@ public class ProjectSchemaCache {
    * {@code dfs.tmp} + {@code p1/sales.csv} to {@code dfs.`tmp`.`p1/sales.csv`}: the
    * plugin name stays unquoted, each workspace part and the relative path are
    * backtick-quoted.
+   *
+   * <p>This is the one place that form is built. The upload response reuses it so the
+   * table path it hands a client is the same SQL the scanner queries: a project id is a
+   * UUID, and {@code dfs.uploads.3fa85f64-5717-...} is not valid Drill SQL unquoted.
    */
-  private static String quoteTablePath(String schemaPath, String relativePath) {
+  static String quoteTablePath(String schemaPath, String relativePath) {
     String[] parts = schemaPath.split("\\.");
     StringBuilder sb = new StringBuilder(parts[0]);
     for (int i = 1; i < parts.length; i++) {

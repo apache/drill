@@ -34,7 +34,15 @@ import {
 describe('uploadProjectFile', () => {
   beforeEach(() => {
     vi.clearAllMocks();
-    mocks.post.mockResolvedValue({ data: { name: 'a.csv', path: '/p/a.csv' } });
+    // The shape the server sends: path is the bare file name, not a schema-qualified one.
+    mocks.post.mockResolvedValue({
+      data: {
+        name: 'a.csv',
+        path: 'a.csv',
+        schema: 'dfs.uploads.p',
+        tablePath: 'dfs.`uploads`.`p/a.csv`',
+      },
+    });
   });
 
   it('posts the file as a multipart part named file, without a forced JSON content type', async () => {
@@ -46,6 +54,12 @@ describe('uploadProjectFile', () => {
     expect(body.get('file')).toBe(file);
     expect(config.headers['Content-Type']).toBeUndefined();
     expect('Content-Type' in config.headers).toBe(true);
+  });
+
+  it('returns the queryable table path the server reports', async () => {
+    const result = await uploadProjectFile('p', new File(['x'], 'a.csv'));
+    expect(result.tablePath).toBe('dfs.`uploads`.`p/a.csv`');
+    expect(result.path).toBe('a.csv');
   });
 
   it('sends overwrite only when asked', async () => {

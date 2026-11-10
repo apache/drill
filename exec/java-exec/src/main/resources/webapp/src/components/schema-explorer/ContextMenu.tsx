@@ -35,6 +35,7 @@ import {
 } from '@ant-design/icons';
 import type { FileInfo, ColumnInfo } from '../../types';
 import { deleteProjectFile, downloadProjectFileUrl } from '../../api/uploads';
+import { getErrorMessage } from '../../api/client';
 import { isInFolder } from './datasetAllowList';
 import { buildSessionizeSql, isPacketCaptureFormat } from '../../utils/sessionize';
 
@@ -200,10 +201,17 @@ export default function ContextMenu({
         }
         case 'download-file':
           if (projectId && uploadedName) {
+            // Firefox only follows a click on an anchor that is in the document, so the
+            // link is appended, clicked and removed rather than clicked while detached.
             const link = document.createElement('a');
             link.href = downloadProjectFileUrl(projectId, uploadedName);
             link.download = uploadedName;
-            link.click();
+            document.body.appendChild(link);
+            try {
+              link.click();
+            } finally {
+              link.remove();
+            }
           }
           break;
         case 'delete-file':
@@ -221,8 +229,10 @@ export default function ContextMenu({
                   onRefreshNode?.(`schema:${uploadSchema}`);
                   onFileDeleted?.();
                 } catch (error) {
-                  const reason = error instanceof Error && error.message ? `: ${error.message}` : '';
-                  message.error(`Could not delete ${uploadedName}${reason}`);
+                  // getErrorMessage, not error.message: axios reports "Request failed
+                  // with status code 403" and buries the server's reason in the body.
+                  const reason = getErrorMessage(error);
+                  message.error(`Could not delete ${uploadedName}${reason ? `: ${reason}` : ''}`);
                 }
               },
             });

@@ -28,6 +28,8 @@ import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 
 import java.util.List;
+import java.util.concurrent.CountDownLatch;
+import java.util.concurrent.TimeUnit;
 import java.util.concurrent.atomic.AtomicInteger;
 
 import static org.junit.jupiter.api.Assertions.assertEquals;
@@ -251,6 +253,70 @@ public class TestProjectSchemaCache {
     cache.removeTable("p1", "mysql", "p1/keep.csv");
     cache.removeTable("no-such-project", "dfs.tmp", "p1/keep.csv");
     assertEquals(1, cache.peek("p1", "dfs.tmp").getTables().size());
+  }
+
+  /**
+   * {@code read} tests staleness without the monitor, so N readers of one stale schema
+   * each used to run a full sweep in turn: with {@code combinedScan} that is up to 100
+   * listings plus 500 probes apiece, every one of them holding a process-wide monitor.
+   * The second reader must be served the first reader's result instead.
+   */
+  @Test
+  public void testConcurrentStaleReadsCollapseToOneScan() throws Exception {
+    // A schema that was scanned at the epoch: stale for both readers.
+    ProjectSchemaCacheEntry seed = new ProjectSchemaCacheEntry();
+    seed.setProjectId("p1");
+    CachedSchema stale = new CachedSchema();
+    stale.setSchemaPath("dfs.tmp");
+    stale.setScannedAt(1L);
+    seed.getSchemas().put("dfs.tmp", stale);
+    store.put("p1", seed);
+
+    AtomicInteger calls = new AtomicInteger();
+    CountDownLatch scanning = new CountDownLatch(1);
+    CountDownLatch release = new CountDownLatch(1);
+    TableScanner scanner = schemaPath -> {
+      calls.incrementAndGet();
+      scanning.countDown();
+      release.await(10, TimeUnit.SECONDS);
+      return List.of(table("dfs.tmp", "p1/one.csv", "FILE", "id", "INT"));
+    };
+
+    Thread first = new Thread(() -> cache.read("p1", "dfs.tmp", scanner), "reader-1");
+    first.start();
+    assertTrue(scanning.await(10, TimeUnit.SECONDS));
+
+    // The second reader sees the stale entry (the store never blocks), then waits on the
+    // monitor the first reader is holding. BLOCKED is therefore past its own peek.
+    Thread second = new Thread(() -> cache.read("p1", "dfs.tmp", scanner), "reader-2");
+    second.start();
+    long until = System.currentTimeMillis() + 10_000L;
+    while (second.getState() != Thread.State.BLOCKED && System.currentTimeMillis() < until) {
+      Thread.sleep(5);
+    }
+    assertEquals(Thread.State.BLOCKED, second.getState());
+
+    release.countDown();
+    first.join(10_000L);
+    second.join(10_000L);
+    assertEquals(1, calls.get());
+    assertEquals(1, cache.peek("p1", "dfs.tmp").getTables().size());
+  }
+
+  /**
+   * The sweep's wall-clock budget. The per-query deadline bounds one query; without a
+   * budget for the sweep as a whole, 100 listings and 500 probes could each take their
+   * 30 seconds while this class's monitor was held. An expired budget returns what it
+   * has as a {@link ProjectSchemaCache.PartialTables} and issues no query at all, which
+   * is why a null {@code WorkManager} and connection are safe here: touching either
+   * would be the failure.
+   */
+  @Test
+  public void testFileScanStopsWhenItsBudgetIsSpent() throws Exception {
+    List<CachedTable> tables = ProjectSchemaCache.fileScan("dfs.tmp", "p1", null, null,
+        System.currentTimeMillis() - 1);
+    assertTrue(tables instanceof ProjectSchemaCache.PartialTables);
+    assertTrue(tables.isEmpty());
   }
 
   @Test

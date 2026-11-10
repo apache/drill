@@ -37,7 +37,7 @@ If the target's connection starts with `file:` and more than one Drillbit is reg
 
 Each project's files live in `<workspace location>/<projectId>` under the plugin's connection. The folder is named after the project id, not the name, so a rename does not move it. The folder is created on the first upload, not at project creation, so a cluster with no target configured grows no empty folders.
 
-On the first successful upload the project gains one dataset reference of type `folder` (label "Uploaded files") with `schema = <plugin>.<workspace>` and `table = <projectId>`. `DatasetRef` otherwise understands `plugin`, `schema` and `table`; none of those fits a per-project directory inside a shared workspace without exposing every project's folder to every project. The frontend handles `folder` in `datasetAllowList.ts` (a `folders` map of schema to allowed folder paths, matching the folder and everything beneath it) and in `SchemaExplorer.tsx`.
+On the first successful upload the project gains one dataset reference of type `folder` (label "Uploaded files") with `schema = <plugin>.<workspace>` and `table = <projectId>`. A project holds at most one such reference per folder, matched on type, schema and table together. That matters when an administrator repoints the cluster target: a project that has already uploaded keeps its reference to the old schema and gains a second one for the new, so its later uploads stay visible to it rather than landing somewhere the project cannot see. `uploadFolders` in `ProjectResources` already scans a schema's folder references together. `DatasetRef` otherwise understands `plugin`, `schema` and `table`; none of those fits a per-project directory inside a shared workspace without exposing every project's folder to every project. The frontend handles `folder` in `datasetAllowList.ts` (a `folders` map of schema to allowed folder paths, matching the folder and everything beneath it) and in `SchemaExplorer.tsx`.
 
 Uploads are always flat in the project folder. Deleting a project is a soft delete and leaves its files in place; orphaned folders are an administrator's cleanup.
 
@@ -70,16 +70,25 @@ All require an authenticated user and the project access above.
 Multipart form with the file in a part named `file`. `?overwrite=true` replaces an existing file of the same name. Response `201`:
 
 ```json
-{ "name": "sales.csv", "path": "sales.csv", "schema": "dfs.uploads.<projectId>" }
+{
+  "name": "sales.csv",
+  "path": "sales.csv",
+  "schema": "dfs.uploads.<projectId>",
+  "tablePath": "dfs.`uploads`.`<projectId>/sales.csv`"
+}
 ```
+
+`tablePath` is the only field a client may put in a query. `path` is the bare file name inside the project folder, and `schema` names the folder with the project id unquoted, which is not valid Drill SQL: a project id is a UUID, so its hyphens parse as subtraction and its first segment may start with a digit. `tablePath` is built by the same `ProjectSchemaCache.quoteTablePath` the scanner quotes with, so the path handed to a client and the path the cache queries are one string. The toast and the Prospector message both use it.
 
 | Status | Cause | Body |
 |---|---|---|
 | 400 | No `file` part, or a bad name (empty, over the length limit, contains `/`, `\`, `..` or a control character, or does not resolve inside the project folder) | `{message}` |
+| 400 | A project id that cannot be a folder name. Most ids are UUIDs, but a scratch project's id is a prefix plus the owner's principal name, so a principal carrying `/` or `..` reaches this without a crafted request. The id passes the same two guards a file name passes. | `{message}` |
 | 403 | Caller lacks `canWrite` | `{message}` |
 | 404 | Project missing or soft-deleted | `{message}` |
 | 409 | `EXISTS`: a file of that name exists and `overwrite` was not set | `{code: "EXISTS", message}` |
 | 409 | `NOT_CONFIGURED`: no target set, or the configured plugin or workspace no longer exists | `{code: "NOT_CONFIGURED", message}` |
+| 409 | `NOT_CONFIGURED`: the configured workspace is no longer writable. `writable` is a Drill planner concept and not a file system permission, so `fs.create` would not refuse it; the check `PUT /uploads/config` makes on save is re-made here on every upload. | `{code: "NOT_CONFIGURED", message}` |
 | 413 | Over `maxSizeBytes` | `{message}` |
 | 500 | Write failed; detail is logged, not returned | `{message}` |
 
@@ -111,14 +120,28 @@ Delete and download share a locator that applies the same name, traversal and ta
 `INFORMATION_SCHEMA` lists a workspace's views and nothing else, so `ProjectSchemaCache.infoSchemaScan` cannot see files. Without more, an uploaded file would appear in the schema tree (which uses `SHOW FILES`) but not in autocomplete or in Prospector's context. Three pieces close that:
 
 - **`putTable` / `removeTable` (the write path).** After an upload, `ProjectFileResources` probes only the file just written (`ProjectSchemaCache.fileEntry`, a `SELECT * ... LIMIT 1`) and merges it with `putTable`. After a delete it calls `removeTable` for that one entry. Neither rescans the folder, because a whole-folder scan runs one query per file on the request thread inside the cache's monitor. `putTable` deliberately does not bump `scannedAt`. Both are best-effort: a cache failure is logged and never fails a write that has already landed.
-- **`fileScan` (the sweep).** Used on the dataset-scan path, where a sweep is what is being asked for. It lists with `SHOW FILES`, descends into subdirectories, and probes each file. Bounds: 500 probes (`MAX_TABLES_PER_SCHEMA`, enumeration stops one past it), 100 `SHOW FILES` listings (`MAX_FOLDER_LISTINGS`) and 10 levels of depth (`MAX_FOLDER_DEPTH`), with a 30 second deadline on each query. When any bound is hit the result is marked truncated rather than cached as if it were the whole folder. A `SHOW FILES` listing that hits its deadline fails the scan instead of caching a partial result. A per-file probe that hits it does not: the probe's failure is swallowed and the file is cached as a table with no columns, indistinguishable from an unreadable file (the same holds for the single-file probe after an upload). A slow file can therefore produce an empty-schema entry.
+- **`fileScan` (the sweep).** Used on the dataset-scan path, where a sweep is what is being asked for. It lists with `SHOW FILES`, descends into subdirectories, and probes each file. Bounds: 500 probes (`MAX_TABLES_PER_SCHEMA`, enumeration stops one past it), 100 `SHOW FILES` listings (`MAX_FOLDER_LISTINGS`), 10 levels of depth (`MAX_FOLDER_DEPTH`), a 30 second deadline on each query, and a 60 second wall-clock budget for the sweep as a whole (`FILE_SCAN_BUDGET_MS`). The budget is what bounds the sweep's duration: the counted bounds allow 100 listings plus 500 probes, and the per-query deadline would let each of them take 30 seconds while the cache's monitor was held. Once the budget is spent the scan stops listing and stops probing, and returns what it has as `PartialTables`. When any bound is hit the result is marked truncated rather than cached as if it were the whole folder. A `SHOW FILES` listing that hits its deadline fails the scan instead of caching a partial result. A per-file probe that hits it does not: the probe's failure is swallowed and the file is cached as a table with no columns, indistinguishable from an unreadable file (the same holds for the single-file probe after an upload). A slow file can therefore produce an empty-schema entry.
 
 `fileScan` skips dotfiles and `.upload-<uuid>` staging orphans, so they never reach the cache or autocomplete. The schema tree still lists them, because the extension-filter exemption applies to the whole uploads workspace. An administrator hunting orphans will find them in the tree, not in the cache.
+- **One sweep per herd.** `read` tests staleness without the cache's monitor, so N concurrent readers of one stale schema would each queue on the monitor and run a full sweep in turn. The staleness test is therefore made a second time with the monitor held (`scanIfStale`): the first reader scans and the rest are served its result. `scan` itself does not re-check, so an explicit refresh always rescans.
 - **`combinedScan`.** A schema can be referenced both as a plain schema and as one or more upload folders, and the cache holds a single entry per schema path, so the two are scanned together: `infoSchemaScan` plus a `fileScan` per folder.
 
 A file Drill cannot parse (an unreadable file, or one no format plugin claims) is cached as a table with no columns. It does not fail the scan.
 
-Table names in the cache are the path relative to the schema, `<projectId>/<file>`, and are queryable as ``dfs.uploads.`<projectId>/<file>` ``.
+Table names in the cache are the path relative to the schema, `<projectId>/<file>`. `quoteTablePath` turns a schema path and one of those names into the queryable form, ``dfs.`uploads`.`<projectId>/<file>` `` — plugin name unquoted, every workspace part and the relative path backtick-quoted. It is the one place that form is built, and the upload response's `tablePath` comes from it.
+
+## Who can read uploads
+
+The schema tree's project filter is cosmetic. `MetadataResources` is `@RolesAllowed(AUTHENTICATED_ROLE)` for the whole class, and the uploads-workspace exemption applies to any `?path=<project id>`, so any authenticated user can list another project's uploaded file names and read the files themselves with ordinary SQL against `` <plugin>.`<workspace>`.`<otherProjectId>/<file>` ``. `canRead` and `canWrite` gate the project endpoints in this feature; they do not gate the query engine, and nothing here adds a layer that would.
+
+That is inherent to Drill rather than a gap in this feature: a dfs workspace has no per-table ACLs, and every query a user runs is planned against the same storage plugin. Real isolation needs both of:
+
+- `drill.exec.impersonation` enabled, so a query runs as the user who submitted it rather than as the Drillbit; and
+- storage-level permissions underneath, so the file system itself refuses the read. On HDFS or a local filesystem that is POSIX ownership on the project folder; on S3 it is a bucket policy or per-prefix IAM.
+
+With impersonation on, uploads are written as the uploading user (see "How the bytes are written"), so the owner is right from the start — but the permissions on the project folder are whatever the storage default gives, and nothing in Drill tightens them.
+
+Point the target at a workspace dedicated to uploads. Sharing a general-purpose workspace such as `dfs.tmp` means project folders sit beside unrelated data, every project's folder is listable by anyone who can see the workspace, and a workspace-wide permission change affects both.
 
 ## Listing: the extension filter
 
@@ -127,6 +150,6 @@ Table names in the cache are the path relative to the schema, `<projectId>/<file
 ## Frontend
 
 - **Drop surfaces.** `ProjectFileDropZone` wraps the project layout and shows an overlay for drags that carry `Files` (in-app drags such as tree nodes are ignored). `ChatInput` accepts drops when given `onFileDropped`. The Data Sources tab has an "Upload file" button. A drop on the composer calls `markDropHandled` (`utils/dropHandled.ts`) and lets the event bubble, so the project zone resets its overlay but skips its own upload.
-- **`useProjectFileUpload`.** Checks `getUploadStatus` first, uploads, reports the outcome, and invalidates `['schemaCache', projectId]` and `['project', projectId]`. It resolves with the stored file, or undefined on failure or a declined replace.
-- **`useConversationFileDrop`.** Uploads through the same hook, then sends one ordinary user message naming each file and its query path, so Prospector can query it with `execute_sql`. No new Prospector tool. Files dropped together are announced in a single message.
-- **Context menu.** `ContextMenu.tsx` gains Delete (confirms, naming the file) and Download for file nodes under the configured uploads schema in the current project. They are shown only for flat names: a nested file did not come from this feature and the endpoints take a single path segment, so the menu offers neither for it. Download is a plain link to the `/content` URL.
+- **`useProjectFileUpload`.** Checks `getUploadStatus` first, uploads, reports the outcome, and invalidates `['schemaCache', projectId]` and `['project', projectId]`. It resolves with the stored file, or undefined on failure or a declined replace. The success toast names `tablePath`. Failures are reported through `getErrorMessage` (`api/client.ts`), not `error.message`: an axios rejection's own message is "Request failed with status code 403" and the server's reason is in `response.data.message`, so the 403 and the 413 would otherwise never reach the user. `ContextMenu`'s Delete does the same.
+- **`useConversationFileDrop`.** Uploads through the same hook, then sends one ordinary user message naming each file and its `tablePath`, so Prospector can query it with `execute_sql`. No new Prospector tool. Files dropped together are announced in a single message.
+- **Context menu.** `ContextMenu.tsx` gains Delete (confirms, naming the file) and Download for file nodes under the configured uploads schema in the current project. They are shown only for flat names: a nested file did not come from this feature and the endpoints take a single path segment, so the menu offers neither for it. Download is a plain link to the `/content` URL, appended to the document before it is clicked and removed afterwards: Firefox will not follow a click on a detached anchor.
