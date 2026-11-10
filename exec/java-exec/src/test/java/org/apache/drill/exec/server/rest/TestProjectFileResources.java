@@ -25,6 +25,7 @@ import static org.junit.Assert.assertTrue;
 import java.io.File;
 import java.nio.charset.StandardCharsets;
 import java.nio.file.Files;
+import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.Collections;
 import java.util.List;
@@ -587,5 +588,161 @@ public class TestProjectFileResources extends ClusterTest {
     }
     assertEquals("file:/data/p1/a.csv",
         ProjectFileResources.resolveInside(dir, "a.csv").toUri().toString());
+  }
+
+  // ==================== Schema cache ====================
+  //
+  // ProjectSchemaCache.fileScan is exercised from here rather than from
+  // TestProjectSchemaCache: it needs a live Drillbit to run SHOW FILES and the
+  // per-file probe, and TestProjectSchemaCache is a store-only unit test with no
+  // cluster. The upload and delete fixtures above are also what makes a real file
+  // appear in a project folder, which is what the scan is for.
+
+  /** The project's cached {@code dfs.tmp} schema, as the REST endpoint reports it. */
+  private static JsonNode cachedUploadSchema(String projectId) throws Exception {
+    Request request = new Request.Builder()
+        .url("http://localhost:" + portNumber + "/api/v1/projects/" + projectId
+            + "/schema-cache")
+        .build();
+    try (Response r = client.newCall(request).execute()) {
+      assertEquals(200, r.code());
+      return MAPPER.readTree(r.body().string()).path("schemas").path("dfs.tmp");
+    }
+  }
+
+  private static List<String> cachedTableNames(String projectId) throws Exception {
+    List<String> names = new ArrayList<>();
+    for (JsonNode t : cachedUploadSchema(projectId).path("tables")) {
+      names.add(t.path("name").asText());
+    }
+    Collections.sort(names);
+    return names;
+  }
+
+  private static JsonNode cachedTable(String projectId, String name) throws Exception {
+    for (JsonNode t : cachedUploadSchema(projectId).path("tables")) {
+      if (name.equals(t.path("name").asText())) {
+        return t;
+      }
+    }
+    return null;
+  }
+
+  private static List<String> columnNames(JsonNode table) {
+    List<String> names = new ArrayList<>();
+    for (JsonNode c : table.path("columns")) {
+      names.add(c.path("name").asText());
+    }
+    return names;
+  }
+
+  @Test
+  public void testFileScanReturnsOneTablePerFile() throws Exception {
+    configureUploads(1000);
+    String id = seedWritableProject();
+    upload(id, "one.csvh", "a,b\n1,2\n", false, 201);
+    upload(id, "two.csvh", "a,b\n3,4\n", false, 201);
+
+    // Names are the paths relative to the cached schema, so they are queryable as
+    // dfs.tmp.`<project id>/one.csvh`.
+    assertEquals(Arrays.asList(id + "/one.csvh", id + "/two.csvh"), cachedTableNames(id));
+    assertEquals("FILE", cachedTable(id, id + "/one.csvh").path("type").asText());
+  }
+
+  @Test
+  public void testFileScanCachesColumnsFromTheProbe() throws Exception {
+    configureUploads(1000);
+    String id = seedWritableProject();
+    upload(id, "headers.csvh", "a,b\n1,2\n", false, 201);
+
+    JsonNode table = cachedTable(id, id + "/headers.csvh");
+    assertEquals(Arrays.asList("a", "b"), columnNames(table));
+  }
+
+  /**
+   * One file Drill cannot read must not cost the project its schema cache: the probe
+   * fails, that file is cached with no columns, and the readable file beside it still
+   * carries its own.
+   */
+  @Test
+  public void testUnparseableFileIsCachedWithNoColumns() throws Exception {
+    configureUploads(1000);
+    String id = seedWritableProject();
+    upload(id, "notes.docx", "PK\u0003\u0004 not really a document", false, 201);
+    upload(id, "good.csvh", "a,b\n1,2\n", false, 201);
+
+    assertEquals(Arrays.asList(id + "/good.csvh", id + "/notes.docx"), cachedTableNames(id));
+    assertEquals(Collections.<String>emptyList(),
+        columnNames(cachedTable(id, id + "/notes.docx")));
+    assertEquals(Arrays.asList("a", "b"), columnNames(cachedTable(id, id + "/good.csvh")));
+  }
+
+  /**
+   * The second upload lands inside the staleness window of the first scan, so only a
+   * refresh on write can put it in the entry.
+   */
+  @Test
+  public void testUploadRefreshesTheCache() throws Exception {
+    configureUploads(1000);
+    String id = seedWritableProject();
+    upload(id, "first.csvh", "a\n1\n", false, 201);
+    assertEquals(Collections.singletonList(id + "/first.csvh"), cachedTableNames(id));
+
+    upload(id, "second.csvh", "a\n2\n", false, 201);
+    assertEquals(Arrays.asList(id + "/first.csvh", id + "/second.csvh"),
+        cachedTableNames(id));
+  }
+
+  @Test
+  public void testDeleteRefreshesTheCache() throws Exception {
+    configureUploads(1000);
+    String id = seedWritableProject();
+    upload(id, "keep.csvh", "a\n1\n", false, 201);
+    upload(id, "drop.csvh", "a\n2\n", false, 201);
+    assertEquals(2, cachedTableNames(id).size());
+
+    try (Response r = send("DELETE", id, "drop.csvh", "")) {
+      assertEquals(204, r.code());
+    }
+    assertEquals(Collections.singletonList(id + "/keep.csvh"), cachedTableNames(id));
+  }
+
+  /**
+   * Uploads are flat, but a folder can hold subdirectories put there another way, and
+   * Drill reads them as part of the same table set.
+   */
+  @Test
+  public void testFileScanDescendsIntoSubdirectories() throws Exception {
+    configureUploads(1000);
+    String id = seedWritableProject();
+    File sub = new File(projectFolder(id), "nested");
+    assertTrue(sub.mkdirs());
+    Files.write(new File(sub, "deep.csvh").toPath(),
+        "a,b\n1,2\n".getBytes(StandardCharsets.UTF_8));
+
+    upload(id, "top.csvh", "a\n1\n", false, 201);
+
+    assertEquals(Arrays.asList(id + "/nested/deep.csvh", id + "/top.csvh"),
+        cachedTableNames(id));
+    assertEquals(Arrays.asList("a", "b"),
+        columnNames(cachedTable(id, id + "/nested/deep.csvh")));
+  }
+
+  /**
+   * A failed upload can leave a {@code <name>.upload-<uuid>} file behind. Those are not
+   * data the user asked for, so the scan skips them rather than spending a probe on them
+   * and offering a phantom table for completion.
+   */
+  @Test
+  public void testScanSkipsStagedUploadLeftovers() throws Exception {
+    configureUploads(1000);
+    String id = seedWritableProject();
+    upload(id, "real.csvh", "a\n1\n", false, 201);
+    Files.write(new File(projectFolder(id), "real.csvh.upload-" + UUID.randomUUID()).toPath(),
+        "a\n9\n".getBytes(StandardCharsets.UTF_8));
+
+    // The overwrite rescans, so the leftover is in the folder when the scan runs.
+    upload(id, "real.csvh", "a\n2\n", true, 201);
+    assertEquals(Collections.singletonList(id + "/real.csvh"), cachedTableNames(id));
   }
 }

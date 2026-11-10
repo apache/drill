@@ -55,6 +55,9 @@ public class ProjectSchemaCache {
   public static final long STALE_INTERVAL_MS = 5 * 60 * 1000L;
   public static final int MAX_TABLES_PER_SCHEMA = 500;
 
+  /** How far {@link #fileScan} descends into a folder's subdirectories. */
+  public static final int MAX_FOLDER_DEPTH = 10;
+
   private static final Set<String> EXCLUDED_PLUGINS = new HashSet<>(Arrays.asList(
       "cp", "sys", "information_schema"));
 
@@ -271,6 +274,123 @@ public class ProjectSchemaCache {
     }
 
     return new ArrayList<>(byKey.values());
+  }
+
+  /**
+   * Scans the files inside one folder of a file system schema, which
+   * {@link #infoSchemaScan} cannot see: INFORMATION_SCHEMA lists a workspace's views
+   * and nothing else. {@code SHOW FILES} enumerates the folder, descending into
+   * subdirectories, and each file is then probed with {@code SELECT * ... LIMIT 1} for
+   * its columns, the same shape {@code MetadataResources.getFileColumns} uses.
+   *
+   * <p>Each table's name is the file's path relative to {@code schemaPath}, so an upload
+   * in {@code dfs.tmp} under folder {@code p1} is cached as {@code p1/sales.csv} and is
+   * queryable as {@code dfs.tmp.`p1/sales.csv`}.
+   *
+   * <p>Nothing here looks at a file's extension: a probe that throws (an unreadable
+   * file, or one no format plugin claims) yields a table with no columns rather than
+   * ending the scan, so one stray document cannot cost the project its schema cache.
+   * Enumeration stops one past {@link #MAX_TABLES_PER_SCHEMA}, which both bounds the
+   * number of probes and leaves {@link #scan} the overflow it needs to mark the schema
+   * truncated.
+   */
+  public static List<CachedTable> fileScan(String schemaPath, String folder,
+      WorkManager workManager, WebUserConnection conn) throws Exception {
+    List<String> relativePaths = new ArrayList<>();
+    collectFiles(schemaPath, folder, relativePaths, 0, workManager, conn);
+
+    List<CachedTable> tables = new ArrayList<>();
+    for (String relativePath : relativePaths) {
+      CachedTable t = new CachedTable();
+      t.setSchema(schemaPath);
+      t.setName(relativePath);
+      t.setType("FILE");
+      t.setColumns(tables.size() < MAX_TABLES_PER_SCHEMA
+          ? probeColumns(schemaPath, relativePath, workManager, conn)
+          : new ArrayList<>());
+      tables.add(t);
+    }
+    return tables;
+  }
+
+  /**
+   * Appends the paths of the files under {@code folder}, relative to {@code schemaPath},
+   * recursing into subdirectories. Returns early once one more than
+   * {@link #MAX_TABLES_PER_SCHEMA} paths have been collected, or past
+   * {@link #MAX_FOLDER_DEPTH}: without the depth bound a deep tree of empty directories
+   * (or a symlink loop) would keep issuing {@code SHOW FILES} without ever reaching the
+   * file cap.
+   */
+  private static void collectFiles(String schemaPath, String folder, List<String> into,
+      int depth, WorkManager workManager, WebUserConnection conn) throws Exception {
+    if (into.size() > MAX_TABLES_PER_SCHEMA || depth > MAX_FOLDER_DEPTH) {
+      return;
+    }
+    QueryResult result = runQuery(
+        "SHOW FILES IN " + quoteTablePath(schemaPath, folder), workManager, conn);
+    for (Map<String, String> row : result.rows) {
+      String name = row.get("name");
+      if (name == null || name.isEmpty() || isSkippedFile(name)) {
+        continue;
+      }
+      String relativePath = folder + "/" + name;
+      if ("true".equalsIgnoreCase(row.get("isDirectory"))) {
+        collectFiles(schemaPath, relativePath, into, depth + 1, workManager, conn);
+      } else {
+        into.add(relativePath);
+      }
+      if (into.size() > MAX_TABLES_PER_SCHEMA) {
+        return;
+      }
+    }
+  }
+
+  /**
+   * Files the scan has no reason to spend a probe on: the staging file a failed upload
+   * can leave behind, and the hidden files a file system keeps beside a write (such as
+   * the local {@code .crc} sidecars), which Drill itself ignores when reading a folder.
+   */
+  private static boolean isSkippedFile(String name) {
+    return name.startsWith(".") || name.contains(ProjectFileResources.STAGING_SUFFIX);
+  }
+
+  /** The columns {@code SELECT * ... LIMIT 1} reports, or none when the probe fails. */
+  private static List<CachedColumn> probeColumns(String schemaPath, String relativePath,
+      WorkManager workManager, WebUserConnection conn) {
+    List<CachedColumn> columns = new ArrayList<>();
+    try {
+      QueryResult result = runQuery(
+          "SELECT * FROM " + quoteTablePath(schemaPath, relativePath) + " LIMIT 1",
+          workManager, conn);
+      List<String> names = new ArrayList<>(result.columns);
+      for (int i = 0; i < names.size(); i++) {
+        CachedColumn c = new CachedColumn();
+        c.setName(names.get(i));
+        c.setType(result.metadata != null && i < result.metadata.size()
+            ? result.metadata.get(i) : "ANY");
+        columns.add(c);
+      }
+    } catch (Exception e) {
+      // Drill decides at query time what it can read. A file it cannot is cached
+      // without columns, and the scan carries on to the next one.
+      logger.debug("Column probe failed for {}.`{}`: {}", schemaPath, relativePath,
+          e.getMessage());
+    }
+    return columns;
+  }
+
+  /**
+   * {@code dfs.tmp} + {@code p1/sales.csv} to {@code dfs.`tmp`.`p1/sales.csv`}: the
+   * plugin name stays unquoted, each workspace part and the relative path are
+   * backtick-quoted.
+   */
+  private static String quoteTablePath(String schemaPath, String relativePath) {
+    String[] parts = schemaPath.split("\\.");
+    StringBuilder sb = new StringBuilder(parts[0]);
+    for (int i = 1; i < parts.length; i++) {
+      sb.append(".`").append(parts[i].replace("`", "``")).append("`");
+    }
+    return sb.append(".`").append(relativePath.replace("`", "``")).append("`").toString();
   }
 
   private static QueryResult runQuery(String sql, WorkManager workManager,

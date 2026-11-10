@@ -881,7 +881,7 @@ public class ProjectResources {
         project.setUpdatedAt(Instant.now().toEpochMilli());
         store.put(id, project);
 
-        scanDatasetSchema(id, datasetRef.getSchema());
+        scanDatasetSchema(id, datasetRef);
 
         return Response.ok(project).build();
       }
@@ -956,7 +956,7 @@ public class ProjectResources {
       for (DatasetRef d : project.getDatasets()) {
         String schema = d.getSchema();
         if (schema != null && scanned.add(schema)) {
-          scanDatasetSchema(id, schema);
+          scanDatasetSchema(id, d);
         }
       }
       ProjectSchemaCacheEntry entry = schemaCache().getEntry(id);
@@ -2050,13 +2050,22 @@ public class ProjectResources {
     return ProjectSchemaCache.get(storeProvider, workManager);
   }
 
-  private void scanDatasetSchema(String projectId, String schema) {
+  /**
+   * Scans the schema one dataset reference points at. A {@code folder} reference names
+   * a directory of files, which INFORMATION_SCHEMA does not list, so it scans with
+   * {@link ProjectSchemaCache#fileScan} instead.
+   */
+  private void scanDatasetSchema(String projectId, DatasetRef ref) {
+    String schema = ref == null ? null : ref.getSchema();
     if (schema == null || !ProjectSchemaCache.isScannable(storageRegistry, schema)) {
       return;
     }
+    final String folder = ProjectFileResources.FOLDER_DATASET_TYPE.equals(ref.getType())
+        ? ref.getTable() : null;
     try {
-      schemaCache().scan(projectId, schema,
-          s -> ProjectSchemaCache.infoSchemaScan(s, workManager, webUserConnection));
+      schemaCache().scan(projectId, schema, s -> folder == null
+          ? ProjectSchemaCache.infoSchemaScan(s, workManager, webUserConnection)
+          : ProjectSchemaCache.fileScan(s, folder, workManager, webUserConnection));
     } catch (Exception e) {
       // Best-effort: a scan failure must never fail the triggering request.
       logger.warn("Schema scan failed for project {} schema {}: {}", projectId, schema, e.getMessage());

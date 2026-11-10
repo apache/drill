@@ -95,12 +95,12 @@ public class ProjectFileResources {
 
   private static final Logger logger = LoggerFactory.getLogger(ProjectFileResources.class);
 
-  private static final String FOLDER_DATASET_TYPE = "folder";
+  static final String FOLDER_DATASET_TYPE = "folder";
   /** Headroom for the multipart boundaries and part headers around the file itself. */
   private static final long MULTIPART_ENVELOPE_BYTES = 8192;
 
   /** {@code .upload-} plus a UUID, the suffix a staged write adds to the name. */
-  private static final String STAGING_SUFFIX = ".upload-";
+  static final String STAGING_SUFFIX = ".upload-";
   private static final int STAGING_SUFFIX_BYTES = STAGING_SUFFIX.length() + 36;
   /**
    * The longest name accepted, leaving room for the staging suffix inside the 255 bytes
@@ -126,6 +126,9 @@ public class ProjectFileResources {
 
   @Inject
   StoragePluginRegistry storageRegistry;
+
+  @Inject
+  WebUserConnection webUserConnection;
 
   /** The 201 body: where the uploaded file can be queried. */
   public static class UploadResponse {
@@ -322,6 +325,7 @@ public class ProjectFileResources {
     }
 
     registerFolderDataset(store, id, cfg);
+    refreshFolderSchema(id, cfg);
     logger.info("User '{}' uploaded '{}' into project {} at {}", user, name, id, target);
     return written;
   }
@@ -336,6 +340,7 @@ public class ProjectFileResources {
     Path target;
     String name;
     String user;
+    UploadConfig cfg;
   }
 
   /**
@@ -378,6 +383,7 @@ public class ProjectFileResources {
       loc.refusal = error(Response.Status.CONFLICT, NOT_CONFIGURED);
       return loc;
     }
+    loc.cfg = cfg;
     loc.fsPlugin = fileSystemPlugin(cfg.plugin);
     if (loc.fsPlugin == null) {
       loc.refusal = error(Response.Status.CONFLICT, NOT_CONFIGURED);
@@ -434,6 +440,7 @@ public class ProjectFileResources {
       logger.error("Failed to delete '{}' at {}", loc.name, loc.target, e);
       return error(Response.Status.INTERNAL_SERVER_ERROR, "Failed to delete the file");
     }
+    refreshFolderSchema(id, loc.cfg);
     logger.info("User '{}' deleted '{}' from project {} at {}", loc.user, loc.name, id,
         loc.target);
     return Response.noContent().build();
@@ -631,6 +638,23 @@ public class ProjectFileResources {
           FOLDER_DATASET_LABEL));
       project.setUpdatedAt(Instant.now().toEpochMilli());
       store.put(id, project);
+    }
+  }
+
+  /**
+   * Re-scans the project's folder after a write or a delete, so the file is in
+   * autocomplete and in the AI assistant's context without waiting out
+   * {@link ProjectSchemaCache#STALE_INTERVAL_MS}. Best-effort: a scan failure must
+   * never fail the upload or delete that has already happened on disk.
+   */
+  private void refreshFolderSchema(String id, UploadConfig cfg) {
+    String schema = cfg.plugin + "." + cfg.workspace;
+    try {
+      ProjectSchemaCache.get(storeProvider, workManager).scan(id, schema,
+          s -> ProjectSchemaCache.fileScan(s, id, workManager, webUserConnection));
+    } catch (Exception e) {
+      logger.warn("Could not refresh the schema cache for project {} schema {}: {}",
+          id, schema, e.getMessage());
     }
   }
 

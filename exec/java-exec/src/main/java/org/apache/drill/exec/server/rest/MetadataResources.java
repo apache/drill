@@ -842,10 +842,15 @@ public class MetadataResources {
       }
       // schema must actually belong to the project
       String trackedSchema = null;
+      String trackedFolder = null;
       for (ProjectResources.DatasetRef d : project.getDatasets()) {
         String sp = d.getSchema();
         if (sp != null && (schema.equals(sp) || schema.startsWith(sp + "."))) {
           trackedSchema = sp;
+          // A folder reference names a directory of files, which INFORMATION_SCHEMA
+          // does not list; those scan with fileScan instead.
+          trackedFolder = ProjectFileResources.FOLDER_DATASET_TYPE.equals(d.getType())
+              ? d.getTable() : null;
           break;
         }
       }
@@ -853,9 +858,11 @@ public class MetadataResources {
         return null;
       }
       final String scanSchema = trackedSchema;
+      final String scanFolder = trackedFolder;
       return ProjectSchemaCache.get(storeProvider, workManager)
-          .read(projectId, scanSchema,
-              s -> ProjectSchemaCache.infoSchemaScan(s, workManager, webUserConnection));
+          .read(projectId, scanSchema, s -> scanFolder == null
+              ? ProjectSchemaCache.infoSchemaScan(s, workManager, webUserConnection)
+              : ProjectSchemaCache.fileScan(s, scanFolder, workManager, webUserConnection));
     } catch (Exception e) {
       logger.debug("Cache lookup failed for project {} schema {}: {}", projectId, schema, e.getMessage());
       return null;
