@@ -34,7 +34,7 @@ import { usePlugins } from './hooks';
 import { buildPluginNode } from './TreeNodeBuilder';
 import { getUploadStatus } from '../../api/uploads';
 import ContextMenu from './ContextMenu';
-import type { NodeType } from './ContextMenu';
+import type { NodeType, UploadedFileProps } from './ContextMenu';
 import { useFavorites } from './useFavorites';
 import { useSchemaUsage } from '../../hooks/useSchemaUsage';
 import ColumnStats from './ColumnStats';
@@ -1189,6 +1189,13 @@ export default function SchemaExplorer({ onInsertText, onSelectQuery, onOpenInNe
     queryClient.invalidateQueries({ queryKey: ['schemaCache', projectId] });
   }, [queryClient, projectId]);
 
+  const uploadedFileProps = useMemo<UploadedFileProps>(
+    () => (projectId && uploadSchema
+      ? { projectId, uploadSchema, onFileDeleted: handleUploadedFileDeleted }
+      : {}),
+    [projectId, uploadSchema, handleUploadedFileDeleted],
+  );
+
   // ---------- Title renderer that wraps each node in a ContextMenu ----------
 
   const titleRender = useCallback(
@@ -1239,15 +1246,13 @@ export default function SchemaExplorer({ onInsertText, onSelectQuery, onOpenInNe
           onToggleFavorite={toggleFavorite}
           dataFormat={dataFormat}
           onOpenInNewTab={onOpenInNewTab}
-          projectId={projectId}
-          uploadSchema={uploadSchema}
-          onFileDeleted={handleUploadedFileDeleted}
+          {...uploadedFileProps}
         >
           <span>{nodeData.title as React.ReactNode}</span>
         </ContextMenu>
       );
     },
-    [onInsertText, handleRefreshNode, handleShowStats, handleShowFileInfo, handleEditPlugin, handleProfileData, lookupFileInfo, isFavorite, toggleFavorite, onOpenInNewTab, projectId, uploadSchema, handleUploadedFileDeleted],
+    [onInsertText, handleRefreshNode, handleShowStats, handleShowFileInfo, handleEditPlugin, handleProfileData, lookupFileInfo, isFavorite, toggleFavorite, onOpenInNewTab, uploadedFileProps],
   );
 
   // ---------- Render ----------

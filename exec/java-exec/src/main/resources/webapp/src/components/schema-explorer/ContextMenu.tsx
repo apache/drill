@@ -40,7 +40,7 @@ import { buildSessionizeSql, isPacketCaptureFormat } from '../../utils/sessioniz
 
 export type NodeType = 'plugin' | 'schema' | 'table' | 'file' | 'column';
 
-export interface ContextMenuProps {
+interface ContextMenuBaseProps {
   nodeType: NodeType;
   nodeKey: string;
   qualifiedName: string;
@@ -59,13 +59,24 @@ export interface ContextMenuProps {
   /** File extension, or the shared format of a folder's files; enables format-specific items */
   dataFormat?: string;
   onOpenInNewTab?: (sql: string, tabName?: string) => void;
-  /** The current project; uploaded files live in a folder of this name */
-  projectId?: string;
-  /** The configured upload target as "<plugin>.<workspace>" */
-  uploadSchema?: string;
-  /** Called after an uploaded file has been deleted */
-  onFileDeleted?: () => void;
 }
+
+/**
+ * Uploaded-file support is all or nothing: naming an upload schema obliges the caller to say what
+ * happens after a delete, so the cache invalidation cannot be forgotten.
+ */
+export type UploadedFileProps =
+  | { projectId?: undefined; uploadSchema?: undefined; onFileDeleted?: undefined }
+  | {
+      /** The current project; uploaded files live in a folder of this name */
+      projectId: string;
+      /** The configured upload target as "<plugin>.<workspace>" */
+      uploadSchema: string;
+      /** Called after an uploaded file has been deleted */
+      onFileDeleted: () => void;
+    };
+
+export type ContextMenuProps = ContextMenuBaseProps & UploadedFileProps;
 
 /**
  * For a file node inside this project's upload folder, the file's name relative to that folder;
@@ -77,7 +88,13 @@ function uploadedFileName(nodeKey: string, projectId?: string, uploadSchema?: st
     return undefined;
   }
   const path = nodeKey.slice(prefix.length);
-  return path !== projectId && isInFolder(path, projectId) ? path.slice(projectId.length + 1) : undefined;
+  if (path === projectId || !isInFolder(path, projectId)) {
+    return undefined;
+  }
+  // Uploads are flat in the project folder and the endpoints take a single path segment, so a
+  // nested file did not come from here and cannot be deleted or downloaded through them.
+  const name = path.slice(projectId.length + 1);
+  return name.includes('/') ? undefined : name;
 }
 
 function copyToClipboard(text: string) {

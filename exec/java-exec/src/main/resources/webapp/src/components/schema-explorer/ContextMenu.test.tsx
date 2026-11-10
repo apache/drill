@@ -64,6 +64,7 @@ describe('ContextMenu uploaded-file items', () => {
     projectId: 'proj-a',
     uploadSchema: 'dfs.uploads',
     nodeKey: 'file:dfs.uploads:proj-a/data.csv',
+    onFileDeleted: vi.fn(),
   };
 
   beforeEach(() => {
@@ -83,12 +84,14 @@ describe('ContextMenu uploaded-file items', () => {
     for (const nodeKey of [
       'file:dfs.uploads:proj-a-backup/data.csv', // sibling folder sharing a prefix
       'file:dfs.uploads:proj-b/data.csv',
+      'file:dfs.uploads:proj-a/sub/x.csv', // nested: the endpoints take one path segment
       'file:dfs.uploads:proj-a', // the folder name itself, not a file inside
       'file:dfs.tmp:proj-a/data.csv', // other schema
     ]) {
       const { unmount } = render(
         <ContextMenu nodeType="file" nodeKey={nodeKey} qualifiedName="q"
-          projectId={upload.projectId} uploadSchema={upload.uploadSchema}>
+          projectId={upload.projectId} uploadSchema={upload.uploadSchema}
+          onFileDeleted={upload.onFileDeleted}>
           <span>n</span>
         </ContextMenu>,
       );
@@ -116,5 +119,17 @@ describe('ContextMenu uploaded-file items', () => {
     fireEvent.click(await screen.findByRole('button', { name: /^Delete$/ }));
     await waitFor(() => expect(onRefreshNode).toHaveBeenCalledWith('schema:dfs.uploads'));
     expect(onFileDeleted).toHaveBeenCalled();
+  });
+
+  it('reports a failed delete and leaves the tree and cache alone', async () => {
+    vi.mocked(deleteProjectFile).mockRejectedValue(new Error('boom'));
+    const onRefreshNode = vi.fn();
+    const onFileDeleted = vi.fn();
+    openMenu({ ...upload, onRefreshNode, onFileDeleted });
+    fireEvent.click(screen.getByRole('menuitem', { name: /Delete/ }));
+    fireEvent.click(await screen.findByRole('button', { name: /^Delete$/ }));
+    expect(await screen.findByText('Could not delete data.csv: boom')).toBeTruthy();
+    expect(onRefreshNode).not.toHaveBeenCalled();
+    expect(onFileDeleted).not.toHaveBeenCalled();
   });
 });
