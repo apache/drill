@@ -283,6 +283,10 @@ public class TestProjectFileResources extends ClusterTest {
     assertNull(ProjectFileResources.safeName("  "));
     assertNull(ProjectFileResources.safeName(null));
     assertNull(ProjectFileResources.safeName("a\nFAKE LOG LINE.csv"));
+    // Long enough that the staging suffix would push the path component past 255 bytes.
+    assertNull(ProjectFileResources.safeName(new String(new char[212]).replace('\0', 'a')));
+    assertEquals(211, ProjectFileResources.safeName(
+        new String(new char[211]).replace('\0', 'a')).length());
     assertNull(ProjectFileResources.safeName("a\rb.csv"));
     assertEquals("sales.csv", ProjectFileResources.safeName(" sales.csv "));
     // Format-agnostic: an extension Drill cannot read is still a legal upload name.
@@ -361,8 +365,47 @@ public class TestProjectFileResources extends ClusterTest {
         ProjectFileResources.projectDir(cfg, s3, "p1").toUri().toString());
   }
 
+  /**
+   * The window the staging exists for: the move onto the target fails, so neither the
+   * bytes already there nor the ones just uploaded may be thrown away. Forced by putting
+   * a non-empty directory where the file would go, which no rename can land on and no
+   * non-recursive delete can clear. No production code is bent to make this happen.
+   */
+  @Test
+  public void testFailedMoveKeepsThePriorContentAndTheUploadedBytes() throws Exception {
+    configureUploads(1000);
+    String id = seedWritableProject();
+    File blocked = new File(projectFolder(id), "blocked.csv");
+    File prior = new File(blocked, "part-0");
+    assertTrue(blocked.mkdirs());
+    Files.write(prior.toPath(), "prior".getBytes(StandardCharsets.UTF_8));
+
+    upload(id, "blocked.csv", "new bytes", true, 500);
+
+    assertEquals("prior", contents(prior));
+    File[] staged = stagedFiles(id);
+    assertEquals(1, staged.length);
+    assertEquals("new bytes", contents(staged[0]));
+  }
+
+  @Test
+  public void testRejectsOverlongName() throws Exception {
+    configureUploads(1000);
+    String id = seedWritableProject();
+    String tooLong = new String(new char[212]).replace('\0', 'a') + ".csv";
+    JsonNode body = upload(id, tooLong, "x\n1\n", false, 400);
+    assertTrue(body.get("message").asText(), body.get("message").asText().contains("name"));
+    assertFalse(projectFolder(id).exists());
+  }
+
+  /**
+   * Staged uploads left in a project folder. Hidden files are skipped: the local file
+   * system keeps a {@code .<name>.crc} sidecar beside each one, which Drill ignores when
+   * it reads the folder.
+   */
   private static File[] stagedFiles(String projectId) {
-    File[] staged = projectFolder(projectId).listFiles((d, n) -> n.contains(".upload-"));
+    File[] staged = projectFolder(projectId)
+        .listFiles((d, n) -> n.contains(".upload-") && !n.startsWith("."));
     return staged == null ? new File[0] : staged;
   }
 

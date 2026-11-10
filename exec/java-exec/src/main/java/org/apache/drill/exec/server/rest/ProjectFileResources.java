@@ -60,6 +60,7 @@ import org.slf4j.LoggerFactory;
 
 import java.io.IOException;
 import java.lang.annotation.Retention;
+import java.nio.charset.StandardCharsets;
 import java.lang.annotation.RetentionPolicy;
 import java.io.InputStream;
 import java.io.OutputStream;
@@ -92,6 +93,16 @@ public class ProjectFileResources {
   private static final String FOLDER_DATASET_TYPE = "folder";
   /** Headroom for the multipart boundaries and part headers around the file itself. */
   private static final long MULTIPART_ENVELOPE_BYTES = 8192;
+
+  /** {@code .upload-} plus a UUID, the suffix a staged write adds to the name. */
+  private static final String STAGING_SUFFIX = ".upload-";
+  private static final int STAGING_SUFFIX_BYTES = STAGING_SUFFIX.length() + 36;
+  /**
+   * The longest name accepted, leaving room for the staging suffix inside the 255 bytes
+   * that file systems commonly allow a single path component. Without this a name near
+   * the limit would pass here and then fail at create time as a 500.
+   */
+  private static final int MAX_NAME_BYTES = 255 - STAGING_SUFFIX_BYTES;
   private static final String FOLDER_DATASET_LABEL = "Uploaded files";
 
   /** Shown whenever the cluster has no usable upload target. */
@@ -181,16 +192,16 @@ public class ProjectFileResources {
   // ==================== Shared helpers (also used by delete and download) ====================
 
   /**
-   * The upload name a client asked for, or null when it is not a plain file name.
-   * A name carrying a path separator or a parent reference is refused outright rather
-   * than scrubbed, so a client never silently writes somewhere it did not name.
+   * The upload name a client asked for, or null when it is not a plain file name that
+   * fits. A name carrying a path separator or a parent reference is refused outright
+   * rather than scrubbed, so a client never silently writes somewhere it did not name.
    */
   public static String safeName(String raw) {
     if (raw == null) {
       return null;
     }
     String name = raw.trim();
-    if (name.isEmpty()) {
+    if (name.isEmpty() || name.getBytes(StandardCharsets.UTF_8).length > MAX_NAME_BYTES) {
       return null;
     }
     if (name.contains("/") || name.contains("\\") || name.contains("..")) {
@@ -248,8 +259,9 @@ public class ProjectFileResources {
     }
     String name = safeName(partMeta.getFileName());
     if (name == null) {
-      return error(Response.Status.BAD_REQUEST,
-          "Invalid file name: a name may not be empty or contain '/', '\\' or '..'");
+      return error(Response.Status.BAD_REQUEST, "Invalid file name: it is empty, longer "
+          + "than " + MAX_NAME_BYTES + " bytes, or contains '/', '\\', '..' or a control "
+          + "character");
     }
 
     UploadConfig cfg = UploadConfigResources.current(storeProvider);
@@ -337,7 +349,7 @@ public class ProjectFileResources {
 
     // The bytes land beside the target under a temporary name and are moved into place
     // only once they are all there, so an abort never costs the file already uploaded.
-    Path staged = new Path(dir, name + ".upload-" + UUID.randomUUID());
+    Path staged = new Path(dir, name + STAGING_SUFFIX + UUID.randomUUID());
 
     // One byte past the cap is enough to know the part is too big, and the part is
     // never held in memory: these are data files.
@@ -355,19 +367,41 @@ public class ProjectFileResources {
           "File exceeds the maximum upload size of " + maxSizeBytes + " bytes");
     }
 
-    // A rename onto an existing name is not portable, so clear the way first. Reached
-    // only when overwrite was asked for; the collision check above covers the rest.
-    if (overwrite) {
-      fs.delete(target, false);
-    }
-    if (!fs.rename(staged, target)) {
-      discard(fs, staged);
-      throw new IOException("Could not move the uploaded file into place");
-    }
+    commit(fs, staged, target, overwrite, name);
 
     return Response.status(Response.Status.CREATED)
         .entity(new UploadResponse(name, name, schema))
         .build();
+  }
+
+  /**
+   * Moves the staged bytes onto the target. The way is cleared first, for an overwrite
+   * only; every other case has already passed the collision check. Renaming optimistically
+   * and clearing only on refusal would be worse: Hadoop's {@code rename} moves the source
+   * <em>into</em> a directory that happens to sit at the target name instead of failing,
+   * which would report a successful upload sitting at the wrong path.
+   *
+   * <p>A failure here never discards the staged file: it holds the only copy of what the
+   * user uploaded, and leaving it under a recoverable name beats losing it. Its path goes
+   * to the log so an administrator can put it right.
+   */
+  private static void commit(FileSystem fs, Path staged, Path target, boolean overwrite,
+      String name) throws IOException {
+    try {
+      if (overwrite) {
+        fs.delete(target, false);
+      }
+      if (fs.rename(staged, target)) {
+        return;
+      }
+    } catch (IOException e) {
+      logger.error("Could not move upload '{}' onto {}. The uploaded bytes remain at {}",
+          name, target, staged, e);
+      throw new IOException("Could not move the uploaded file into place");
+    }
+    logger.error("Could not move upload '{}' onto {}. The uploaded bytes remain at {}",
+        name, target, staged);
+    throw new IOException("Could not move the uploaded file into place");
   }
 
   private static void discard(FileSystem fs, Path staged) {
