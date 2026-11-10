@@ -421,6 +421,8 @@ public class TestProjectFileResources extends ClusterTest {
         + "/api/v1/projects/" + projectId + "/files/" + nameSegment + suffix);
     if ("DELETE".equals(method)) {
       b.delete();
+    } else if ("HEAD".equals(method)) {
+      b.head();
     } else {
       b.get();
     }
@@ -538,5 +540,52 @@ public class TestProjectFileResources extends ClusterTest {
         assertEquals(name, 400, r.code());
       }
     }
+  }
+
+  /** HEAD is auto-served from the GET handler with the body dropped; it must not leak. */
+  @Test
+  public void testHeadOnDownloadSucceedsWithoutBody() throws Exception {
+    configureUploads(1000);
+    String id = seedWritableProject();
+    upload(id, "h.csv", "a\n1\n", false, 201);
+    try (Response r = send("HEAD", id, "h.csv", "/content")) {
+      assertEquals(200, r.code());
+      assertEquals(0, r.body().bytes().length);
+    }
+    try (Response r = send("HEAD", id, "nope.csv", "/content")) {
+      assertEquals(404, r.code());
+    }
+  }
+
+  @Test
+  public void testDeleteOfADirectoryIsNotFoundAndLeavesItIntact() throws Exception {
+    configureUploads(1000);
+    String id = seedWritableProject();
+    File dir = new File(projectFolder(id), "sub");
+    assertTrue(dir.mkdirs());
+    Files.write(new File(dir, "inner.csv").toPath(), "x".getBytes(StandardCharsets.UTF_8));
+    try (Response r = send("DELETE", id, "sub", "")) {
+      assertEquals(404, r.code());
+    }
+    assertTrue(new File(dir, "inner.csv").exists());
+  }
+
+  /**
+   * Called directly: Jetty and OkHttp normalize "." away before any handler sees it, so
+   * it cannot be sent over HTTP. This is the check upload, delete and download share.
+   */
+  @Test
+  public void testResolveInsideRefusesNamesThatEscapeTheFolder() {
+    org.apache.hadoop.fs.Path dir = new org.apache.hadoop.fs.Path(new org.apache.hadoop.fs.Path("file:///"), "data/p1");
+    for (String name : Arrays.asList(".", "foo:bar")) {
+      try {
+        ProjectFileResources.resolveInside(dir, name);
+        org.junit.Assert.fail("expected a refusal for " + name);
+      } catch (IllegalArgumentException expected) {
+        assertTrue(expected.getMessage(), expected.getMessage().contains("name"));
+      }
+    }
+    assertEquals("file:/data/p1/a.csv",
+        ProjectFileResources.resolveInside(dir, "a.csv").toUri().toString());
   }
 }

@@ -235,6 +235,28 @@ public class ProjectFileResources {
         new Path(ws.getLocation(), projectId));
   }
 
+  /**
+   * The path of {@code name} inside {@code dir}, or an {@link IllegalArgumentException}
+   * whose message is safe to return to the client. The second, independent traversal
+   * guard behind {@link #safeName}: it lets through names that still do not resolve
+   * inside the project folder, such as "." or a scheme-bearing "foo:bar" that replaces
+   * the parent outright. Upload, delete and download all resolve through here.
+   */
+  static Path resolveInside(Path dir, String name) {
+    Path target;
+    try {
+      target = new Path(dir, name);
+    } catch (IllegalArgumentException e) {
+      throw new IllegalArgumentException("Invalid file name: it cannot be resolved");
+    }
+    String dirUri = dir.toUri().normalize().toString();
+    if (!target.toUri().normalize().toString().startsWith(dirUri + "/")) {
+      throw new IllegalArgumentException(
+          "Invalid file name: it does not resolve inside the project folder");
+    }
+    return target;
+  }
+
   // ==================== Endpoint ====================
 
   @POST
@@ -285,19 +307,11 @@ public class ProjectFileResources {
           + " The configured workspace '" + cfg.workspace + "' no longer exists.");
     }
 
-    // Second, independent traversal guard: safeName lets through names that still do not
-    // resolve inside the project folder, such as "." or a scheme-bearing "foo:bar" that
-    // replaces the parent outright.
     Path target;
     try {
-      target = new Path(dir, name);
+      target = resolveInside(dir, name);
     } catch (IllegalArgumentException e) {
-      return error(Response.Status.BAD_REQUEST, "Invalid file name: it cannot be resolved");
-    }
-    String dirUri = dir.toUri().normalize().toString();
-    if (!target.toUri().normalize().toString().startsWith(dirUri + "/")) {
-      return error(Response.Status.BAD_REQUEST,
-          "Invalid file name: it does not resolve inside the project folder");
+      return error(Response.Status.BAD_REQUEST, e.getMessage());
     }
 
     String schema = cfg.plugin + "." + cfg.workspace + "." + id;
@@ -376,19 +390,10 @@ public class ProjectFileResources {
       return loc;
     }
 
-    // Second traversal guard, as in upload: "." and a scheme-bearing "foo:bar" pass
-    // safeName but do not resolve to a file inside the project folder.
     try {
-      loc.target = new Path(dir, loc.name);
+      loc.target = resolveInside(dir, loc.name);
     } catch (IllegalArgumentException e) {
-      loc.refusal = error(Response.Status.BAD_REQUEST,
-          "Invalid file name: it cannot be resolved");
-      return loc;
-    }
-    String dirUri = dir.toUri().normalize().toString();
-    if (!loc.target.toUri().normalize().toString().startsWith(dirUri + "/")) {
-      loc.refusal = error(Response.Status.BAD_REQUEST,
-          "Invalid file name: it does not resolve inside the project folder");
+      loc.refusal = error(Response.Status.BAD_REQUEST, e.getMessage());
     }
     return loc;
   }
@@ -446,15 +451,14 @@ public class ProjectFileResources {
     if (loc.refusal != null) {
       return loc.refusal;
     }
-    InputStream in;
     try {
-      // Opened here, as the user, so a missing file is still a 404 and the stream that is
-      // handed to the response already carries the user's file system.
-      in = asUser(loc.user, () -> {
-        FileSystem fs = FileSystem.get(URI.create(loc.fsConfig.getConnection()),
-            loc.fsPlugin.getFsConf());
-        return isFile(fs, loc.target) ? fs.open(loc.target) : null;
-      });
+      // Checked here so a missing file is still a 404. The stream is not opened until the
+      // body is written, so its lifetime is the write's: a HEAD, or a failure before the
+      // entity runs, never holds a handle.
+      boolean present = asUser(loc.user, () -> isFile(openFs(loc), loc.target));
+      if (!present) {
+        return error(Response.Status.NOT_FOUND, "File not found");
+      }
     } catch (InterruptedException e) {
       Thread.currentThread().interrupt();
       throw new DrillRuntimeException("Download interrupted", e);
@@ -462,17 +466,25 @@ public class ProjectFileResources {
       logger.error("Failed to open '{}' at {}", loc.name, loc.target, e);
       return error(Response.Status.INTERNAL_SERVER_ERROR, "Failed to read the file");
     }
-    if (in == null) {
-      return error(Response.Status.NOT_FOUND, "File not found");
-    }
     StreamingOutput body = out -> {
-      try (InputStream source = in) {
-        IOUtils.copyLarge(source, out);
+      try {
+        try (InputStream source = asUser(loc.user, () -> openFs(loc).open(loc.target))) {
+          IOUtils.copyLarge(source, out);
+        }
+      } catch (IOException e) {
+        throw e;
+      } catch (Exception e) {
+        logger.error("Failed to stream '{}' at {}", loc.name, loc.target, e);
+        throw new IOException("Failed to read the file");
       }
     };
     return Response.ok(body, MediaType.APPLICATION_OCTET_STREAM)
         .header("Content-Disposition", contentDisposition(loc.name))
         .build();
+  }
+
+  private static FileSystem openFs(Located loc) throws IOException {
+    return FileSystem.get(URI.create(loc.fsConfig.getConnection()), loc.fsPlugin.getFsConf());
   }
 
   private static boolean isFile(FileSystem fs, Path path) throws IOException {
