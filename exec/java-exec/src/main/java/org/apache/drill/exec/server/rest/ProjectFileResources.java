@@ -24,12 +24,16 @@ import io.swagger.v3.oas.annotations.tags.Tag;
 import jakarta.annotation.security.RolesAllowed;
 import jakarta.inject.Inject;
 import jakarta.ws.rs.Consumes;
+import jakarta.ws.rs.NameBinding;
 import jakarta.ws.rs.POST;
 import jakarta.ws.rs.PathParam;
 import jakarta.ws.rs.Produces;
 import jakarta.ws.rs.QueryParam;
+import jakarta.ws.rs.container.ContainerRequestContext;
+import jakarta.ws.rs.container.ContainerRequestFilter;
 import jakarta.ws.rs.core.MediaType;
 import jakarta.ws.rs.core.Response;
+import jakarta.ws.rs.ext.Provider;
 import org.apache.commons.io.IOUtils;
 import org.apache.drill.common.exceptions.DrillRuntimeException;
 import org.apache.drill.exec.ExecConstants;
@@ -55,6 +59,8 @@ import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
 import java.io.IOException;
+import java.lang.annotation.Retention;
+import java.lang.annotation.RetentionPolicy;
 import java.io.InputStream;
 import java.io.OutputStream;
 import java.net.URI;
@@ -78,11 +84,14 @@ import java.util.UUID;
 @jakarta.ws.rs.Path("/api/v1/projects/{id}/files")
 @Tag(name = "Projects", description = "APIs for managing data analytics projects")
 @RolesAllowed(DrillUserPrincipal.AUTHENTICATED_ROLE)
+@ProjectFileResources.BoundedUpload
 public class ProjectFileResources {
 
   private static final Logger logger = LoggerFactory.getLogger(ProjectFileResources.class);
 
   private static final String FOLDER_DATASET_TYPE = "folder";
+  /** Headroom for the multipart boundaries and part headers around the file itself. */
+  private static final long MULTIPART_ENVELOPE_BYTES = 8192;
   private static final String FOLDER_DATASET_LABEL = "Uploaded files";
 
   /** Shown whenever the cluster has no usable upload target. */
@@ -120,6 +129,55 @@ public class ProjectFileResources {
     }
   }
 
+  /** Binds {@link UploadSizeFilter} to this resource and nothing else. */
+  @NameBinding
+  @Retention(RetentionPolicy.RUNTIME)
+  public @interface BoundedUpload {
+  }
+
+  /**
+   * Refuses an over-large request from its {@code Content-Length} before the entity is
+   * read. Without this the cap would bound only what is kept: Jersey spools any part
+   * over a few kilobytes to the Drillbit's temp directory to satisfy the
+   * {@code @FormDataParam} injection, which happens after request filters but before the
+   * handler runs. A request that declares no length still spools, so this narrows the
+   * exposure rather than closing it.
+   */
+  @Provider
+  @BoundedUpload
+  public static class UploadSizeFilter implements ContainerRequestFilter {
+
+    @Inject
+    PersistentStoreProvider storeProvider;
+
+    @Override
+    public void filter(ContainerRequestContext request) {
+      long declared = request.getLength();
+      if (declared < 0) {
+        return;
+      }
+      UploadConfig cfg = UploadConfigResources.current(storeProvider);
+      if (cfg == null) {
+        return;
+      }
+      if (declared > allowedRequestBytes(cfg.maxSizeBytes)) {
+        request.abortWith(error(Response.Status.REQUEST_ENTITY_TOO_LARGE,
+            "File exceeds the maximum upload size of " + cfg.maxSizeBytes + " bytes"));
+      }
+    }
+  }
+
+  /**
+   * The largest whole request a part of {@code maxSizeBytes} can arrive in. The request
+   * carries the multipart boundaries and part headers as well as the file, so comparing
+   * the raw {@code Content-Length} against the cap would reject a part that is exactly at
+   * it. Saturates rather than overflowing.
+   */
+  static long allowedRequestBytes(long maxSizeBytes) {
+    long allowed = maxSizeBytes + MULTIPART_ENVELOPE_BYTES;
+    return allowed < maxSizeBytes ? Long.MAX_VALUE : allowed;
+  }
+
   // ==================== Shared helpers (also used by delete and download) ====================
 
   /**
@@ -137,6 +195,12 @@ public class ProjectFileResources {
     }
     if (name.contains("/") || name.contains("\\") || name.contains("..")) {
       return null;
+    }
+    // A control character in a name would forge lines in the log that records it.
+    for (int i = 0; i < name.length(); i++) {
+      if (Character.isISOControl(name.charAt(i))) {
+        return null;
+      }
     }
     return name;
   }
@@ -204,9 +268,15 @@ public class ProjectFileResources {
           + " The configured workspace '" + cfg.workspace + "' no longer exists.");
     }
 
-    // Second, independent traversal guard: the resolved path must still sit in the
-    // project folder even if safeName ever let something through.
-    Path target = new Path(dir, name);
+    // Second, independent traversal guard: safeName lets through names that still do not
+    // resolve inside the project folder, such as "." or a scheme-bearing "foo:bar" that
+    // replaces the parent outright.
+    Path target;
+    try {
+      target = new Path(dir, name);
+    } catch (IllegalArgumentException e) {
+      return error(Response.Status.BAD_REQUEST, "Invalid file name: it cannot be resolved");
+    }
     String dirUri = dir.toUri().normalize().toString();
     if (!target.toUri().normalize().toString().startsWith(dirUri + "/")) {
       return error(Response.Status.BAD_REQUEST,
@@ -246,9 +316,9 @@ public class ProjectFileResources {
       Thread.currentThread().interrupt();
       throw new DrillRuntimeException("Upload interrupted", e);
     } catch (Exception e) {
+      // The detail stays in the log: file system messages carry server-side paths.
       logger.error("Failed to upload '{}' to {}", name, target, e);
-      return error(Response.Status.INTERNAL_SERVER_ERROR,
-          "Failed to write the uploaded file: " + e.getMessage());
+      return error(Response.Status.INTERNAL_SERVER_ERROR, "Failed to write the uploaded file");
     }
   }
 
@@ -265,20 +335,34 @@ public class ProjectFileResources {
     }
     fs.mkdirs(dir);
 
+    // The bytes land beside the target under a temporary name and are moved into place
+    // only once they are all there, so an abort never costs the file already uploaded.
+    Path staged = new Path(dir, name + ".upload-" + UUID.randomUUID());
+
     // One byte past the cap is enough to know the part is too big, and the part is
     // never held in memory: these are data files.
     long limit = maxSizeBytes == Long.MAX_VALUE ? maxSizeBytes : maxSizeBytes + 1;
     long copied;
-    try (OutputStream out = fs.create(target, true)) {
+    try (OutputStream out = fs.create(staged, true)) {
       copied = IOUtils.copyLarge(part, out, 0L, limit);
     } catch (IOException e) {
-      discard(fs, target);
+      discard(fs, staged);
       throw e;
     }
     if (copied > maxSizeBytes) {
-      discard(fs, target);
+      discard(fs, staged);
       return error(Response.Status.REQUEST_ENTITY_TOO_LARGE,
           "File exceeds the maximum upload size of " + maxSizeBytes + " bytes");
+    }
+
+    // A rename onto an existing name is not portable, so clear the way first. Reached
+    // only when overwrite was asked for; the collision check above covers the rest.
+    if (overwrite) {
+      fs.delete(target, false);
+    }
+    if (!fs.rename(staged, target)) {
+      discard(fs, staged);
+      throw new IOException("Could not move the uploaded file into place");
     }
 
     return Response.status(Response.Status.CREATED)
@@ -286,11 +370,11 @@ public class ProjectFileResources {
         .build();
   }
 
-  private static void discard(FileSystem fs, Path target) {
+  private static void discard(FileSystem fs, Path staged) {
     try {
-      fs.delete(target, false);
+      fs.delete(staged, false);
     } catch (IOException e) {
-      logger.warn("Failed to remove partial upload {}: {}", target, e.getMessage());
+      logger.warn("Failed to remove partial upload {}: {}", staged, e.getMessage());
     }
   }
 

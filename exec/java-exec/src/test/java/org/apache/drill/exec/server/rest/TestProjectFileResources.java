@@ -40,10 +40,13 @@ import okhttp3.OkHttpClient;
 import okhttp3.Request;
 import okhttp3.RequestBody;
 import okhttp3.Response;
+import org.apache.drill.common.logical.FormatPluginConfig;
 import org.apache.drill.exec.ExecConstants;
 import org.apache.drill.exec.server.rest.ProjectResources.DatasetRef;
 import org.apache.drill.exec.server.rest.ProjectResources.Project;
 import org.apache.drill.exec.server.rest.auth.DrillUserPrincipal;
+import org.apache.drill.exec.store.dfs.FileSystemConfig;
+import org.apache.drill.exec.store.dfs.WorkspaceConfig;
 import org.apache.drill.exec.store.sys.PersistentStore;
 import org.apache.drill.test.ClusterFixtureBuilder;
 import org.apache.drill.test.ClusterTest;
@@ -152,7 +155,11 @@ public class TestProjectFileResources extends ClusterTest {
     configureUploads(1000);
     String id = seedWritableProject();
 
-    for (String name : Arrays.asList("../../etc/passwd", "a/b.csv", "..\\win.csv", "..")) {
+    // "." and "foo:bar" pass safeName and are stopped only by the normalize-and-prefix
+    // check: Hadoop resolves the first back onto the folder itself and the second, which
+    // it reads as a scheme-bearing URI, outside the folder entirely.
+    for (String name : Arrays.asList("../../etc/passwd", "a/b.csv", "..\\win.csv", "..",
+        ".", "foo:bar")) {
       JsonNode body = upload(id, name, "x,y\n1,2\n", false, 400);
       assertTrue(body.get("message").asText(), body.get("message").asText().contains("name"));
     }
@@ -275,9 +282,88 @@ public class TestProjectFileResources extends ClusterTest {
     assertNull(ProjectFileResources.safeName(".."));
     assertNull(ProjectFileResources.safeName("  "));
     assertNull(ProjectFileResources.safeName(null));
+    assertNull(ProjectFileResources.safeName("a\nFAKE LOG LINE.csv"));
+    assertNull(ProjectFileResources.safeName("a\rb.csv"));
     assertEquals("sales.csv", ProjectFileResources.safeName(" sales.csv "));
     // Format-agnostic: an extension Drill cannot read is still a legal upload name.
     assertEquals("notes.zzz", ProjectFileResources.safeName("notes.zzz"));
+  }
+
+  /**
+   * A declared length past the cap is refused from the request header, before Jersey
+   * spools the part to the Drillbit's temp directory to inject it.
+   */
+  @Test
+  public void testRejectsOversizeContentLengthBeforeReadingTheEntity() throws Exception {
+    configureUploads(10);
+    String id = seedWritableProject();
+    byte[] tooBig = new byte[(int) ProjectFileResources.allowedRequestBytes(10) + 1];
+    try (Response r = post(id, "huge.csv", tooBig, false)) {
+      assertEquals(413, r.code());
+    }
+    // The discriminator: the handler creates the project folder before it starts copying,
+    // so an absent folder is proof the request never reached the handler at all.
+    assertFalse(projectFolder(id).exists());
+  }
+
+  @Test
+  public void testRequestAllowanceCoversTheMultipartEnvelopeAndSaturates() {
+    assertTrue(ProjectFileResources.allowedRequestBytes(10) > 10);
+    assertEquals(Long.MAX_VALUE, ProjectFileResources.allowedRequestBytes(Long.MAX_VALUE));
+  }
+
+  /**
+   * An aborted upload must not cost the file already in place. The staged-then-renamed
+   * write is what makes this pass; truncating the target up front would not.
+   */
+  @Test
+  public void testOversizeOverwriteLeavesTheExistingFileIntact() throws Exception {
+    configureUploads(1000);
+    String id = seedWritableProject();
+    upload(id, "keep.csv", "original", false, 201);
+
+    configureUploads(5);
+    upload(id, "keep.csv", "12345678901", true, 413);
+
+    assertEquals("original", contents(new File(projectFolder(id), "keep.csv")));
+    assertEquals(0, stagedFiles(id).length);
+  }
+
+  /** No {@code .upload-} leftovers after a successful write either. */
+  @Test
+  public void testSuccessfulUploadLeavesNoStagingFile() throws Exception {
+    configureUploads(1000);
+    String id = seedWritableProject();
+    upload(id, "clean.csv", "a\n1\n", false, 201);
+    assertEquals(0, stagedFiles(id).length);
+  }
+
+  /**
+   * A workspace location given without a leading slash. Pinned because the composition
+   * resolves it against the connection root rather than any process directory.
+   */
+  @Test
+  public void testProjectDirResolvesARelativeWorkspaceLocation() {
+    UploadConfigResources.UploadConfig cfg =
+        new UploadConfigResources.UploadConfig("dfs", "rel", 100L);
+    FileSystemConfig fsConfig = new FileSystemConfig("file:///",
+        Collections.<String, String>emptyMap(),
+        Collections.singletonMap("rel", new WorkspaceConfig("uploads", true, null, false)),
+        Collections.<String, FormatPluginConfig>emptyMap(), null);
+    assertEquals("file:/uploads/p1",
+        ProjectFileResources.projectDir(cfg, fsConfig, "p1").toUri().toString());
+
+    FileSystemConfig s3 = new FileSystemConfig("s3a://bucket",
+        Collections.<String, String>emptyMap(),
+        Collections.singletonMap("rel", new WorkspaceConfig("/uploads", true, null, false)),
+        Collections.<String, FormatPluginConfig>emptyMap(), null);
+    assertEquals("s3a://bucket/uploads/p1",
+        ProjectFileResources.projectDir(cfg, s3, "p1").toUri().toString());
+  }
+
+  private static File[] stagedFiles(String projectId) {
+    File[] staged = projectFolder(projectId).listFiles((d, n) -> n.contains(".upload-"));
+    return staged == null ? new File[0] : staged;
   }
 
   private static String contents(File file) throws Exception {
