@@ -178,6 +178,7 @@ public class TestProjectFileResources extends ClusterTest {
       JsonNode body = upload(id, "a.csv", "x\n1\n", false, 409);
       assertTrue(body.get("message").asText(),
           body.get("message").asText().contains("upload folder"));
+      assertEquals("NOT_CONFIGURED", body.get("code").asText());
     } finally {
       configureUploads(1000);
     }
@@ -223,6 +224,7 @@ public class TestProjectFileResources extends ClusterTest {
     JsonNode conflict = upload(id, "dup.csv", "second", false, 409);
     assertTrue(conflict.get("message").asText(),
         conflict.get("message").asText().contains("overwrite"));
+    assertEquals("EXISTS", conflict.get("code").asText());
     assertEquals("first", contents(target));
 
     upload(id, "dup.csv", "second", true, 201);

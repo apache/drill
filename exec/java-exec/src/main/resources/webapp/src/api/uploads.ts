@@ -60,10 +60,26 @@ export async function setUploadConfig(cfg: UploadConfig): Promise<SaveUploadConf
   return response.data;
 }
 
+/** The file name is already taken in this project; retry with { overwrite: true } if the user agrees. */
+export class UploadCollisionError extends Error {
+  constructor(message: string) {
+    super(message);
+    this.name = 'UploadCollisionError';
+  }
+}
+
+/** No usable upload target exists (unset, or the plugin or workspace changed). Overwriting will not help. */
+export class UploadNotConfiguredError extends Error {
+  constructor(message: string) {
+    super(message);
+    this.name = 'UploadNotConfiguredError';
+  }
+}
+
 /**
- * Upload a file into a project. A name collision without opts.overwrite rejects with an
- * axios error whose response.status is 409; use isUploadCollision() to tell it apart from
- * other failures, then retry with { overwrite: true } if the user agrees.
+ * Upload a file into a project. A 409 is classified from the response body's `code` field:
+ * EXISTS rejects with UploadCollisionError, NOT_CONFIGURED with UploadNotConfiguredError.
+ * Every other failure rejects with the original axios error.
  */
 export async function uploadProjectFile(
   projectId: string,
@@ -72,21 +88,31 @@ export async function uploadProjectFile(
 ): Promise<UploadedFile> {
   const form = new FormData();
   form.append('file', file);
-  const response = await apiClient.post<UploadedFile>(
-    `/api/v1/projects/${encodeURIComponent(projectId)}/files`,
-    form,
-    {
-      params: opts?.overwrite ? { overwrite: true } : undefined,
-      // Clear the client's JSON default so the browser sets multipart with its own boundary.
-      headers: { 'Content-Type': undefined },
+  try {
+    const response = await apiClient.post<UploadedFile>(
+      `/api/v1/projects/${encodeURIComponent(projectId)}/files`,
+      form,
+      {
+        params: opts?.overwrite ? { overwrite: true } : undefined,
+        // Clear the client's JSON default so the browser sets multipart with its own boundary.
+        headers: { 'Content-Type': undefined },
+      }
+    );
+    return response.data;
+  } catch (error) {
+    const response = (error as { response?: { status?: number; data?: { code?: string; message?: string } } })
+      ?.response;
+    if (response?.status === 409) {
+      const message = response.data?.message ?? 'Upload refused';
+      if (response.data?.code === 'EXISTS') {
+        throw new UploadCollisionError(message);
+      }
+      if (response.data?.code === 'NOT_CONFIGURED') {
+        throw new UploadNotConfiguredError(message);
+      }
     }
-  );
-  return response.data;
-}
-
-/** True when an upload failed because a file of that name already exists (HTTP 409). */
-export function isUploadCollision(error: unknown): boolean {
-  return (error as { response?: { status?: number } } | null)?.response?.status === 409;
+    throw error;
+  }
 }
 
 /** DELETE /api/v1/projects/{id}/files/{name} */

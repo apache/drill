@@ -23,7 +23,13 @@ vi.mock('./client', () => ({
   default: { get: vi.fn(), put: vi.fn(), post: mocks.post, delete: mocks.delete },
 }));
 
-import { uploadProjectFile, deleteProjectFile, downloadProjectFileUrl } from './uploads';
+import {
+  uploadProjectFile,
+  deleteProjectFile,
+  downloadProjectFileUrl,
+  UploadCollisionError,
+  UploadNotConfiguredError,
+} from './uploads';
 
 describe('uploadProjectFile', () => {
   beforeEach(() => {
@@ -50,6 +56,30 @@ describe('uploadProjectFile', () => {
     expect(mocks.post.mock.calls[0][2].params).toBeUndefined();
     expect(mocks.post.mock.calls[1][2].params).toBeUndefined();
     expect(mocks.post.mock.calls[2][2].params).toEqual({ overwrite: true });
+  });
+});
+
+describe('uploadProjectFile 409 classification', () => {
+  const file = new File(['x'], 'a.csv');
+  const reject = (status: number, data: unknown) =>
+    mocks.post.mockRejectedValue({ response: { status, data } });
+
+  it('throws UploadCollisionError for code EXISTS', async () => {
+    reject(409, { code: 'EXISTS', message: 'already exists' });
+    await expect(uploadProjectFile('p', file)).rejects.toBeInstanceOf(UploadCollisionError);
+  });
+
+  it('throws UploadNotConfiguredError for code NOT_CONFIGURED, not a collision', async () => {
+    reject(409, { code: 'NOT_CONFIGURED', message: 'No upload folder' });
+    const err = await uploadProjectFile('p', file).catch((e) => e);
+    expect(err).toBeInstanceOf(UploadNotConfiguredError);
+    expect(err).not.toBeInstanceOf(UploadCollisionError);
+  });
+
+  it('passes other failures through untouched', async () => {
+    const raw = { response: { status: 413, data: { message: 'too big' } } };
+    mocks.post.mockRejectedValue(raw);
+    await expect(uploadProjectFile('p', file)).rejects.toBe(raw);
   });
 });
 

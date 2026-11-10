@@ -111,6 +111,10 @@ public class ProjectFileResources {
   private static final String FOLDER_DATASET_LABEL = "Uploaded files";
 
   /** Shown whenever the cluster has no usable upload target. */
+  /** Machine-readable reasons carried in the {@code code} field of a 409 body. */
+  static final String CODE_EXISTS = "EXISTS";
+  static final String CODE_NOT_CONFIGURED = "NOT_CONFIGURED";
+
   private static final String NOT_CONFIGURED =
       "No upload folder is configured for this cluster. "
           + "An administrator must set one before files can be uploaded.";
@@ -296,17 +300,17 @@ public class ProjectFileResources {
 
     UploadConfig cfg = UploadConfigResources.current(storeProvider);
     if (cfg == null || cfg.plugin == null || cfg.workspace == null) {
-      return error(Response.Status.CONFLICT, NOT_CONFIGURED);
+      return error(Response.Status.CONFLICT, CODE_NOT_CONFIGURED, NOT_CONFIGURED);
     }
     FileSystemPlugin fsPlugin = fileSystemPlugin(cfg.plugin);
     if (fsPlugin == null) {
-      return error(Response.Status.CONFLICT, NOT_CONFIGURED
+      return error(Response.Status.CONFLICT, CODE_NOT_CONFIGURED, NOT_CONFIGURED
           + " The configured plugin '" + cfg.plugin + "' is no longer a file system plugin.");
     }
     FileSystemConfig fsConfig = (FileSystemConfig) fsPlugin.getConfig();
     Path dir = projectDir(cfg, fsConfig, id);
     if (dir == null) {
-      return error(Response.Status.CONFLICT, NOT_CONFIGURED
+      return error(Response.Status.CONFLICT, CODE_NOT_CONFIGURED, NOT_CONFIGURED
           + " The configured workspace '" + cfg.workspace + "' no longer exists.");
     }
 
@@ -380,19 +384,19 @@ public class ProjectFileResources {
 
     UploadConfig cfg = UploadConfigResources.current(storeProvider);
     if (cfg == null || cfg.plugin == null || cfg.workspace == null) {
-      loc.refusal = error(Response.Status.CONFLICT, NOT_CONFIGURED);
+      loc.refusal = error(Response.Status.CONFLICT, CODE_NOT_CONFIGURED, NOT_CONFIGURED);
       return loc;
     }
     loc.cfg = cfg;
     loc.fsPlugin = fileSystemPlugin(cfg.plugin);
     if (loc.fsPlugin == null) {
-      loc.refusal = error(Response.Status.CONFLICT, NOT_CONFIGURED);
+      loc.refusal = error(Response.Status.CONFLICT, CODE_NOT_CONFIGURED, NOT_CONFIGURED);
       return loc;
     }
     loc.fsConfig = (FileSystemConfig) loc.fsPlugin.getConfig();
     Path dir = projectDir(cfg, loc.fsConfig, id);
     if (dir == null) {
-      loc.refusal = error(Response.Status.CONFLICT, NOT_CONFIGURED);
+      loc.refusal = error(Response.Status.CONFLICT, CODE_NOT_CONFIGURED, NOT_CONFIGURED);
       return loc;
     }
 
@@ -545,7 +549,7 @@ public class ProjectFileResources {
     FileSystem fs = FileSystem.get(URI.create(fsConfig.getConnection()), fsPlugin.getFsConf());
 
     if (!overwrite && fs.exists(target)) {
-      return error(Response.Status.CONFLICT, "A file named '" + name
+      return error(Response.Status.CONFLICT, CODE_EXISTS, "A file named '" + name
           + "' already exists in this project. Retry with overwrite=true to replace it.");
     }
     fs.mkdirs(dir);
@@ -702,6 +706,22 @@ public class ProjectFileResources {
       return null;
     }
     return plugin instanceof FileSystemPlugin ? (FileSystemPlugin) plugin : null;
+  }
+
+  /** A message body that also carries a stable, machine-readable code. */
+  public static class CodedMessageResponse extends MessageResponse {
+    @JsonProperty
+    public String code;
+
+    public CodedMessageResponse(String code, String message) {
+      super(message);
+      this.code = code;
+    }
+  }
+
+  private static Response error(Response.Status status, String code, String message) {
+    return Response.status(status).type(MediaType.APPLICATION_JSON)
+        .entity(new CodedMessageResponse(code, message)).build();
   }
 
   private static Response error(Response.Status status, String message) {
