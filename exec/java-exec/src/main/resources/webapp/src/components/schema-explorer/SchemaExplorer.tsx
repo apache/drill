@@ -44,7 +44,7 @@ import { listWorkflows } from '../../api/workflows';
 import { getVisualizations } from '../../api/visualizations';
 import { getProject } from '../../api/projects';
 import { getExecutionHistory } from '../../utils/queryExecutionHistory';
-import { buildDatasetAllowList, type DatasetAllowList } from './datasetAllowList';
+import { buildDatasetAllowList, isFolderAncestor, isInFolder, type DatasetAllowList } from './datasetAllowList';
 import { dynamicTableFromSql } from '../../utils/sql';
 
 const { Search } = Input;
@@ -179,6 +179,12 @@ function isPluginAllowed(pluginName: string, allow: DatasetAllowList): boolean {
       return true;
     }
   }
+  // Any folder ref under this plugin?
+  for (const s of allow.folders.keys()) {
+    if (s === pluginName || s.startsWith(pluginName + '.')) {
+      return true;
+    }
+  }
   return false;
 }
 
@@ -193,14 +199,14 @@ function isSchemaAllowed(schemaName: string, allow: DatasetAllowList): boolean {
   if (allow.schemas.has(schemaName)) {
     return true;
   }
-  return allow.tables.has(schemaName);
+  return allow.tables.has(schemaName) || allow.folders.has(schemaName);
 }
 
 /**
  * Filter tree nodes to only include datasets matching the provided allow list.
  * Supports plugin-level, schema-level, and table-level filtering.
  */
-function filterTreeNodes(nodes: DataNode[], allow: DatasetAllowList): DataNode[] {
+export function filterTreeNodes(nodes: DataNode[], allow: DatasetAllowList): DataNode[] {
   return nodes.reduce<DataNode[]>((acc, node) => {
     const key = node.key as string;
 
@@ -230,7 +236,11 @@ function filterTreeNodes(nodes: DataNode[], allow: DatasetAllowList): DataNode[]
         acc.push(node);
       } else {
         const allowed = allow.tables.get(schema);
-        if (allowed && allowed.has(filePath)) {
+        const folders = allow.folders.get(schema);
+        if (
+          (allowed && allowed.has(filePath))
+          || (folders && Array.from(folders).some((f) => isInFolder(filePath, f)))
+        ) {
           acc.push(node);
         }
       }
@@ -253,13 +263,31 @@ function filterTreeNodes(nodes: DataNode[], allow: DatasetAllowList): DataNode[]
         acc.push(node);
         return acc;
       }
+      const dirPath = parts.slice(2).join(':');
+      const folders = allow.folders.get(schema);
+      if (folders) {
+        // The folder itself or anything beneath it: keep whole
+        if (Array.from(folders).some((f) => isInFolder(dirPath, f))) {
+          acc.push(node);
+          return acc;
+        }
+        // An ancestor on the way to a folder: keep, filtering any loaded children
+        if (Array.from(folders).some((f) => isFolderAncestor(dirPath, f))) {
+          if (node.children) {
+            const filteredChildren = filterTreeNodes(node.children, allow);
+            acc.push({ ...node, children: filteredChildren });
+          } else {
+            acc.push(node);
+          }
+          return acc;
+        }
+      }
       if (node.children) {
         const filteredChildren = filterTreeNodes(node.children, allow);
         if (filteredChildren.length > 0) {
           acc.push({ ...node, children: filteredChildren });
         }
       } else {
-        const dirPath = parts.slice(2).join(':');
         const allowed = allow.tables.get(schema);
         if (allowed) {
           const hasMatch = Array.from(allowed).some((t) => t.startsWith(dirPath + '/'));

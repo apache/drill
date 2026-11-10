@@ -69,4 +69,14 @@ describe('buildDatasetAllowList', () => {
     expect(result.plugins.size).toBe(0);
     expect(result.schemas.size).toBe(0);
   });
+
+  it('puts a folder ref in folders, not tables', () => {
+    const datasets: DatasetRef[] = [
+      { id: '6', type: 'folder', schema: 'dfs.uploads', table: 'proj-a', label: 'Uploaded files' },
+    ];
+    const result = buildDatasetAllowList(datasets);
+    expect(result.folders.get('dfs.uploads')?.has('proj-a')).toBe(true);
+    expect(result.tables.has('dfs.uploads')).toBe(false);
+    expect(result.schemas.has('dfs.uploads')).toBe(false);
+  });
 });

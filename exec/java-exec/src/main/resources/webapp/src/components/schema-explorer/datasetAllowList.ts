@@ -27,6 +27,18 @@ export interface DatasetAllowList {
   schemas: Set<string>;
   /** Specific table/file allowances: schema → set of table/file names */
   tables: Map<string, Set<string>>;
+  /** Allowed folders: schema → set of folder paths (the folder and everything beneath it) */
+  folders: Map<string, Set<string>>;
+}
+
+/** True when path is the folder itself or lies beneath it (compared on a "/" boundary). */
+export function isInFolder(path: string, folder: string): boolean {
+  return path === folder || path.startsWith(folder + '/');
+}
+
+/** True when path is a strict ancestor of the folder, i.e. on the way down to it. */
+export function isFolderAncestor(path: string, folder: string): boolean {
+  return folder.startsWith(path + '/');
 }
 
 /**
@@ -39,12 +51,18 @@ export function buildDatasetAllowList(datasets: DatasetRef[]): DatasetAllowList 
     plugins: new Set(),
     schemas: new Set(),
     tables: new Map(),
+    folders: new Map(),
   };
   for (const ds of datasets) {
     if (ds.type === 'plugin' && ds.schema) {
       allow.plugins.add(ds.schema);
     } else if (ds.type === 'schema' && ds.schema) {
       allow.schemas.add(ds.schema);
+    } else if (ds.type === 'folder' && ds.schema && ds.table) {
+      if (!allow.folders.has(ds.schema)) {
+        allow.folders.set(ds.schema, new Set());
+      }
+      allow.folders.get(ds.schema)!.add(ds.table);
     } else if (
       (ds.type === 'table' || ds.type === 'view' || ds.type === 'materialized_view')
       && ds.schema && ds.table

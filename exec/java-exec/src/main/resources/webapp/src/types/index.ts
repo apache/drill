@@ -301,7 +301,7 @@ export interface DashboardCreate {
 // Project types
 export interface DatasetRef {
   id: string;
-  type: 'table' | 'saved_query' | 'plugin' | 'schema' | 'view' | 'materialized_view';
+  type: 'table' | 'saved_query' | 'plugin' | 'schema' | 'view' | 'materialized_view' | 'folder';
   schema?: string;
   table?: string;
   savedQueryId?: string;
