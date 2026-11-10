@@ -66,15 +66,22 @@ describe('UploadTargetCard', () => {
     expect(screen.getByText(/pick a workspace/i)).toBeInTheDocument();
   });
 
+  async function openOptions() {
+    const combo = await screen.findByRole('combobox');
+    // The list fills in once the plugin query resolves.
+    fireEvent.mouseDown(combo);
+    await waitFor(() => {
+      expect(document.querySelector('.ant-select-item-option')).not.toBeNull();
+    });
+    return combo;
+  }
+
   it('offers only writable workspaces of filesystem plugins', async () => {
     renderCard();
-    const select = await screen.findByLabelText('Upload workspace');
-    await waitFor(() => expect(screen.getAllByRole('option').length).toBeGreaterThan(1));
-    const labels = screen.getAllByRole('option').map((o) => o.textContent);
-    expect(labels).toContain('dfs.tmp');
-    expect(labels).not.toContain('dfs.root');
-    expect(labels).not.toContain('mongo.nope');
-    expect(select).toBeInTheDocument();
+    await openOptions();
+    expect(screen.getAllByText('dfs.tmp').length).toBeGreaterThan(0);
+    expect(screen.queryByText('dfs.root')).toBeNull();
+    expect(screen.queryByText('mongo.nope')).toBeNull();
   });
 
   it('shows the warning returned after saving', async () => {
@@ -83,9 +90,8 @@ describe('UploadTargetCard', () => {
       warning: 'Local file: target on a multi-node cluster',
     });
     renderCard();
-    const select = await screen.findByLabelText('Upload workspace');
-    await waitFor(() => expect(screen.getAllByRole('option').length).toBeGreaterThan(1));
-    fireEvent.change(select, { target: { value: 'dfs.tmp' } });
+    await openOptions();
+    fireEvent.click(document.querySelector('.ant-select-item-option') as Element);
     fireEvent.click(screen.getByRole('button', { name: /save/i }));
     expect(await screen.findByText(/multi-node cluster/)).toBeInTheDocument();
     expect(uploads.setUploadConfig).toHaveBeenCalledWith(

@@ -16,7 +16,7 @@
  * limitations under the License.
  */
 import { useEffect, useMemo, useState } from 'react';
-import { Alert, Button, message } from 'antd';
+import { Alert, Button, Card, Select, message } from 'antd';
 import { useMutation, useQuery, useQueryClient } from '@tanstack/react-query';
 import { getPlugins } from '../../api/storage';
 import {
@@ -55,9 +55,11 @@ export default function UploadTargetCard() {
   }, [plugins]);
 
   useEffect(() => {
-    if (config?.plugin && config?.workspace) {
+    // Seed once from the saved config; never overwrite an unsaved choice on a refetch.
+    if (!selected && config?.plugin && config?.workspace) {
       setSelected(`${config.plugin}.${config.workspace}`);
     }
+    // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [config]);
 
   const save = useMutation({
@@ -77,8 +79,7 @@ export default function UploadTargetCard() {
   const configured = status?.configured && status.plugin && status.workspace;
 
   return (
-    <div className="upload-target-card" style={{ marginBottom: 16 }}>
-      <h3>File uploads</h3>
+    <Card title="File uploads" size="small" style={{ marginBottom: 16 }}>
       <p>
         {configured ? (
           <>Uploads are stored in <strong>{`${status?.plugin}.${status?.workspace}`}</strong></>
@@ -88,18 +89,17 @@ export default function UploadTargetCard() {
           </>
         )}
       </p>
-      <select
+      <Select
         aria-label="Upload workspace"
-        value={selected}
-        onChange={(e) => setSelected(e.target.value)}
-      >
-        <option value="">Select a workspace</option>
-        {targets.map((t) => (
-          <option key={`${t.plugin}.${t.workspace}`} value={`${t.plugin}.${t.workspace}`}>
-            {`${t.plugin}.${t.workspace}`}
-          </option>
-        ))}
-      </select>{' '}
+        style={{ minWidth: 240, marginRight: 8 }}
+        placeholder="Select a workspace"
+        value={selected || undefined}
+        onChange={setSelected}
+        options={targets.map((t) => ({
+          value: `${t.plugin}.${t.workspace}`,
+          label: `${t.plugin}.${t.workspace}`,
+        }))}
+      />
       <Button
         type="primary"
         disabled={!selected}
@@ -109,6 +109,6 @@ export default function UploadTargetCard() {
         Save
       </Button>
       {warning && <Alert style={{ marginTop: 12 }} type="warning" showIcon message={warning} />}
-    </div>
+    </Card>
   );
 }
