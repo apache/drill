@@ -24,6 +24,8 @@ import io.swagger.v3.oas.annotations.tags.Tag;
 import jakarta.annotation.security.RolesAllowed;
 import jakarta.inject.Inject;
 import jakarta.ws.rs.Consumes;
+import jakarta.ws.rs.DELETE;
+import jakarta.ws.rs.GET;
 import jakarta.ws.rs.NameBinding;
 import jakarta.ws.rs.POST;
 import jakarta.ws.rs.PathParam;
@@ -33,6 +35,7 @@ import jakarta.ws.rs.container.ContainerRequestContext;
 import jakarta.ws.rs.container.ContainerRequestFilter;
 import jakarta.ws.rs.core.MediaType;
 import jakarta.ws.rs.core.Response;
+import jakarta.ws.rs.core.StreamingOutput;
 import jakarta.ws.rs.ext.Provider;
 import org.apache.commons.io.IOUtils;
 import org.apache.drill.common.exceptions.DrillRuntimeException;
@@ -51,6 +54,7 @@ import org.apache.drill.exec.store.sys.PersistentStore;
 import org.apache.drill.exec.store.sys.PersistentStoreProvider;
 import org.apache.drill.exec.util.ImpersonationUtil;
 import org.apache.drill.exec.work.WorkManager;
+import org.apache.hadoop.fs.FileStatus;
 import org.apache.hadoop.fs.FileSystem;
 import org.apache.hadoop.fs.Path;
 import org.glassfish.jersey.media.multipart.FormDataContentDisposition;
@@ -65,6 +69,7 @@ import java.lang.annotation.RetentionPolicy;
 import java.io.InputStream;
 import java.io.OutputStream;
 import java.net.URI;
+import java.net.URLEncoder;
 import java.security.PrivilegedExceptionAction;
 import java.time.Instant;
 import java.util.Map;
@@ -307,6 +312,185 @@ public class ProjectFileResources {
     return written;
   }
 
+  // ==================== Delete and download ====================
+
+  /** A request resolved to one file inside a project's folder, or the reason it was refused. */
+  private static final class Located {
+    Response refusal;
+    FileSystemPlugin fsPlugin;
+    FileSystemConfig fsConfig;
+    Path target;
+    String name;
+    String user;
+  }
+
+  /**
+   * Runs the checks delete and download share: the project exists, the caller has the
+   * access asked for, the name passes {@link #safeName} and then the second traversal
+   * guard, and an upload target is configured. Error bodies are fixed text so a missing
+   * file never reveals whether the project folder exists.
+   */
+  private Located locate(String id, String rawName, boolean needWrite) {
+    Located loc = new Located();
+    PersistentStore<Project> store = ProjectResources.openStore(storeProvider, workManager);
+    Project project = store.get(id);
+    if (project == null || project.getDeletedAt() > 0) {
+      loc.refusal = error(Response.Status.NOT_FOUND, "Project not found");
+      return loc;
+    }
+    loc.user = principal.getName();
+    if (needWrite) {
+      if (!ProjectResources.canWrite(project, loc.user)) {
+        loc.refusal = error(Response.Status.FORBIDDEN,
+            "You do not have write access to this project");
+        return loc;
+      }
+    } else if (!ProjectResources.canRead(project, loc.user)) {
+      loc.refusal = error(Response.Status.FORBIDDEN,
+          "You do not have access to this project");
+      return loc;
+    }
+
+    loc.name = safeName(rawName);
+    if (loc.name == null) {
+      loc.refusal = error(Response.Status.BAD_REQUEST, "Invalid file name: it is empty, "
+          + "longer than " + MAX_NAME_BYTES + " bytes, or contains '/', '\\', '..' or a "
+          + "control character");
+      return loc;
+    }
+
+    UploadConfig cfg = UploadConfigResources.current(storeProvider);
+    if (cfg == null || cfg.plugin == null || cfg.workspace == null) {
+      loc.refusal = error(Response.Status.CONFLICT, NOT_CONFIGURED);
+      return loc;
+    }
+    loc.fsPlugin = fileSystemPlugin(cfg.plugin);
+    if (loc.fsPlugin == null) {
+      loc.refusal = error(Response.Status.CONFLICT, NOT_CONFIGURED);
+      return loc;
+    }
+    loc.fsConfig = (FileSystemConfig) loc.fsPlugin.getConfig();
+    Path dir = projectDir(cfg, loc.fsConfig, id);
+    if (dir == null) {
+      loc.refusal = error(Response.Status.CONFLICT, NOT_CONFIGURED);
+      return loc;
+    }
+
+    // Second traversal guard, as in upload: "." and a scheme-bearing "foo:bar" pass
+    // safeName but do not resolve to a file inside the project folder.
+    try {
+      loc.target = new Path(dir, loc.name);
+    } catch (IllegalArgumentException e) {
+      loc.refusal = error(Response.Status.BAD_REQUEST,
+          "Invalid file name: it cannot be resolved");
+      return loc;
+    }
+    String dirUri = dir.toUri().normalize().toString();
+    if (!loc.target.toUri().normalize().toString().startsWith(dirUri + "/")) {
+      loc.refusal = error(Response.Status.BAD_REQUEST,
+          "Invalid file name: it does not resolve inside the project folder");
+    }
+    return loc;
+  }
+
+  /** Runs {@code action} as the requesting user when impersonation is on. */
+  private <T> T asUser(String user, PrivilegedExceptionAction<T> action) throws Exception {
+    if (workManager.getContext().getConfig().getBoolean(ExecConstants.IMPERSONATION_ENABLED)) {
+      return ImpersonationUtil.createProxyUgi(user).doAs(action);
+    }
+    return action.run();
+  }
+
+  @DELETE
+  @jakarta.ws.rs.Path("/{name}")
+  @Produces(MediaType.APPLICATION_JSON)
+  @Operation(summary = "Delete an uploaded file from a project",
+      description = "Removes one file from the project's folder in the cluster upload target")
+  public Response delete(
+      @Parameter(description = "Project ID") @PathParam("id") String id,
+      @Parameter(description = "File name") @PathParam("name") String rawName) {
+    Located loc = locate(id, rawName, true);
+    if (loc.refusal != null) {
+      return loc.refusal;
+    }
+    try {
+      boolean deleted = asUser(loc.user, () -> {
+        FileSystem fs = FileSystem.get(URI.create(loc.fsConfig.getConnection()),
+            loc.fsPlugin.getFsConf());
+        return isFile(fs, loc.target) && fs.delete(loc.target, false);
+      });
+      if (!deleted) {
+        return error(Response.Status.NOT_FOUND, "File not found");
+      }
+    } catch (InterruptedException e) {
+      Thread.currentThread().interrupt();
+      throw new DrillRuntimeException("Delete interrupted", e);
+    } catch (Exception e) {
+      logger.error("Failed to delete '{}' at {}", loc.name, loc.target, e);
+      return error(Response.Status.INTERNAL_SERVER_ERROR, "Failed to delete the file");
+    }
+    logger.info("User '{}' deleted '{}' from project {} at {}", loc.user, loc.name, id,
+        loc.target);
+    return Response.noContent().build();
+  }
+
+  @GET
+  @jakarta.ws.rs.Path("/{name}/content")
+  @Produces({MediaType.APPLICATION_OCTET_STREAM, MediaType.APPLICATION_JSON})
+  @Operation(summary = "Download an uploaded file from a project",
+      description = "Streams the file's bytes through the Drillbit from the upload target")
+  public Response download(
+      @Parameter(description = "Project ID") @PathParam("id") String id,
+      @Parameter(description = "File name") @PathParam("name") String rawName) {
+    Located loc = locate(id, rawName, false);
+    if (loc.refusal != null) {
+      return loc.refusal;
+    }
+    InputStream in;
+    try {
+      // Opened here, as the user, so a missing file is still a 404 and the stream that is
+      // handed to the response already carries the user's file system.
+      in = asUser(loc.user, () -> {
+        FileSystem fs = FileSystem.get(URI.create(loc.fsConfig.getConnection()),
+            loc.fsPlugin.getFsConf());
+        return isFile(fs, loc.target) ? fs.open(loc.target) : null;
+      });
+    } catch (InterruptedException e) {
+      Thread.currentThread().interrupt();
+      throw new DrillRuntimeException("Download interrupted", e);
+    } catch (Exception e) {
+      logger.error("Failed to open '{}' at {}", loc.name, loc.target, e);
+      return error(Response.Status.INTERNAL_SERVER_ERROR, "Failed to read the file");
+    }
+    if (in == null) {
+      return error(Response.Status.NOT_FOUND, "File not found");
+    }
+    StreamingOutput body = out -> {
+      try (InputStream source = in) {
+        IOUtils.copyLarge(source, out);
+      }
+    };
+    return Response.ok(body, MediaType.APPLICATION_OCTET_STREAM)
+        .header("Content-Disposition", contentDisposition(loc.name))
+        .build();
+  }
+
+  private static boolean isFile(FileSystem fs, Path path) throws IOException {
+    try {
+      FileStatus status = fs.getFileStatus(path);
+      return status.isFile();
+    } catch (java.io.FileNotFoundException e) {
+      return false;
+    }
+  }
+
+  /** An attachment header with an ASCII fallback name and the exact one as RFC 5987. */
+  private static String contentDisposition(String name) {
+    String ascii = name.replaceAll("[^\\x20-\\x7e]|[\"\\\\]", "_");
+    String encoded = URLEncoder.encode(name, StandardCharsets.UTF_8).replace("+", "%20");
+    return "attachment; filename=\"" + ascii + "\"; filename*=UTF-8''" + encoded;
+  }
+
   // ==================== Writing ====================
 
   /**
@@ -452,6 +636,7 @@ public class ProjectFileResources {
   }
 
   private static Response error(Response.Status status, String message) {
-    return Response.status(status).entity(new MessageResponse(message)).build();
+    return Response.status(status).type(MediaType.APPLICATION_JSON)
+        .entity(new MessageResponse(message)).build();
   }
 }

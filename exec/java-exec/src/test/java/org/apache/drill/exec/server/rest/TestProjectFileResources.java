@@ -412,4 +412,131 @@ public class TestProjectFileResources extends ClusterTest {
   private static String contents(File file) throws Exception {
     return new String(Files.readAllBytes(file.toPath()), StandardCharsets.UTF_8);
   }
+
+  // ==================== Delete and download ====================
+
+  private static Response send(String method, String projectId, String nameSegment,
+      String suffix) throws Exception {
+    Request.Builder b = new Request.Builder().url("http://localhost:" + portNumber
+        + "/api/v1/projects/" + projectId + "/files/" + nameSegment + suffix);
+    if ("DELETE".equals(method)) {
+      b.delete();
+    } else {
+      b.get();
+    }
+    return client.newCall(b.build()).execute();
+  }
+
+  @Test
+  public void testDeleteRemovesFile() throws Exception {
+    configureUploads(1000);
+    String id = seedWritableProject();
+    upload(id, "gone.csv", "a\n1\n", false, 201);
+    File file = new File(projectFolder(id), "gone.csv");
+    assertTrue(file.exists());
+
+    try (Response r = send("DELETE", id, "gone.csv", "")) {
+      assertEquals(204, r.code());
+    }
+    assertFalse(file.exists());
+
+    try (Response r = send("DELETE", id, "gone.csv", "")) {
+      assertEquals(404, r.code());
+    }
+  }
+
+  @Test
+  public void testDeleteRejectsPathTraversal() throws Exception {
+    configureUploads(1000);
+    String id = seedWritableProject();
+    upload(id, "keep.csv", "a\n1\n", false, 201);
+    File outside = new File(dirTestWatcher.getDfsTestTmpDir(), "outside.csv");
+    Files.write(outside.toPath(), "x".getBytes(StandardCharsets.UTF_8));
+    try {
+      // The backslash and parent-reference forms fail safeName; "foo:bar" passes it and
+      // is stopped only by the normalize-and-prefix check.
+      for (String name : Arrays.asList("..%5Coutside.csv", "a%5Cb.csv", "foo:bar")) {
+        try (Response r = send("DELETE", id, name, "")) {
+          assertEquals(name, 400, r.code());
+        }
+      }
+      assertTrue(outside.exists());
+      assertTrue(new File(projectFolder(id), "keep.csv").exists());
+    } finally {
+      outside.delete();
+    }
+  }
+
+  @Test
+  public void testDeleteRejectsWithoutWriteAccess() throws Exception {
+    configureUploads(1000);
+    String id = seedProject("someone-else", Collections.<String>emptyList(),
+        Arrays.asList(DrillUserPrincipal.ANONYMOUS_USER));
+    File file = new File(projectFolder(id), "mine.csv");
+    assertTrue(file.getParentFile().mkdirs());
+    Files.write(file.toPath(), "x".getBytes(StandardCharsets.UTF_8));
+
+    try (Response r = send("DELETE", id, "mine.csv", "")) {
+      assertEquals(403, r.code());
+    }
+    assertTrue(file.exists());
+  }
+
+  @Test
+  public void testDownloadStreamsBytes() throws Exception {
+    configureUploads(1000);
+    String id = seedWritableProject();
+    byte[] bytes = new byte[] {0, 1, 2, (byte) 0xff, 10, 13, 65};
+    try (Response up = post(id, "blob.bin", bytes, false)) {
+      assertEquals(201, up.code());
+    }
+    try (Response r = send("GET", id, "blob.bin", "/content")) {
+      assertEquals(200, r.code());
+      assertTrue(r.header("Content-Type"), r.header("Content-Type").startsWith(
+          "application/octet-stream"));
+      assertTrue(r.header("Content-Disposition"),
+          r.header("Content-Disposition").contains("filename=\"blob.bin\""));
+      assertTrue(Arrays.equals(bytes, r.body().bytes()));
+    }
+  }
+
+  @Test
+  public void testDownloadAllowsViewer() throws Exception {
+    configureUploads(1000);
+    String id = seedProject("someone-else", Collections.<String>emptyList(),
+        Arrays.asList(DrillUserPrincipal.ANONYMOUS_USER));
+    File file = new File(projectFolder(id), "shared.csv");
+    assertTrue(file.getParentFile().mkdirs());
+    Files.write(file.toPath(), "viewable".getBytes(StandardCharsets.UTF_8));
+
+    try (Response r = send("GET", id, "shared.csv", "/content")) {
+      assertEquals(200, r.code());
+      assertEquals("viewable", r.body().string());
+    }
+  }
+
+  @Test
+  public void testDownloadMissingFileIsNotFound() throws Exception {
+    configureUploads(1000);
+    String id = seedWritableProject();
+    // Same answer whether or not the project folder exists.
+    try (Response r = send("GET", id, "nope.csv", "/content")) {
+      assertEquals(404, r.code());
+    }
+    upload(id, "there.csv", "a\n", false, 201);
+    try (Response r = send("GET", id, "nope.csv", "/content")) {
+      assertEquals(404, r.code());
+    }
+  }
+
+  @Test
+  public void testDownloadRejectsPathTraversal() throws Exception {
+    configureUploads(1000);
+    String id = seedWritableProject();
+    for (String name : Arrays.asList("..%5Cx.csv", "foo:bar")) {
+      try (Response r = send("GET", id, name, "/content")) {
+        assertEquals(name, 400, r.code());
+      }
+    }
+  }
 }
