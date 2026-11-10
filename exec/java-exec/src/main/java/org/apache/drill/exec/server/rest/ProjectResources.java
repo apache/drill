@@ -233,6 +233,9 @@ public class ProjectResources {
     private boolean isPublic;
     @JsonProperty
     private List<String> sharedWith;
+    /** Read-only collaborators. {@code sharedWith} members are editors. */
+    @JsonProperty
+    private List<String> viewers;
     @JsonProperty
     private List<DatasetRef> datasets;
     @JsonProperty
@@ -262,6 +265,16 @@ public class ProjectResources {
     public Project() {
     }
 
+    public Project(String id, String name, String description, List<String> tags, String owner,
+        boolean isPublic, List<String> sharedWith, List<DatasetRef> datasets,
+        List<String> savedQueryIds, List<String> visualizationIds, List<String> dashboardIds,
+        List<WikiPage> wikiPages, boolean isSystem, long createdAt, long updatedAt,
+        String tileColor, String tileImage, long deletedAt) {
+      this(id, name, description, tags, owner, isPublic, sharedWith, null, datasets,
+          savedQueryIds, visualizationIds, dashboardIds, wikiPages, isSystem, createdAt,
+          updatedAt, tileColor, tileImage, deletedAt);
+    }
+
     @JsonCreator
     public Project(
         @JsonProperty("id") String id,
@@ -271,6 +284,7 @@ public class ProjectResources {
         @JsonProperty("owner") String owner,
         @JsonProperty("isPublic") boolean isPublic,
         @JsonProperty("sharedWith") List<String> sharedWith,
+        @JsonProperty("viewers") List<String> viewers,
         @JsonProperty("datasets") List<DatasetRef> datasets,
         @JsonProperty("savedQueryIds") List<String> savedQueryIds,
         @JsonProperty("visualizationIds") List<String> visualizationIds,
@@ -289,6 +303,7 @@ public class ProjectResources {
       this.owner = owner;
       this.isPublic = isPublic;
       this.sharedWith = sharedWith != null ? sharedWith : new ArrayList<>();
+      this.viewers = viewers != null ? viewers : new ArrayList<>();
       this.datasets = datasets != null ? datasets : new ArrayList<>();
       this.savedQueryIds = savedQueryIds != null ? savedQueryIds : new ArrayList<>();
       this.visualizationIds = visualizationIds != null ? visualizationIds : new ArrayList<>();
@@ -309,6 +324,7 @@ public class ProjectResources {
     public String getOwner() { return owner; }
     public boolean isPublic() { return isPublic; }
     public List<String> getSharedWith() { return sharedWith; }
+    public List<String> getViewers() { return viewers; }
     public List<DatasetRef> getDatasets() { return datasets; }
     public List<String> getSavedQueryIds() { return savedQueryIds; }
     public List<String> getVisualizationIds() { return visualizationIds; }
@@ -326,6 +342,7 @@ public class ProjectResources {
     public void setTags(List<String> tags) { this.tags = tags; }
     public void setPublic(boolean isPublic) { this.isPublic = isPublic; }
     public void setSharedWith(List<String> sharedWith) { this.sharedWith = sharedWith; }
+    public void setViewers(List<String> viewers) { this.viewers = viewers != null ? viewers : new ArrayList<>(); }
     public void setDatasets(List<DatasetRef> datasets) { this.datasets = datasets; }
     public void setSavedQueryIds(List<String> savedQueryIds) { this.savedQueryIds = savedQueryIds; }
     public void setVisualizationIds(List<String> visualizationIds) { this.visualizationIds = visualizationIds; }
@@ -397,6 +414,8 @@ public class ProjectResources {
     public Boolean isPublic;
     @JsonProperty
     public List<String> sharedWith;
+    @JsonProperty
+    public List<String> viewers;
     @JsonProperty
     public String tileColor;
     @JsonProperty
@@ -609,9 +628,9 @@ public class ProjectResources {
             .build();
       }
 
-      if (!project.getOwner().equals(getCurrentUser())) {
+      if (!canWrite(project, getCurrentUser())) {
         return Response.status(Response.Status.FORBIDDEN)
-            .entity(new MessageResponse("Only the owner can update this project"))
+            .entity(new MessageResponse("You do not have write access to this project"))
             .build();
       }
 
@@ -629,6 +648,9 @@ public class ProjectResources {
       }
       if (request.sharedWith != null) {
         project.setSharedWith(request.sharedWith);
+      }
+      if (request.viewers != null) {
+        project.setViewers(request.viewers);
       }
       // Cover fields are set unconditionally; null clears the value.
       project.setTileColor(request.tileColor);
@@ -668,9 +690,9 @@ public class ProjectResources {
             .build();
       }
 
-      if (!project.getOwner().equals(getCurrentUser())) {
+      if (!canWrite(project, getCurrentUser())) {
         return Response.status(Response.Status.FORBIDDEN)
-            .entity(new MessageResponse("Only the owner can delete this project"))
+            .entity(new MessageResponse("You do not have write access to this project"))
             .build();
       }
 
@@ -757,9 +779,9 @@ public class ProjectResources {
             .build();
       }
 
-      if (!project.getOwner().equals(getCurrentUser())) {
+      if (!canWrite(project, getCurrentUser())) {
         return Response.status(Response.Status.FORBIDDEN)
-            .entity(new MessageResponse("Only the owner can restore this project"))
+            .entity(new MessageResponse("You do not have write access to this project"))
             .build();
       }
 
@@ -794,9 +816,9 @@ public class ProjectResources {
             .build();
       }
 
-      if (!project.getOwner().equals(getCurrentUser())) {
+      if (!canWrite(project, getCurrentUser())) {
         return Response.status(Response.Status.FORBIDDEN)
-            .entity(new MessageResponse("Only the owner can purge this project"))
+            .entity(new MessageResponse("You do not have write access to this project"))
             .build();
       }
 
@@ -838,9 +860,9 @@ public class ProjectResources {
               .build();
         }
 
-        if (!project.getOwner().equals(getCurrentUser())) {
+        if (!canWrite(project, getCurrentUser())) {
           return Response.status(Response.Status.FORBIDDEN)
-              .entity(new MessageResponse("Only the owner can modify this project"))
+              .entity(new MessageResponse("You do not have write access to this project"))
               .build();
         }
 
@@ -881,9 +903,9 @@ public class ProjectResources {
             .build();
       }
 
-      if (!project.getOwner().equals(getCurrentUser())) {
+      if (!canWrite(project, getCurrentUser())) {
         return Response.status(Response.Status.FORBIDDEN)
-            .entity(new MessageResponse("Only the owner can modify this project"))
+            .entity(new MessageResponse("You do not have write access to this project"))
             .build();
       }
 
@@ -919,9 +941,9 @@ public class ProjectResources {
         return Response.status(Response.Status.NOT_FOUND)
             .entity(new MessageResponse("Project not found")).build();
       }
-      if (!project.getOwner().equals(getCurrentUser())) {
+      if (!canWrite(project, getCurrentUser())) {
         return Response.status(Response.Status.FORBIDDEN)
-            .entity(new MessageResponse("Only the owner can modify this project")).build();
+            .entity(new MessageResponse("You do not have write access to this project")).build();
       }
       Set<String> scanned = new HashSet<>();
       for (DatasetRef d : project.getDatasets()) {
@@ -1047,9 +1069,9 @@ public class ProjectResources {
             .build();
       }
 
-      if (!project.getOwner().equals(getCurrentUser())) {
+      if (!canWrite(project, getCurrentUser())) {
         return Response.status(Response.Status.FORBIDDEN)
-            .entity(new MessageResponse("Only the owner can modify this project"))
+            .entity(new MessageResponse("You do not have write access to this project"))
             .build();
       }
 
@@ -1089,9 +1111,9 @@ public class ProjectResources {
             .build();
       }
 
-      if (!project.getOwner().equals(getCurrentUser())) {
+      if (!canWrite(project, getCurrentUser())) {
         return Response.status(Response.Status.FORBIDDEN)
-            .entity(new MessageResponse("Only the owner can modify this project"))
+            .entity(new MessageResponse("You do not have write access to this project"))
             .build();
       }
 
@@ -1128,9 +1150,9 @@ public class ProjectResources {
             .build();
       }
 
-      if (!project.getOwner().equals(getCurrentUser())) {
+      if (!canWrite(project, getCurrentUser())) {
         return Response.status(Response.Status.FORBIDDEN)
-            .entity(new MessageResponse("Only the owner can modify this project"))
+            .entity(new MessageResponse("You do not have write access to this project"))
             .build();
       }
 
@@ -1169,9 +1191,9 @@ public class ProjectResources {
             .build();
       }
 
-      if (!project.getOwner().equals(getCurrentUser())) {
+      if (!canWrite(project, getCurrentUser())) {
         return Response.status(Response.Status.FORBIDDEN)
-            .entity(new MessageResponse("Only the owner can modify this project"))
+            .entity(new MessageResponse("You do not have write access to this project"))
             .build();
       }
 
@@ -1208,9 +1230,9 @@ public class ProjectResources {
             .build();
       }
 
-      if (!project.getOwner().equals(getCurrentUser())) {
+      if (!canWrite(project, getCurrentUser())) {
         return Response.status(Response.Status.FORBIDDEN)
-            .entity(new MessageResponse("Only the owner can modify this project"))
+            .entity(new MessageResponse("You do not have write access to this project"))
             .build();
       }
 
@@ -1249,9 +1271,9 @@ public class ProjectResources {
             .build();
       }
 
-      if (!project.getOwner().equals(getCurrentUser())) {
+      if (!canWrite(project, getCurrentUser())) {
         return Response.status(Response.Status.FORBIDDEN)
-            .entity(new MessageResponse("Only the owner can modify this project"))
+            .entity(new MessageResponse("You do not have write access to this project"))
             .build();
       }
 
@@ -1289,9 +1311,9 @@ public class ProjectResources {
             .build();
       }
 
-      if (!project.getOwner().equals(getCurrentUser())) {
+      if (!canWrite(project, getCurrentUser())) {
         return Response.status(Response.Status.FORBIDDEN)
-            .entity(new MessageResponse("Only the owner can modify this project"))
+            .entity(new MessageResponse("You do not have write access to this project"))
             .build();
       }
 
@@ -1345,9 +1367,9 @@ public class ProjectResources {
             .build();
       }
 
-      if (!project.getOwner().equals(getCurrentUser())) {
+      if (!canWrite(project, getCurrentUser())) {
         return Response.status(Response.Status.FORBIDDEN)
-            .entity(new MessageResponse("Only the owner can modify this project"))
+            .entity(new MessageResponse("You do not have write access to this project"))
             .build();
       }
 
@@ -1410,9 +1432,9 @@ public class ProjectResources {
             .build();
       }
 
-      if (!project.getOwner().equals(getCurrentUser())) {
+      if (!canWrite(project, getCurrentUser())) {
         return Response.status(Response.Status.FORBIDDEN)
-            .entity(new MessageResponse("Only the owner can modify this project"))
+            .entity(new MessageResponse("You do not have write access to this project"))
             .build();
       }
 
@@ -1505,6 +1527,19 @@ public class ProjectResources {
   public static boolean canRead(Project project, String user) {
     return project.getOwner().equals(user)
         || project.isPublic()
+        || project.getSharedWith().contains(user)
+        || project.getViewers().contains(user);
+  }
+
+  /**
+   * The single definition of "may this user modify this project": the owner or an editor
+   * ({@code sharedWith} member). Viewers and {@code isPublic} grant read access only.
+   *
+   * <p>Callers must separately reject soft-deleted projects ({@code getDeletedAt() > 0}),
+   * as with {@link #canRead(Project, String)}.
+   */
+  public static boolean canWrite(Project project, String user) {
+    return project.getOwner().equals(user)
         || project.getSharedWith().contains(user);
   }
 

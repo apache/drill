@@ -328,6 +328,8 @@ export interface Project {
   isPublic: boolean;
   isSystem?: boolean;
   sharedWith: string[];
+  /** Read-only collaborators; sharedWith members are editors. */
+  viewers?: string[];
   datasets: DatasetRef[];
   savedQueryIds: string[];
   visualizationIds: string[];
@@ -357,6 +359,7 @@ export interface ProjectUpdate {
   tags?: string[];
   isPublic?: boolean;
   sharedWith?: string[];
+  viewers?: string[];
   /** Sent unconditionally on appearance saves; null clears the value. */
   tileColor?: string | null;
   tileImage?: string | null;

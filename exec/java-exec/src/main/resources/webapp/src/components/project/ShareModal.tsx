@@ -16,7 +16,7 @@
  * limitations under the License.
  */
 import { useState } from 'react';
-import { Modal, Switch, Input, Button, Space, Tag, Typography, message, Divider } from 'antd';
+import { Modal, Switch, Input, Select, Button, Space, Tag, Typography, message, Divider } from 'antd';
 import { GlobalOutlined, LockOutlined, UserAddOutlined, CloseOutlined } from '@ant-design/icons';
 import { updateProject } from '../../api/projects';
 import type { Project } from '../../types';
@@ -33,6 +33,7 @@ interface ShareModalProps {
 export default function ShareModal({ open, project, onClose, onSuccess }: ShareModalProps) {
   const [isPublic, setIsPublic] = useState(project.isPublic);
   const [sharedWith, setSharedWith] = useState<string[]>(project.sharedWith || []);
+  const [viewers, setViewers] = useState<string[]>(project.viewers || []);
   const [newUser, setNewUser] = useState('');
   const [saving, setSaving] = useState(false);
 
@@ -41,7 +42,7 @@ export default function ShareModal({ open, project, onClose, onSuccess }: ShareM
     if (!username) {
       return;
     }
-    if (sharedWith.includes(username)) {
+    if (sharedWith.includes(username) || viewers.includes(username)) {
       message.warning('User already added');
       return;
     }
@@ -51,12 +52,18 @@ export default function ShareModal({ open, project, onClose, onSuccess }: ShareM
 
   const handleRemoveUser = (user: string) => {
     setSharedWith(sharedWith.filter((u) => u !== user));
+    setViewers(viewers.filter((u) => u !== user));
+  };
+
+  const handleRoleChange = (user: string, role: 'editor' | 'viewer') => {
+    setSharedWith([...sharedWith.filter((u) => u !== user), ...(role === 'editor' ? [user] : [])]);
+    setViewers([...viewers.filter((u) => u !== user), ...(role === 'viewer' ? [user] : [])]);
   };
 
   const handleSave = async () => {
     setSaving(true);
     try {
-      await updateProject(project.id, { isPublic, sharedWith });
+      await updateProject(project.id, { isPublic, sharedWith, viewers });
       message.success('Sharing settings updated');
       onSuccess();
     } catch (err) {
@@ -117,18 +124,32 @@ export default function ShareModal({ open, project, onClose, onSuccess }: ShareM
         </div>
 
         {/* Shared users list */}
-        {sharedWith.length > 0 && (
+        {(sharedWith.length > 0 || viewers.length > 0) && (
           <div>
-            {sharedWith.map((user) => (
-              <Tag
+            {[...sharedWith, ...viewers].map((user) => (
+              <div
                 key={user}
-                closable
-                closeIcon={<CloseOutlined />}
-                onClose={() => handleRemoveUser(user)}
-                style={{ marginBottom: 4 }}
+                style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: 4 }}
               >
-                {user}
-              </Tag>
+                <Tag
+                  closable
+                  closeIcon={<CloseOutlined />}
+                  onClose={() => handleRemoveUser(user)}
+                >
+                  {user}
+                </Tag>
+                <Select
+                  size="small"
+                  aria-label={`Role for ${user}`}
+                  value={sharedWith.includes(user) ? 'editor' : 'viewer'}
+                  onChange={(role: 'editor' | 'viewer') => handleRoleChange(user, role)}
+                  options={[
+                    { value: 'editor', label: 'Editor' },
+                    { value: 'viewer', label: 'Viewer' },
+                  ]}
+                  style={{ width: 100 }}
+                />
+              </div>
             ))}
           </div>
         )}
