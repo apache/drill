@@ -137,18 +137,44 @@ export default function JdbcForm({ config, onChange }: JdbcFormProps) {
     setTestResult(null);
 
     try {
-      const testConfig = {
+      // Start from the stored config, then overlay what the form models. Rebuilding the
+      // config from this form's own fields tested a different data source than the one
+      // being saved: everything the form does not model -- sourceParameters, authMode,
+      // a credentials provider -- was dropped, so a connection could pass or fail here
+      // for reasons that had nothing to do with the plugin as configured.
+      const provider = config.credentialsProvider as Record<string, unknown> | undefined;
+      const testConfig: Record<string, unknown> = {
+        ...config,
         type: 'jdbc',
         driver,
         url,
-        // Only when set: an empty user name is a user name, and the server would try to
-        // connect as it rather than without credentials.
-        ...(username ? { username } : {}),
-        ...(password ? { password } : {}),
         writable,
         caseInsensitiveTableNames: caseInsensitive,
         writerBatchSize: batchSize,
       };
+      // A credential goes where it came from, as elsewhere in this form: a provider's
+      // credentials plus a stale top-level copy would leave the server choosing between
+      // two. An empty value is not a credential -- the server would try to connect as a
+      // user named "" rather than without credentials.
+      delete testConfig.username;
+      delete testConfig.password;
+      if (provider) {
+        testConfig.credentialsProvider = {
+          ...provider,
+          credentials: {
+            ...(provider.credentials as Record<string, string> | undefined),
+            ...(username ? { username } : {}),
+            ...(password ? { password } : {}),
+          },
+        };
+      } else {
+        if (username) {
+          testConfig.username = username;
+        }
+        if (password) {
+          testConfig.password = password;
+        }
+      }
 
       const result = await testConnection('test-connection', testConfig);
       setTestResult({
@@ -163,7 +189,7 @@ export default function JdbcForm({ config, onChange }: JdbcFormProps) {
     } finally {
       setTestLoading(false);
     }
-  }, [driver, url, username, password, writable, caseInsensitive, batchSize]);
+  }, [config, driver, url, username, password, writable, caseInsensitive, batchSize]);
 
   const handleParamsChange = (newParams: ParamRow[]) => {
     setParams(newParams);
