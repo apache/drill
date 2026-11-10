@@ -44,6 +44,7 @@ import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
 import { getPlugins, deletePlugin, enablePlugin } from '../api/storage';
 import { cleanupPluginDatasets } from '../api/projects';
 import { getPluginLogoUrl, getPluginGradient, knownPluginTypes, getTemplate } from '../components/datasource';
+import UploadTargetCard from '../components/datasource/UploadTargetCard';
 import { usePageChrome } from '../contexts/AppChromeContext';
 import type { StoragePluginDetail } from '../types';
 
@@ -238,6 +239,8 @@ export default function DataSourcesPage() {
           </p>
         </div>
       </header>
+
+      <UploadTargetCard />
 
       <div className="page-datasources-toolbar">
         <Input
