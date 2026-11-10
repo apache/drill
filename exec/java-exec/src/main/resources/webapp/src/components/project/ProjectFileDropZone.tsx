@@ -21,6 +21,7 @@ import { Typography } from 'antd';
 import { InboxOutlined } from '@ant-design/icons';
 import { useProjectContext } from '../../contexts/ProjectContext';
 import { useProjectFileUpload } from '../../hooks/useProjectFileUpload';
+import { isDropHandled } from '../../utils/dropHandled';
 
 /** True only for drags that carry files from outside the browser, not in-app drags such as tree nodes. */
 function carriesFiles(e: DragEvent): boolean {
@@ -67,6 +68,9 @@ export default function ProjectFileDropZone({ projectId, children }: Props) {
     e.preventDefault();
     depth.current = 0;
     setDragging(false);
+    if (isDropHandled(e)) {
+      return; // a drop target inside the zone took these files
+    }
     Array.from(e.dataTransfer.files).forEach((f) => {
       void upload(f);
     });

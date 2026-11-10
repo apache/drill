@@ -54,4 +54,20 @@ describe('useConversationFileDrop', () => {
 
     expect(sendMessage).not.toHaveBeenCalled();
   });
+
+  it('sends one message for several files dropped together', async () => {
+    upload.mockImplementation(async (f: File) => ({ name: f.name, path: `p.${f.name}`, schema: `dfs.\`${f.name}\`` }));
+    const { result } = renderHook(() => useConversationFileDrop('proj', sendMessage));
+    const other = new File(['x'], 'costs.csv', { type: 'text/csv' });
+
+    await act(async () => {
+      await Promise.all([result.current(file), result.current(other)]);
+    });
+
+    expect(sendMessage).toHaveBeenCalledTimes(1);
+    const text = sendMessage.mock.calls[0][0] as string;
+    expect(text).toContain('sales.csv');
+    expect(text).toContain('costs.csv');
+    expect(text).toContain('dfs.`costs.csv`');
+  });
 });

@@ -17,6 +17,7 @@
  */
 import { useState, useCallback } from 'react';
 import type { DragEvent } from 'react';
+import { markDropHandled } from '../../utils/dropHandled';
 import { Input, Button, Space } from 'antd';
 import { SendOutlined, StopOutlined } from '@ant-design/icons';
 
@@ -68,8 +69,8 @@ export default function ChatInput({ onSend, onStop, isStreaming, disabled, place
       return;
     }
     e.preventDefault();
-    // Handled here; stop the project-wide drop zone from uploading the same file again.
-    e.stopPropagation();
+    // Let the drop bubble so the project drop zone can reset itself, but tell it these files are taken.
+    markDropHandled(e);
     Array.from(e.dataTransfer.files).forEach((f) => onFileDropped(f));
   };
 

@@ -19,6 +19,7 @@ import { describe, it, expect, vi, beforeEach } from 'vitest';
 import { render, screen, fireEvent, waitFor } from '@testing-library/react';
 import { QueryClient, QueryClientProvider } from '@tanstack/react-query';
 import ProjectFileDropZone from './ProjectFileDropZone';
+import ChatInput from '../prospector/ChatInput';
 import {
   uploadProjectFile,
   getUploadStatus,
@@ -124,5 +125,33 @@ describe('ProjectFileDropZone', () => {
     fireEvent.drop(zone, fileDrag);
     expect(await screen.findByText(/Could not upload sales\.csv: File too large/)).toBeTruthy();
     expect(uploadProjectFile).toHaveBeenCalledTimes(1);
+  });
+
+  it('uploads once and clears the overlay when a file is dropped on a composer inside the zone', async () => {
+    vi.mocked(uploadProjectFile).mockResolvedValue({ name: 'sales.csv', path: 'dfs.up.sales' });
+    const onFileDropped = vi.fn();
+    render(
+      <QueryClientProvider client={new QueryClient()}>
+        <ProjectFileDropZone projectId="p1">
+          <ChatInput onSend={vi.fn()} onStop={vi.fn()} isStreaming={false} onFileDropped={onFileDropped} />
+        </ProjectFileDropZone>
+      </QueryClientProvider>,
+    );
+    const composer = screen.getByRole('textbox').closest('.prospector-chat-input') as HTMLElement;
+
+    fireEvent.dragEnter(composer, fileDrag);
+    expect(screen.getByText('Drop to add to Project One')).toBeTruthy();
+    fireEvent.drop(composer, fileDrag);
+
+    expect(screen.queryByText('Drop to add to Project One')).toBeNull();
+    expect(onFileDropped).toHaveBeenCalledTimes(1);
+    await new Promise((r) => setTimeout(r, 0));
+    expect(uploadProjectFile).not.toHaveBeenCalled();
+
+    // A later drag must start from a clean count, so one enter shows and one leave hides.
+    fireEvent.dragEnter(composer, fileDrag);
+    expect(screen.getByText('Drop to add to Project One')).toBeTruthy();
+    fireEvent.dragLeave(composer, fileDrag);
+    expect(screen.queryByText('Drop to add to Project One')).toBeNull();
   });
 });
