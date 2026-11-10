@@ -80,7 +80,7 @@ public class ProjectSchemaCache {
   private static final long FILE_SCAN_TIMEOUT_MS = 30_000L;
 
   /**
-   * Wall-clock budget for one {@link #fileScan}, covering its listings and its probes
+   * Wall-clock budget for one sweep, covering every folder's listings and probes
    * together. {@link #FILE_SCAN_TIMEOUT_MS} bounds a single query; nothing bounded the
    * sweep as a whole, so a folder of merely slow files could hold this class's monitor
    * for minutes (up to 100 listings plus 500 probes, each allowed 30 s) while every other
@@ -352,15 +352,33 @@ public class ProjectSchemaCache {
    * holds a single entry per schema path, so the two must be scanned together: picking
    * one scanner per schema would let whichever reference was seen first decide the
    * entry's content and drop the other's tables.
+   *
+   * <p>{@link #FILE_SCAN_BUDGET_MS} is spent once across every folder, not once per
+   * folder: a project accumulates a folder reference per upload target it has been
+   * pointed at, so a per-folder budget would let one sweep hold the monitor for the
+   * budget times the number of references.
    */
   public static List<CachedTable> combinedScan(String schemaPath, List<String> folders,
       WorkManager workManager, WebUserConnection conn) throws Exception {
     List<CachedTable> tables = new ArrayList<>(infoSchemaScan(schemaPath, workManager, conn));
+    List<CachedTable> files = folderScans(schemaPath, folders, workManager, conn,
+        System.currentTimeMillis() + FILE_SCAN_BUDGET_MS);
+    tables.addAll(files);
+    return files instanceof PartialTables ? new PartialTables(tables) : tables;
+  }
+
+  /**
+   * Every folder of one schema, under a single deadline. Package-visible so a test can
+   * hand it a deadline that has already passed.
+   */
+  static List<CachedTable> folderScans(String schemaPath, List<String> folders,
+      WorkManager workManager, WebUserConnection conn, long deadline) throws Exception {
+    List<CachedTable> tables = new ArrayList<>();
     boolean partial = false;
     if (folders != null) {
       for (String folder : folders) {
         if (folder != null && !folder.isEmpty()) {
-          List<CachedTable> files = fileScan(schemaPath, folder, workManager, conn);
+          List<CachedTable> files = fileScan(schemaPath, folder, workManager, conn, deadline);
           partial |= files instanceof PartialTables;
           tables.addAll(files);
         }

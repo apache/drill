@@ -282,7 +282,15 @@ public class ProjectFileResources {
    * whose message is safe to return to the client. The second, independent traversal
    * guard behind {@link #safeName}: it lets through names that still do not resolve
    * inside the project folder, such as "." or a scheme-bearing "foo:bar" that replaces
-   * the parent outright. Upload, delete and download all resolve through here.
+   * the parent outright. Upload, delete and download all resolve through here, and so
+   * does the project id in {@link #projectDir}.
+   *
+   * <p>The separator is appended only when {@code dir} does not already end in one. A
+   * {@code dir} at the root of its storage ({@code file:/}, {@code s3a://bucket/}) prints
+   * with a trailing slash, so comparing against {@code dirUri + "/"} would test for a
+   * doubled separator and refuse every name — including a workspace whose
+   * {@code location} is {@code "/"}, which is what a bucket dedicated to uploads looks
+   * like.
    */
   static Path resolveInside(Path dir, String name) {
     Path target;
@@ -292,7 +300,12 @@ public class ProjectFileResources {
       throw new IllegalArgumentException("Invalid file name: it cannot be resolved");
     }
     String dirUri = dir.toUri().normalize().toString();
-    if (!target.toUri().normalize().toString().startsWith(dirUri + "/")) {
+    String prefix = dirUri.endsWith("/") ? dirUri : dirUri + "/";
+    String targetUri = target.toUri().normalize().toString();
+    // The length test is what refuses a name that resolves back onto the folder itself,
+    // such as ".": with a root dir the prefix is the folder, so startsWith alone would
+    // let it through.
+    if (!targetUri.startsWith(prefix) || targetUri.length() == prefix.length()) {
       throw new IllegalArgumentException(
           "Invalid file name: it does not resolve inside the project folder");
     }

@@ -1021,6 +1021,42 @@ public class TestProjectFileResources extends ClusterTest {
         ProjectFileResources.projectDir(cfg, fsConfig, "p1").toUri().toString());
   }
 
+  /**
+   * A workspace at the root of its storage. The containment check compares the resolved
+   * path against the folder plus a separator, and a root folder already prints with one,
+   * so appending a second refused every id: a bucket given over to uploads, which is the
+   * shape the docs recommend, could not be used at all.
+   */
+  @Test
+  public void testProjectDirAcceptsAWorkspaceAtTheStorageRoot() {
+    UploadConfigResources.UploadConfig cfg =
+        new UploadConfigResources.UploadConfig("dfs", "rel", 100L);
+
+    assertEquals("file:/p1", rootWorkspaceDir(cfg, "file:///").toUri().toString());
+    assertEquals("s3a://bucket/p1", rootWorkspaceDir(cfg, "s3a://bucket/").toUri().toString());
+    assertEquals("hdfs://nn:8020/p1",
+        rootWorkspaceDir(cfg, "hdfs://nn:8020/").toUri().toString());
+
+    // The guard is still a guard at the root: an id that resolves back onto the
+    // workspace itself, or out of it, is refused there too.
+    FileSystemConfig root = rootWorkspaceConfig("s3a://bucket/");
+    for (String id : Arrays.asList(".", "..", "a/b", "foo:bar")) {
+      assertNull(id, ProjectFileResources.projectDir(cfg, root, id));
+    }
+  }
+
+  private static org.apache.hadoop.fs.Path rootWorkspaceDir(
+      UploadConfigResources.UploadConfig cfg, String connection) {
+    return ProjectFileResources.projectDir(cfg, rootWorkspaceConfig(connection), "p1");
+  }
+
+  private static FileSystemConfig rootWorkspaceConfig(String connection) {
+    return new FileSystemConfig(connection,
+        Collections.<String, String>emptyMap(),
+        Collections.singletonMap("rel", new WorkspaceConfig("/", true, null, false)),
+        Collections.<String, FormatPluginConfig>emptyMap(), null);
+  }
+
   @Test
   public void testDeleteRefreshesTheCache() throws Exception {
     configureUploads(1000);

@@ -319,6 +319,20 @@ public class TestProjectSchemaCache {
     assertTrue(tables.isEmpty());
   }
 
+  /**
+   * And the budget is spent once per sweep, not once per folder. A project accumulates a
+   * folder reference per upload target it has been pointed at, so a per-folder budget
+   * would let one sweep hold the monitor for the budget times the number of references.
+   * Two folders under one expired deadline must both stop, and neither may query.
+   */
+  @Test
+  public void testTheBudgetIsSharedAcrossAllOfASchemasFolders() throws Exception {
+    List<CachedTable> tables = ProjectSchemaCache.folderScans("dfs.tmp",
+        List.of("p1", "p2"), null, null, System.currentTimeMillis() - 1);
+    assertTrue(tables instanceof ProjectSchemaCache.PartialTables);
+    assertTrue(tables.isEmpty());
+  }
+
   @Test
   public void testRemoveAndRemoveProject() {
     AtomicInteger calls = new AtomicInteger();
