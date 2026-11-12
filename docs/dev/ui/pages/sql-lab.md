@@ -34,7 +34,7 @@ In `src/components/sqllab/`:
   - **Delete** and **Download** appear on file nodes inside the current project's uploads folder (the configured upload schema), and only for flat names. Delete confirms by name, calls `DELETE /api/v1/projects/{id}/files/{name}` and then refreshes the tree and schema cache; Download links to `.../content`. See [`../../FileUploads.md`](../../FileUploads.md).
 - `QueryToolbar` — Run / Run Selection / Cancel buttons, schema/auto-limit dropdowns, format SQL.
 - `VisualizationBuilder` — chart-config panel that drives ChartPreview. Lives next to ResultsGrid as the "Visualization" sub-tab.
-- `NotebookPanel` — collapsible right-side markdown notebook for query narratives. 
+- `NotebookPanel` — Jupyter-style notebook in the results pane. Runs Python in the browser via Pyodide with the tab's results injected as a pandas DataFrame. See [`../../Notebooks.md`](../../Notebooks.md).
 - `SaveQueryDialog` — save current tab as a new or existing saved query.
 - `QueryHistoryModal` — past executions for the current user.
 - `KeyboardShortcutsModal` — help overlay (triggered by `?`).
@@ -138,7 +138,7 @@ Design and the reasoning behind the projection handling are in
 - **Auto-limit.** When `autoLimit` is set, bare SELECT statements get `LIMIT N` appended. `extractSqlLimit()` strips comments before checking for an existing LIMIT.
 - **Visualizations.** Building a chart adds it to the tab as a "Visualization" tab on the results panel and stores its id in `tab.vizIds`. Visualizations can be opened independently from the `/visualizations` page.
 - **AI Optimize.** Selecting "Optimize" in the AI menu sends the current SQL through Prospector with the optimize prompt. The response streams into a modal; "Accept" runs the result through `transpileSql` and replaces the editor contents.
-- **Notebook panel.** Collapsible markdown surface to the right of the editor. Renders saved markdown plus runnable Python cells.
+- **Notebook.** A tab in the results pane: code and markdown cells running real Python (Pyodide/WASM) in the browser, with the result set injected as a pandas DataFrame named after the tab. Cells autosave to `localStorage` per tab; nothing executes on the server. See [`../../Notebooks.md`](../../Notebooks.md).
 - **Mobile / tablet.** Below the mobile breakpoint (`Grid.useBreakpoint()`), the schema explorer collapses and the layout switches to single-pane.
 
 ## Sampling dynamic schemas
