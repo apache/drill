@@ -262,6 +262,7 @@ message QueryProfile {
   optional string queryId = 22;
   optional int32 autoLimit = 23;
   repeated string scanned_plugins = 24;
+  optional bool plan_cache_hit = 25;
 }
 
 message MajorFragmentProfile {

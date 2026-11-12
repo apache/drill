@@ -1,0 +1,287 @@
+<!--
+Licensed to the Apache Software Foundation (ASF) under one
+or more contributor license agreements.  See the NOTICE file
+distributed with this work for additional information
+regarding copyright ownership.  The ASF licenses this file
+to you under the Apache License, Version 2.0 (the
+"License"); you may not use this file except in compliance
+with the License.  You may obtain a copy of the License at
+
+http://www.apache.org/licenses/LICENSE-2.0
+
+Unless required by applicable law or agreed to in writing, software
+distributed under the License is distributed on an "AS IS" BASIS,
+WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+See the License for the specific language governing permissions and
+limitations under the License.
+-->
+
+# Physical plan cache
+
+Drill normally validates and optimizes every SQL query, even when the same query
+shape has just been executed. The plan cache reuses that work for repeated reads.
+It caches a physical plan, not query results: every execution reads the current
+source data.
+
+The feature is opt-in and disabled by default:
+
+```sql
+ALTER SESSION SET planner.enable_plan_cache = true;
+```
+
+Use `ALTER SYSTEM` instead of `ALTER SESSION` to set the default for new queries.
+
+Enable plan caching only after every Drillbit in the cluster has been upgraded
+to a version that supports it. Keep it disabled throughout a rolling upgrade:
+parameterized plans carry `bound_dynamic_param(...)` expressions in execution
+fragments, and older Drillbits cannot parse this syntax. Upgrading only the
+coordinating Drillbit is insufficient because any participating execution
+Drillbit must understand these expressions.
+
+## The basic idea
+
+These queries can share a plan when the scan plugin supports it:
+
+```sql
+SELECT id, label FROM dfs.`/data/users.csvh` WHERE id = '101';
+SELECT id, label FROM dfs.`/data/users.csvh` WHERE id = '250';
+```
+
+Drill replaces eligible data literals with typed slots when building the cache
+key. Each slot carries its current value during the first planning pass. The
+resulting physical expressions retain the slot number, so a later query can
+replace the value without running the optimizer again. Literal type, numeric
+precision and scale, and string length are part of the template.
+
+```mermaid
+flowchart LR
+  SQL[Parse SQL and build template] --> Lookup{Compatible cached plan?}
+  Lookup -->|Yes| Bind[Bind current values and rebuild scans]
+  Lookup -->|No| Plan[Validate and optimize normally]
+  Bind --> Execute[Execute against current data]
+  Plan --> Execute
+  Execute -->|Successful first execution| Save[Publish immutable plan snapshot]
+```
+
+The cache belongs to one Drillbit and can be shared across connections. Its key
+includes the query user, default schema and SQL template. Each entry also records
+effective planner options, plugin configurations and the compatibility version
+of every referenced table, including tables inside joins, CTEs and subqueries.
+Effective-option and plugin-configuration fingerprints are also part of the key,
+so sessions with different settings retain separate entries. Table versions stay
+in the entry's context snapshot and trigger invalidation when compatibility changes.
+A mismatch or failure falls back to ordinary planning.
+
+Each table's compatibility version combines the plugin's native version with the
+effective provided schema, if any. The core hashes the complete parsed schema,
+including column definitions, defaults and properties, with object properties
+sorted consistently and column order preserved. Provided-schema changes,
+creation or deletion therefore invalidate an old entry even when the native
+schema version is unchanged. Native schema changes still invalidate entries
+when a provided schema is present. When schema-file support is disabled, the file
+does not contribute to compatibility. An absent provided schema uses an explicit
+no-schema state. Schema read failures bypass caching.
+
+The cached representation is immutable physical-plan JSON. A hit creates a new
+plan object graph and binds the new values throughout its expressions. Each
+participating scan must also rebuild any state derived from those values.
+The initial integration uses delimited text (CSV/TSV) with an explicit single-file
+selection. Predicates remain in Drill's Filter operator, so binding changes only
+Drill expressions. The existing `EasyGroupScan` JSON reader rebuilds file blocks
+and endpoint assignments. The compatibility version includes file length and
+modification time: appends, replacements and header changes that alter either
+value invalidate the entry and replan. As with file metadata caches, writers must
+update modification times when changing content; edits that preserve both length
+and modification time are not detected.
+
+## What can be reused
+
+Read queries can include joins, aggregates, subqueries, CTEs, ordering and limits.
+Every source plugin must explicitly support caching and guarantee safe
+reconstruction of its scans. This change opts in single-file delimited text
+scans; other formats and storage plugins retain the default of no support.
+
+Constants that determine SQL structure stay in the key: group/order expressions,
+window definitions, limit/offset, field selectors, and function configuration
+arguments such as `DATE_PART`'s unit or `CONVERT_FROM`'s encoding. DATE, TIME,
+TIMESTAMP and INTERVAL literals also stay in the key because their parameter
+binding is not supported. Other eligible literals in the same query can still
+be rebound. Queries with no slots can reuse their complete template.
+
+SELECT, HAVING and QUALIFY expressions are always preserved to keep matching
+expressions consistent during validation and rewriting, including inline windows
+without an outer ORDER BY. For example, the `1` in `SELECT x + 1` remains in the
+template key; changing it creates a different template. Eligible WHERE and JOIN
+condition literals can still be rebound.
+
+Writes, DDL, existing dynamic parameters, volatile/query-context functions and
+sessions containing temporary tables or mutable aliases bypass the cache.
+Unsupported scans, views without a compatible table identity, text directories
+and wildcard selections use normal planning. Even a directory containing one
+file bypasses caching, so cached selections cannot retain stale partition pruning.
+
+## Storage plugin roadmap
+
+This PR establishes the engine path with a small text-format integration that
+requires no native predicate rebuilding. Additional integrations belong in
+follow-up changes:
+
+1. **Text directories and other DFS formats without filter pushdown.** Rebuild
+   file selections and directory partition pruning for the current values;
+   detect schema and file-set changes.
+2. **Plugins with predicate pushdown, including HBase, Iceberg and Parquet.**
+   Preserve the source predicate and rebuild native filters, bounds, partitions,
+   files or row groups for the newly bound values. Define compatibility versions
+   independently from data snapshots where compatible updates should keep hitting.
+3. **JDBC.** Rebuild pushed-down SQL for the current parameter values. Evaluate
+   shared plugin hooks for native predicate reconstruction.
+
+Each integration must retain the inputs needed to reconstruct value-dependent
+scan state and provide reliable compatibility checks, following the
+[plugin developer guide](PLAN_CACHE_PLUGIN_GUIDE.md). Benchmark cache-hit planning
+and end-to-end latency against ordinary planning, including metadata reads and
+bind-time reconstruction. For DFS and Parquet in particular, measure file listing
+and pruning costs to establish how much planning work a hit actually saves.
+
+## Lifetime and observation
+
+An immutable physical-plan JSON snapshot is serialized immediately after planning,
+before parallelization or execution can mutate the operators. Publication happens
+only after the first query succeeds. A bounded background queue holds the immutable
+JSON and the original literal values. Before publication, it performs a trial bind
+through the same expression-binding and scan-reconstruction path used on cache hits.
+A failed trial bind skips publication without affecting the completed query. The
+trial plan is discarded; the original JSON template is cached. This replaces the
+JSON-only read-back check, so publication does not perform both checks. A full queue
+simply skips publication.
+
+This is intentionally a general plan for the parameterized template. Constant
+folding that depends on bindable parameter values cannot be applied without
+specializing the plan to one execution and losing the slots needed by later queries.
+Structural constants can still be optimized. Value-dependent selectivity estimates,
+join ordering and distribution choices may therefore be less effective than when
+planning literal SQL, including on the first cache miss. This is an expected trade-off
+for avoiding repeated optimization. Cached row-count estimates come from the first optimization;
+new values and statistics changes alone do not trigger a new cost-based plan choice.
+
+`planner.enable_plan_cache_fallback` defaults to `true`. If planning a parameterized
+query throws an exception, Drill logs a WARN with the SQL template and exception,
+then retries the original SQL once with a fresh parser, converter and handler,
+without consulting or publishing to the plan cache. Queries with no bindable
+literals do not enter this fallback path. If both attempts fail, the ordinary
+planning error is returned; such queries incur the cost of both attempts.
+
+To expose parameterized planning errors directly during debugging or testing:
+
+```sql
+ALTER SESSION SET planner.enable_plan_cache_fallback = false;
+```
+
+This option can also be set at SYSTEM scope. When disabled, parameterized planning
+failures still produce a WARN, but are returned without this retry. Cache lookup,
+binding and publication failures retain their existing handling.
+
+The following boot options can be overridden in `drill-override.conf`. They are
+read once per Drillbit and changing them requires a restart. The effective settings
+are logged at startup. `planner.enable_plan_cache` remains the runtime on/off switch.
+
+```hocon
+drill.exec.plan_cache: {
+  max_size_bytes: 33554432,
+  expire_after_write: 0,
+  expire_after_access: 10m
+}
+```
+
+- `max_size_bytes` bounds the total UTF-8 byte size of cache keys, physical-plan JSON,
+  and optional explain text per Drillbit. The default is 32 MiB; entry metadata and
+  Java object overhead are not included in this limit. A value of `0` disables cache storage.
+- `expire_after_write` sets a fixed lifetime since creation or replacement.
+  The default of `0` disables this policy; reads do not extend a configured lifetime.
+- `expire_after_access` sets an idle lifetime since the last read or write.
+  The default of `10m` removes unused entries while allowing active plans to remain
+  cached, subject to capacity eviction and compatibility checks.
+
+Durations accept HOCON units such as `30s`, `10m`, or `1h`. A duration of `0`
+disables only that expiration policy. When both policies are enabled, an entry
+expires as soon as either deadline is reached. When both are disabled, capacity
+eviction and explicit invalidation still apply. All three settings must be
+non-negative; invalid settings fail Drillbit startup.
+
+Capacity eviction favors recently accessed entries using Guava's segmented LRU
+policy, so entries can be evicted before their expiration deadlines or before the
+global size limit is reached. Expired entries are no longer returned by lookups;
+physical removal occurs during cache maintenance rather than on a background timer.
+Without write-based expiration, hot plans do not periodically re-optimize. Operators
+who need that behavior can configure a nonzero `expire_after_write` lifetime.
+
+The query profile's **Plan Cache Hit** field, or JSON `planCacheHit`, identifies a
+successful hit. Explain shows slot names and this execution's parameter values;
+those alone do not prove a hit.
+
+DEBUG logging from `DrillSqlWorker` reports cache hits, misses and invalidation due
+to context changes or binding failures. `PlanCache` logs publication and skipped
+publication caused by serialization errors, a failed trial bind or a busy writer. Foreman thread names
+include the query ID, allowing these messages to be correlated with query profiles.
+
+The following per-cache gauges are registered in `DrillMetrics` under
+`drill.plan_cache.`:
+
+| Gauge | Meaning |
+| --- | --- |
+| `hits` | Plans successfully rebound and returned by eligible lookups. |
+| `misses` | Eligible lookups without a usable entry, including stale entries and binding failures. Queries that bypass caching are excluded. |
+| `planning_failures` | Parameterized planning attempts that threw an exception, followed by successful ordinary planning of the original SQL. |
+| `invalidations` | Explicit invalidation requests, including whole-cache clear commands. |
+| `evictions` | Guava automatic removals due to capacity or expiration. |
+| `entries` | Current entry count reported by Guava; expired entries may remain counted until maintenance. |
+
+`drill.plan_cache.planning_failures` is a cumulative, Drillbit-local counter
+exposed as a gauge, like `hits` and `misses`. It increments only after fallback
+**planning** succeeds, regardless of whether subsequent query execution succeeds.
+It does not count cases where both planning attempts fail, fallback is disabled,
+or only cache preparation, binding or publication fails. WARN logs therefore can
+outnumber this counter. Clearing the cache does not reset it; recreating the cache
+(normally a Drillbit restart) does.
+
+Treat this counter as evidence to investigate, rather than proof of a parameterization
+bug. False positives are possible: transient metadata changes, resource pressure,
+concurrent activity or nondeterministic planning can make the second attempt succeed
+even if parameterization did not cause the first failure. The counter also cannot
+detect a plan that succeeds but produces incorrect results; differential testing
+with caching disabled, on a miss and on a hit is still needed.
+
+JMX reporting is enabled by default and can be controlled with the JVM property
+`drill.metrics.jmx.enabled`. Periodic metric logging can be enabled with
+`-Ddrill.metrics.log.enabled=true`; `drill.metrics.log.interval` defaults to 60 seconds.
+Closing the cache unregisters its gauges.
+
+Administrators can clear the receiving Drillbit's cache with:
+
+```sql
+ALTER SYSTEM CLEAR PLAN CACHE;
+```
+
+The command follows the SYSTEM option administrator policy: when user
+authentication is enabled, only configured administrator users or members of
+administrator groups can run it. With authentication disabled, the command is
+available to all users. It returns `ok` and a `summary` identifying the Drillbit
+whose cache was cleared. It does not broadcast to other Drillbits; to clear a
+cluster, connect to each Drillbit and issue the command there.
+
+`SYSTEM` specifies the administrator privilege scope; it does not make this
+command cluster-wide. Behind a load balancer, one invocation clears only the
+receiving Drillbit, and later queries routed to other Drillbits can still hit
+their caches. Use a direct connection to each Drillbit when clearing the whole
+cluster, and check the returned `summary` to identify the node that was cleared.
+
+Clearing also advances a cache generation. Plans prepared before the clear,
+including queued writes and publications pending query completion, cannot
+repopulate the cache. Already-bound queries continue normally. Queries planned
+after the clear can populate it again. Repeated clears, including while plan
+caching is disabled for the session, succeed. Hit/miss counters remain cumulative;
+each clear counts as one invalidation request.
+
+See the [plugin developer guide](PLAN_CACHE_PLUGIN_GUIDE.md) for the integration
+contract. The accompanying pull request description contains validation results
+and benchmark methodology.

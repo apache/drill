@@ -83,6 +83,8 @@ public class SystemOptionManager extends BaseOptionManager implements AutoClosea
     @SuppressWarnings("deprecation")
     final OptionDefinition[] definitions = new OptionDefinition[]{
       new OptionDefinition(PlannerSettings.CONSTANT_FOLDING),
+      new OptionDefinition(PlannerSettings.PLAN_CACHE),
+      new OptionDefinition(PlannerSettings.PLAN_CACHE_FALLBACK),
       new OptionDefinition(PlannerSettings.EXCHANGE),
       new OptionDefinition(PlannerSettings.HASHAGG),
       new OptionDefinition(PlannerSettings.STREAMAGG),
