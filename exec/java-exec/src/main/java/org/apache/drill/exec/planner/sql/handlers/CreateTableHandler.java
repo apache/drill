@@ -43,6 +43,9 @@ import org.apache.drill.exec.physical.PhysicalPlan;
 import org.apache.drill.exec.physical.base.PhysicalOperator;
 import org.apache.drill.exec.planner.sql.DirectPlan;
 import org.apache.drill.exec.rpc.user.UserSession;
+import org.apache.drill.exec.security.AccessAuthorizerManager;
+import org.apache.drill.exec.security.DdlAccessChecker;
+import org.apache.drill.exec.security.spi.AccessType;
 import org.apache.drill.exec.store.StorageStrategy;
 import org.apache.drill.exec.planner.logical.DrillRel;
 import org.apache.drill.exec.planner.logical.DrillScreenRel;
@@ -86,6 +89,14 @@ public class CreateTableHandler extends DefaultSqlHandler {
     final AbstractSchema drillSchema = resolveSchema(sqlCreateTable, config.getConverter().getDefaultSchema(), drillConfig);
     final boolean checkTableNonExistence = sqlCreateTable.checkTableNonExistence();
     final String schemaPath = drillSchema.getFullSchemaName();
+
+    // Ranger DDL authorization: CREATE privilege on the new table. Temporary
+    // tables are session-scoped objects (UUID name, invisible to other users)
+    // and bypass authorization. Checked before the existence check so an
+    // unauthorized user cannot probe table existence via differing errors.
+    if (!sqlCreateTable.isTemporary() && AccessAuthorizerManager.isEnabled(config.getContext().getConfig())) {
+      DdlAccessChecker.checkDdlAccess(context, drillSchema, originalTableName, AccessType.CREATE);
+    }
 
     // Check table creation possibility
     if(!checkTableCreationPossibility(drillSchema, originalTableName, drillConfig, context.getSession(), schemaPath, checkTableNonExistence)) {

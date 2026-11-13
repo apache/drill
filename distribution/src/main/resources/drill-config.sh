@@ -365,6 +365,11 @@ export DRILLBIT_LOG_PATH="${DRILL_LOG_PREFIX}.log"
 # Add Drill conf folder at the beginning of the classpath
 CP="$DRILL_CONF_DIR"
 
+# Add Ranger config directory if it exists (for ranger-drill-security.xml etc.)
+if [ -d "$DRILL_CONF_DIR/ranger" ]; then
+  CP="$CP:$DRILL_CONF_DIR/ranger"
+fi
+
 # If both user and YARN-provided Java lib paths exist,
 # combine them.
 

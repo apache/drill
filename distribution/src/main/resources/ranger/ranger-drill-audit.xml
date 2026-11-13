@@ -1,0 +1,75 @@
+<?xml version="1.0"?>
+<?xml-stylesheet type="text/xsl" href="configuration.xsl"?>
+<!--
+  Licensed to the Apache Software Foundation (ASF) under one or more
+  contributor license agreements.  See the NOTICE file distributed with
+  this work for additional information regarding copyright ownership.
+  The ASF licenses this file to You under the Apache License, Version 2.0
+  (the "License"); you may not use this file except in compliance with
+  the License.  You may obtain a copy of the License at
+
+  http://www.apache.org/licenses/LICENSE-2.0
+
+  Unless required by applicable law or agreed to in writing, software
+  distributed under the License is distributed on an "AS IS" BASIS,
+  WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+  See the License for the specific language governing permissions and
+  limitations under the License.
+-->
+<configuration>
+  <!--
+    Ranger audit configuration for Drill.
+
+    Property names MUST match what AuditProviderFactory reads (verified from
+    bytecode of ranger-audit-core-2.8.0.jar):
+      xasecure.audit.is.enabled          — master switch (must be true)
+      xasecure.audit.log4j.is.enabled    — log4j/drillbit.log destination
+      xasecure.audit.solr.is.enabled     — Solr destination
+      xasecure.audit.hdfs.is.enabled     — HDFS destination
+
+    The old names xasecure.audit.is.audit.to.{log4j,solr,hdfs} are NOT read
+    by AuditProviderFactory and have no effect.
+
+    When xasecure.audit.log4j.is.enabled=true, AuditProviderFactory loads
+    org.apache.ranger.audit.provider.Log4jAuditProvider via Class.forName().
+    That class logs audit events to SLF4J logger
+    "xaaudit.org.apache.ranger.audit.provider.Log4jAuditProvider".
+    Configure this logger in logback.xml to capture audit records.
+  -->
+
+  <!-- Master switch: must be true for any audit destination to work -->
+  <property>
+    <name>xasecure.audit.is.enabled</name>
+    <value>true</value>
+  </property>
+
+  <!-- Log4j destination: writes audit records to drillbit.log via SLF4J -->
+  <property>
+    <name>xasecure.audit.log4j.is.enabled</name>
+    <value>true</value>
+  </property>
+
+  <!-- Solr destination (disabled by default) -->
+  <property>
+    <name>xasecure.audit.solr.is.enabled</name>
+    <value>false</value>
+  </property>
+  <property>
+    <name>xasecure.audit.solr.url</name>
+    <value>http://ranger-admin-host:6083/solr/ranger_audits</value>
+  </property>
+
+  <!-- HDFS destination (disabled by default) -->
+  <property>
+    <name>xasecure.audit.hdfs.is.enabled</name>
+    <value>false</value>
+  </property>
+  <property>
+    <name>xasecure.audit.hdfs.config.directory</name>
+    <value>hdfs://namenode:8020/ranger/audit</value>
+  </property>
+  <property>
+    <name>xasecure.audit.hdfs.config.file</name>
+    <value>/etc/hadoop/conf/core-site.xml</value>
+  </property>
+</configuration>

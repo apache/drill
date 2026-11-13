@@ -27,3 +27,10 @@ For information about the Jetty 12 upgrade, known limitations, and developer gui
 ## Materialized Views
 
 For information about materialized view support, including SQL syntax, query rewriting, and metastore integration, see [MaterializedViews.md](MaterializedViews.md)
+
+For information on the Jetty 12 upgrade, known limitations, and developer guidelines see [Jetty12Migration.md](Jetty12Migration.md)
+
+## Ranger Authorization
+
+For information on developing and configuring Apache Ranger column-level authorization for Drill see [RangerAuthorization.md](RangerAuthorization.md)
+

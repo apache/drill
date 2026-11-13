@@ -51,4 +51,12 @@
     <name>datanucleus.autoCreateTables</name>
     <value>true</value>
   </property>
+  <property>
+    <name>io.compression.codecs</name>
+    <value>org.apache.hadoop.io.compress.DefaultCodec,org.apache.hadoop.io.compress.GzipCodec,org.apache.hadoop.io.compress.BZip2Codec,org.apache.hadoop.io.compress.SnappyCodec,org.apache.hadoop.io.compress.Lz4Codec,org.apache.hadoop.io.compress.ZStandardCodec</value>
+    <description>Explicit codec list: skips ServiceLoader discovery, which
+      fails on Windows when the BrotliCodec native library (brotli.dll) is
+      not available. BrotliCodec's constructor eagerly loads the native
+      library and throws ServiceConfigurationError otherwise.</description>
+  </property>
 </configuration>
