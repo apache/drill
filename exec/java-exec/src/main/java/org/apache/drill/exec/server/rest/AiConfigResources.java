@@ -53,6 +53,7 @@ import jakarta.ws.rs.core.SecurityContext;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.Map;
+import java.util.Objects;
 
 /**
  * REST resource for managing Prospector AI configuration.
@@ -897,22 +898,27 @@ public class AiConfigResources {
   }
 
   /** Returns the stored LLM config, or null when none has been set. */
-  public static LlmConfig current(PersistentStoreProvider provider) {
-    return store(provider).get(CONFIG_KEY);
+  public static LlmConfig current(PersistentStoreProvider provider, ObjectMapper mapper) {
+    return store(provider, mapper).get(CONFIG_KEY);
   }
 
-  /** The shared config store for this provider; the same instance serves every caller. */
-  public static PersistentStore<LlmConfig> store(PersistentStoreProvider provider) {
-    return openStore(provider, null);
+  /**
+   * The shared config store for this provider; the same instance serves every caller.
+   * Every caller names the mapper it wants, so which caller warms the cache first cannot
+   * decide how the config is serialized for the rest of the process.
+   */
+  public static PersistentStore<LlmConfig> store(PersistentStoreProvider provider, ObjectMapper mapper) {
+    return openStore(provider, mapper);
   }
 
   // Keyed by provider so a restarted or second cluster in one JVM does not reuse a stale store.
   private static synchronized PersistentStore<LlmConfig> openStore(
       PersistentStoreProvider provider, ObjectMapper mapper) {
+    Objects.requireNonNull(mapper, "An AI config store needs an explicit ObjectMapper");
     if (cachedStore == null || cachedFor != provider) {
       try {
         cachedStore = provider.getOrCreateStore(
-            PersistentStoreConfig.newJacksonBuilder(mapper != null ? mapper : new ObjectMapper(), LlmConfig.class)
+            PersistentStoreConfig.newJacksonBuilder(mapper, LlmConfig.class)
             .name(CONFIG_STORE_NAME)
             .build()
         );

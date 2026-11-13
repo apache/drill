@@ -17,6 +17,9 @@
  */
 package org.apache.drill.exec.server.rest.workflow;
 
+import ch.qos.logback.classic.Level;
+import ch.qos.logback.classic.spi.ILoggingEvent;
+import ch.qos.logback.core.read.ListAppender;
 import org.apache.drill.exec.server.rest.AiConfigResources;
 import org.apache.drill.exec.server.rest.SavedQueryResources;
 import org.apache.drill.exec.server.rest.ai.ChatMessage;
@@ -34,6 +37,7 @@ import org.apache.drill.test.ClusterTest;
 import org.junit.AfterClass;
 import org.junit.BeforeClass;
 import org.junit.Test;
+import org.slf4j.LoggerFactory;
 
 import java.io.File;
 import java.io.OutputStream;
@@ -285,7 +289,8 @@ public class TestWorkflowRunner extends ClusterTest {
   private static final String FAKE_PROVIDER = "fake-summary-provider";
 
   private static PersistentStore<LlmConfig> aiStore() throws Exception {
-    return AiConfigResources.store(cluster.drillbit().getContext().getStoreProvider());
+    return AiConfigResources.store(cluster.drillbit().getContext().getStoreProvider(),
+        cluster.drillbit().getContext().getLpPersistence().getMapper());
   }
 
   private static void configure(String providerId, boolean enabled) throws Exception {
@@ -307,6 +312,7 @@ public class TestWorkflowRunner extends ClusterTest {
 
       @Override public LlmCallResult streamChatCompletion(LlmConfig config, List<ChatMessage> messages,
           List<ToolDefinition> tools, OutputStream out, UsageObserver usage) {
+        usage.onUsage(11, 7);
         LlmCallResult r = new LlmCallResult();
         r.appendResponseText(reply);
         return r;
@@ -325,7 +331,7 @@ public class TestWorkflowRunner extends ClusterTest {
 
   @Test
   public void summarizeRefusesWhenProspectorIsNotConfigured() {
-    Exception e = assertThrows(Exception.class, () -> runner.summarize("p", 100));
+    Exception e = assertThrows(Exception.class, () -> runner.summarize("p", 100, "alice"));
     assertEquals("Prospector is not configured; an administrator must set it up before ai_summary can run.",
         e.getMessage());
   }
@@ -334,7 +340,7 @@ public class TestWorkflowRunner extends ClusterTest {
   public void summarizeRefusesWhenProspectorIsDisabled() throws Exception {
     registerFake("hello");
     configure(FAKE_PROVIDER, false);
-    Exception e = assertThrows(Exception.class, () -> runner.summarize("p", 100));
+    Exception e = assertThrows(Exception.class, () -> runner.summarize("p", 100, "alice"));
     assertEquals("Prospector is disabled; an administrator must enable it before ai_summary can run.",
         e.getMessage());
   }
@@ -343,22 +349,97 @@ public class TestWorkflowRunner extends ClusterTest {
   public void summarizeReturnsTheModelText() throws Exception {
     registerFake("hello world");
     configure(FAKE_PROVIDER, true);
-    assertEquals("hello world", runner.summarize("p", 100));
+    assertEquals("hello world", runner.summarize("p", 100, "alice"));
   }
 
   @Test
   public void summarizeTruncatesToMaxChars() throws Exception {
     registerFake("hello world");
     configure(FAKE_PROVIDER, true);
-    assertEquals("hello", runner.summarize("p", 5));
-    assertEquals("", runner.summarize("p", -3));
+    assertEquals("hello", runner.summarize("p", 5, "alice"));
+    assertEquals("", runner.summarize("p", -3, "alice"));
   }
 
   @Test
   public void summarizeRejectsAnUnknownProvider() throws Exception {
     configure("no-such-provider", true);
-    Exception e = assertThrows(Exception.class, () -> runner.summarize("p", 100));
+    Exception e = assertThrows(Exception.class, () -> runner.summarize("p", 100, "alice"));
     assertTrue(e.getMessage(), e.getMessage().contains("no-such-provider"));
+  }
+
+
+  /** Captures the ai.events JSON lines written while the body runs. */
+  private static List<String> captureAiEvents(ThrowingRunnable body) throws Exception {
+    ch.qos.logback.classic.Logger events =
+        (ch.qos.logback.classic.Logger) LoggerFactory.getLogger("ai.events");
+    Level previous = events.getLevel();
+    ListAppender<ILoggingEvent> appender = new ListAppender<>();
+    appender.start();
+    events.setLevel(Level.INFO);
+    events.addAppender(appender);
+    try {
+      body.run();
+    } finally {
+      events.detachAppender(appender);
+      events.setLevel(previous);
+      appender.stop();
+    }
+    return appender.list.stream().map(ILoggingEvent::getFormattedMessage)
+        .collect(java.util.stream.Collectors.toList());
+  }
+
+  private interface ThrowingRunnable {
+    void run() throws Exception;
+  }
+
+  @Test
+  public void summarizeRecordsItsTokenUsage() throws Exception {
+    registerFake("hello world");
+    configure(FAKE_PROVIDER, true);
+    List<String> lines = captureAiEvents(() -> runner.summarize("prompt text", 100, "alice"));
+    assertEquals(lines.toString(), 1, lines.size());
+    String line = lines.get(0);
+    assertTrue(line, line.contains("\"feature\":\"workflow_ai_summary\""));
+    assertTrue(line, line.contains("\"user\":\"alice\""));
+    assertTrue(line, line.contains("\"promptTokens\":11"));
+    assertTrue(line, line.contains("\"responseTokens\":7"));
+    assertTrue(line, line.contains("\"totalTokens\":18"));
+    assertTrue(line, line.contains("\"success\":true"));
+  }
+
+  @Test
+  public void aFailedSummarizeIsStillRecorded() throws Exception {
+    configure("no-such-provider", true);
+    List<String> lines = captureAiEvents(
+        () -> assertThrows(Exception.class, () -> runner.summarize("p", 100, "alice")));
+    // An unknown provider never reaches a provider call, so nothing is recorded for it.
+    assertTrue(lines.toString(), lines.isEmpty());
+
+    LlmProviderRegistry.register(new LlmProvider() {
+      @Override public String getId() {
+        return "exploding-provider";
+      }
+
+      @Override public String getDisplayName() {
+        return "Exploding";
+      }
+
+      @Override public LlmCallResult streamChatCompletion(LlmConfig config, List<ChatMessage> messages,
+          List<ToolDefinition> tools, OutputStream out, UsageObserver usage) throws Exception {
+        throw new IllegalStateException("provider exploded");
+      }
+
+      @Override public ValidationResult validateConfig(LlmConfig config) {
+        return null;
+      }
+    });
+    configure("exploding-provider", true);
+    lines = captureAiEvents(
+        () -> assertThrows(Exception.class, () -> runner.summarize("p", 100, "bob")));
+    assertEquals(lines.toString(), 1, lines.size());
+    assertTrue(lines.get(0), lines.get(0).contains("\"success\":false"));
+    assertTrue(lines.get(0), lines.get(0).contains("provider exploded"));
+    assertTrue(lines.get(0), lines.get(0).contains("\"feature\":\"workflow_ai_summary\""));
   }
 
   @Test

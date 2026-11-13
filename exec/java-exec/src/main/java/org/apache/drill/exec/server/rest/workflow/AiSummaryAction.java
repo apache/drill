@@ -53,7 +53,7 @@ public class AiSummaryAction implements ActionType {
     // template path ({{rows[*].x}}, {{error}}) can carry query data into the prompt.
     String instructions = sendData ? ctx.render(template) : Templates.render(template, aggregateOnly(ctx.run()));
     String prompt = buildPrompt(instructions, ctx.run(), sendData);
-    return Map.of("summary", ctx.services().summarize(prompt, maxChars));
+    return Map.of("summary", ctx.services().summarize(prompt, maxChars, ctx.workflow().owner));
   }
 
   /** A copy of the run carrying only aggregate facts. */

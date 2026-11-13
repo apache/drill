@@ -78,7 +78,7 @@ public class BuiltInActionsTest {
       }
 
       @Override public void sendMail(List<String> to, String s, String b) { }
-      @Override public String summarize(String prompt, int maxChars) { return "summary"; }
+      @Override public String summarize(String prompt, int maxChars, String user) { return "summary"; }
     };
     Workflow wf = new Workflow();
     wf.id = "wf-1";
@@ -98,7 +98,7 @@ public class BuiltInActionsTest {
       }
 
       @Override public void sendMail(List<String> to, String s, String b) { }
-      @Override public String summarize(String prompt, int maxChars) { return "summary"; }
+      @Override public String summarize(String prompt, int maxChars, String user) { return "summary"; }
     };
     Workflow wf = new Workflow();
     wf.id = "wf-1";
@@ -160,7 +160,7 @@ public class BuiltInActionsTest {
     WorkflowServices services = new WorkflowServices() {
       @Override public void executeStatements(List<String> sql, String user, int timeout) { }
       @Override public void sendMail(List<String> to, String s, String b) { sent.add(to + "|" + s + "|" + b); }
-      @Override public String summarize(String prompt, int maxChars) { return "summary"; }
+      @Override public String summarize(String prompt, int maxChars, String user) { return "summary"; }
     };
     RunContext ctx = new RunContext();
     ctx.rowCount = 4;
@@ -175,6 +175,7 @@ public class BuiltInActionsTest {
   /** Fake services whose summarize records the prompt and returns or throws as configured. */
   private static final class SummaryServices implements WorkflowServices {
     final List<String> prompts = new ArrayList<>();
+    String user;
     final boolean sendData;
     final String reply;
     final Exception failure;
@@ -190,7 +191,8 @@ public class BuiltInActionsTest {
     @Override public boolean sendDataToAi() { return sendData; }
 
     @Override
-    public String summarize(String prompt, int maxChars) throws Exception {
+    public String summarize(String prompt, int maxChars, String user) throws Exception {
+      this.user = user;
       prompts.add(prompt);
       if (failure != null) {
         throw failure;
@@ -210,8 +212,17 @@ public class BuiltInActionsTest {
   }
 
   private static Map<String, Object> runSummary(SummaryServices services, String config) throws Exception {
+    Workflow wf = new Workflow();
+    wf.owner = "alice";
     return new AiSummaryAction().execute(
-        new ActionContext(new Workflow(), "select 1", summaryRun(), services), M.readTree(config));
+        new ActionContext(wf, "select 1", summaryRun(), services), M.readTree(config));
+  }
+
+  @Test
+  public void aiSummaryRecordsTheCallAgainstTheWorkflowOwner() throws Exception {
+    SummaryServices s = new SummaryServices(true, "ok", null);
+    runSummary(s, "{}");
+    assertEquals("alice", s.user);
   }
 
   @Test

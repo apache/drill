@@ -29,8 +29,11 @@ public interface WorkflowServices {
   /**
    * Asks the configured model to complete the prompt and returns its text, truncated to maxChars.
    * Never returns null; throws when no provider is configured or the call fails.
+   *
+   * @param user the identity the call is recorded against in AI analytics, normally the
+   *     workflow's owner, since nobody is at a keyboard when a scheduled run spends tokens
    */
-  String summarize(String prompt, int maxChars) throws Exception;
+  String summarize(String prompt, int maxChars, String user) throws Exception;
 
   /**
    * Whether the administrator allows query data (columns and row values) to be sent to the model.

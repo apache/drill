@@ -34,6 +34,8 @@ import org.apache.drill.exec.server.rest.RestQueryRunner;
 import org.apache.drill.exec.server.rest.SavedQueryResources;
 import org.apache.drill.exec.server.rest.WebSessionResources;
 import org.apache.drill.exec.server.rest.WebUserConnection;
+import org.apache.drill.exec.server.rest.ai.AiEvent;
+import org.apache.drill.exec.server.rest.ai.AiEventLogger;
 import org.apache.drill.exec.server.rest.ai.ChatMessage;
 import org.apache.drill.exec.server.rest.ai.LlmCallResult;
 import org.apache.drill.exec.server.rest.ai.LlmConfig;
@@ -421,15 +423,24 @@ public class WorkflowRunner implements AutoCloseable, WorkflowServices {
     SmtpMailer.send(stores.smtp().get(WorkflowStores.DEFAULT_KEY), to, subject, body);
   }
 
+  /** The feature slug ai_summary's provider calls are recorded under in /ai-analytics. */
+  static final String AI_SUMMARY_FEATURE = "workflow_ai_summary";
+
+  /** The config store's mapper, named explicitly so no other caller's choice decides it. */
+  private LlmConfig aiConfig() {
+    return AiConfigResources.current(provider,
+        workManager.getContext().getLpPersistence().getMapper());
+  }
+
   @Override
   public boolean sendDataToAi() {
-    LlmConfig config = AiConfigResources.current(provider);
+    LlmConfig config = aiConfig();
     return config != null && config.isSendDataToAi();
   }
 
   @Override
-  public String summarize(String prompt, int maxChars) throws Exception {
-    LlmConfig config = AiConfigResources.current(provider);
+  public String summarize(String prompt, int maxChars, String user) throws Exception {
+    LlmConfig config = aiConfig();
     if (config == null) {
       throw new IllegalStateException(
           "Prospector is not configured; an administrator must set it up before ai_summary can run.");
@@ -442,15 +453,75 @@ public class WorkflowRunner implements AutoCloseable, WorkflowServices {
     if (llm == null) {
       throw new IllegalStateException("Unknown Prospector provider: " + config.getProvider());
     }
-    LlmCallResult result = llm.streamChatCompletion(
-        config, List.of(ChatMessage.user(prompt)), List.<ToolDefinition>of(),
-        new ByteArrayOutputStream(), UsageObserver.NOOP);
-    String text = result.getResponseText();
-    if (text == null) {
-      text = "";
+    // Every other provider call site records its tokens; a scheduled run is the one call a
+    // user never sees happen, so leaving it out would hide it from cost accounting entirely.
+    Integer[] observed = new Integer[2];
+    UsageObserver observer = (in, out) -> {
+      observed[0] = in;
+      observed[1] = out;
+    };
+    long start = System.currentTimeMillis();
+    LlmCallResult result = null;
+    Exception failure = null;
+    try {
+      result = llm.streamChatCompletion(
+          config, List.of(ChatMessage.user(prompt)), List.<ToolDefinition>of(),
+          new ByteArrayOutputStream(), observer);
+      String text = result.getResponseText();
+      if (text == null) {
+        text = "";
+      }
+      int limit = Math.max(0, maxChars);
+      return text.length() > limit ? text.substring(0, limit) : text;
+    } catch (Exception e) {
+      failure = e;
+      throw e;
+    } finally {
+      recordSummaryEvent(config, user, prompt, result, observed, failure,
+          System.currentTimeMillis() - start);
     }
-    int limit = Math.max(0, maxChars);
-    return text.length() > limit ? text.substring(0, limit) : text;
+  }
+
+  /** Writes one AiEvent for an ai_summary call. Best-effort: analytics never fail the run. */
+  private static void recordSummaryEvent(LlmConfig config, String user, String prompt,
+      LlmCallResult result, Integer[] observed, Exception failure, long durationMs) {
+    try {
+      AiEvent event = new AiEvent();
+      event.ts = AiEventLogger.nowIso();
+      event.user = (user == null || user.isEmpty()) ? "anonymous" : user;
+      event.feature = AI_SUMMARY_FEATURE;
+      event.source = "server";
+      event.provider = config != null ? config.getProvider() : null;
+      event.model = config != null ? config.getModel() : null;
+      event.durationMs = durationMs;
+      event.success = failure == null && result != null;
+      event.cancelled = false;
+      if (failure != null) {
+        event.errorClass = failure.getClass().getSimpleName();
+        event.error = failure.getMessage();
+      }
+      event.promptTokens = result != null && result.getPromptTokens() != null
+          ? result.getPromptTokens() : observed[0];
+      event.responseTokens = result != null && result.getResponseTokens() != null
+          ? result.getResponseTokens() : observed[1];
+      event.totalTokens = result != null && result.getTotalTokens() != null
+          ? result.getTotalTokens()
+          : sum(event.promptTokens, event.responseTokens);
+      event.prompt = AiEventLogger.truncate(prompt);
+      if (result != null) {
+        event.response = AiEventLogger.truncate(result.getResponseText());
+      }
+      AiEventLogger.log(event);
+    } catch (Exception e) {
+      logger.warn("Failed to record the ai_summary usage event", e);
+    }
+  }
+
+  private static Integer sum(Integer a, Integer b) {
+    if (a == null && b == null) {
+      return null;
+    }
+    return (a == null ? 0 : a) + (b == null ? 0 : b);
   }
 
   /**
