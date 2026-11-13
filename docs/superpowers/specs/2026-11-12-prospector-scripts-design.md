@@ -299,6 +299,56 @@ and until the hand-off file format and the workflow-document change are written
 down. If that measurement fails, Group C is not worth building and the honest
 product is A and B plus a Run button.
 
+## Version control — written up, not scheduled
+
+Raised by the user after the design was otherwise settled, and deliberately not
+part of Groups A–C. The one step of edit history specified for the script
+object stands as the minimum; everything here supersedes it if and when this is
+picked up.
+
+"Version control" is three features with very different costs, and they should
+not be decided as one.
+
+**Tier 1 — revision history, server-side.** Every save is a revision carrying
+author, timestamp, the body, and a restore action; the UI shows a diff between
+any two. No authentication, no network, no new dependency — the same store the
+rest of the feature uses. This covers the need that actually bites: a scheduled
+forecast moved and someone has to find out what changed. If only one tier is
+ever built, it is this one, and it belongs in Group B.
+
+**Tier 2 — one-way push to a Git remote.** A button, and optionally a push on
+every save, with Drill remaining the source of truth and the repository acting
+as a mirror. Costs: a credential per user or per project through the existing
+`credentialsProvider` plumbing, a Git client (JGit, or shelling out to `git`,
+either of which needs a `jdbc-all` size check), and the usual remote failure
+handling. It fails harmlessly by construction — a rejected push leaves the
+script exactly as it was, and nothing that executes depends on the remote being
+reachable.
+
+**Tier 3 — two-way sync, repository as source of truth.** Pull before run,
+merge conflicts, branch selection, and a story for what a scheduled run does
+when the remote is unreachable or the pulled code no longer runs.
+
+### Tier 3 is an anti-goal unless its permission story is designed first
+
+A scheduled script is locked: editing it requires disabling the schedule, and
+only the owner can re-enable. The point is that nobody changes code running as
+the workflow owner without that owner's checkpoint.
+
+If the repository is the source of truth and a run pulls before executing, then
+anybody with push access to that repository changes what the Drillbit executes
+on Monday, as the owner, with no Drill-side checkpoint anywhere. Repository
+access is not Drill access, is not audited by Drill, and is frequently broader
+than the project's editor list. That is precisely the escalation the locking
+rule closes, reopened through a side door.
+
+Tier 2 has no such problem, which is the whole reason to prefer it.
+
+If Tier 3 is ever wanted, it needs its own design round answering at least: who
+the run executes as when the code came from a remote, what pins a scheduled run
+to a reviewed commit rather than a moving branch head, and what a run does when
+the remote is unreachable — fail, or proceed on the last known good commit.
+
 ## Open risks
 
 - **Runtime divergence is reduced, not eliminated.** One interpreter per
