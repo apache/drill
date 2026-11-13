@@ -16,6 +16,11 @@
  * limitations under the License.
  */
 import '@testing-library/jest-dom';
+import { configure } from '@testing-library/react';
+
+// See the note in vitest.config.ts: Testing Library's 1s default is shorter than a single
+// render of a page test, so findBy* timed out under CI load on elements that do appear.
+configure({ asyncUtilTimeout: 5_000 });
 
 // Node 26 exposes a global `localStorage` accessor that returns undefined unless the
 // process was started with --localstorage-file. Vitest's jsdom environment only copies a

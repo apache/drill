@@ -25,5 +25,14 @@ export default defineConfig({
     globals: true,
     setupFiles: ['./src/setupTests.ts'],
     css: true,
+    // These are integration-style tests: a page test mounts the router, antd and a lazily
+    // imported page, and costs well over a second. Testing Library's default asyncUtilTimeout
+    // is 1s, which is shorter than a single render under a loaded CI runner, so findBy* calls
+    // were timing out and reporting "unable to find" for elements that do appear. Waiting
+    // longer does not weaken an assertion: a behaviour that is actually wrong still fails,
+    // it just fails five seconds later. testTimeout has to exceed asyncUtilTimeout, or a
+    // test dies on the test deadline before the wait it is doing can report what it wanted.
+    testTimeout: 30_000,
+    hookTimeout: 30_000,
   },
 });
