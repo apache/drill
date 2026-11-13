@@ -16,6 +16,7 @@ All developer documentation is under [`docs/dev/`](docs/dev/). Start with [`docs
 | **Prospector reports** — generated reports saved to a project wiki, PDF download | [`docs/dev/ProspectorReports.md`](docs/dev/ProspectorReports.md) |
 | **File uploads** — drag a file into a project and query it; upload target, project role model, staged writes, schema cache | [`docs/dev/FileUploads.md`](docs/dev/FileUploads.md) |
 | **Notebooks** — Python in the browser (Pyodide) in SQL Lab, DataFrame injection, export back to Drill | [`docs/dev/Notebooks.md`](docs/dev/Notebooks.md) |
+| **Machine learning** — `predict()` over PMML models, training with nyoka, the `ai_summary` workflow action | [`docs/dev/MachineLearning.md`](docs/dev/MachineLearning.md) |
 | **Workflows** — scheduled queries with action pipelines, conditions, run log | [`docs/dev/WORKFLOWS.md`](docs/dev/WORKFLOWS.md) (reference), [`docs/dev/WorkflowsGuide.md`](docs/dev/WorkflowsGuide.md) (user and admin guide) |
 | Prospector AI assistant — backend | [`docs/dev/PROSPECTOR.md`](docs/dev/PROSPECTOR.md) |
 | **PCAP protocol decoders** — parsed_protocol / parsed_data / decode_error, writing a decoder | [`docs/dev/PcapProtocolDecoders.md`](docs/dev/PcapProtocolDecoders.md) |

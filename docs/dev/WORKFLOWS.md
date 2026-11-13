@@ -126,12 +126,15 @@ A condition or template that references `actions.<id>.*` makes the action depend
 | `record_alert` | `message` (template, required) | `message` (string) | No |
 | `save_to_table` | `location` (default `dfs.tmp`), `format` (`parquet`, `json`, `csv`; default `parquet`), `mode` (`overwrite`, `append`, `newTablePerRun`; default `overwrite`) | `path` (string) | Yes |
 | `email` | `to` (list of addresses, at least one), `subject` and `body` (templates) | `sent` (boolean) | Yes |
+| `ai_summary` | `instructions` (template, optional), `maxChars` (default 2000) | `summary` (string) | Yes |
 
 `record_alert` flags the run with a message shown as a badge in run history.
 
 `save_to_table` re-runs the saved query as a CTAS or INSERT and writes the full result, not only the preview. A trailing `;` on the saved SQL is stripped and the query is wrapped with a newline before the closing parenthesis, so a trailing `--` comment cannot swallow it. The target is `<location>.` followed by the backticked path `schedules/<workflowId>` (dashes in the id become underscores). `newTablePerRun` writes `schedules/<id>/run_<epochMillis>` instead. `overwrite` runs `DROP TABLE IF EXISTS` then CTAS, `append` runs `INSERT INTO`, and the other modes run CTAS. The statements run on one session as the workflow owner, starting with `ALTER SESSION SET store.format`. The action validates `location` (`^[A-Za-z0-9_]+(\.[A-Za-z0-9_]+)?$`), `format`, `mode` and the workflow id itself before building any SQL, because migrated legacy configs bypass schema validation.
 
 `email` sends through the global SMTP configuration. If SMTP is not configured the action errors with "SMTP is not configured".
+
+`ai_summary` asks the configured Prospector LLM to summarise the run. It refuses when Prospector is unconfigured or disabled, and a dry run previews instead of calling the provider. When `sendDataToAi` is off, the prompt carries only status, row count and duration, and `instructions` render against a blanked context. See [MachineLearning.md](MachineLearning.md).
 
 ### Adding an action type
 
