@@ -28,11 +28,12 @@ import java.util.Collections;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import org.apache.drill.exec.server.rest.ProjectResources.Project;
 import org.junit.Test;
+import org.apache.drill.test.BaseTest;
 
 /**
  * Unit tests for the project read and write access rules.
  */
-public class TestProjectResources {
+public class TestProjectResources extends BaseTest {
 
   private static Project project(boolean isPublic) {
     Project p = new Project();

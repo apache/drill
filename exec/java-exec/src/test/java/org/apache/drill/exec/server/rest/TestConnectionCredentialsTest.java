@@ -28,12 +28,13 @@ import java.util.Map;
 
 import static org.junit.Assert.assertEquals;
 import static org.junit.Assert.assertNull;
+import org.apache.drill.test.BaseTest;
 
 /**
  * The credentials the test-connection endpoint connects with. A storage config holds them in
  * one of two shapes, and only one of them is reachable through getCredentialsProvider().
  */
-public class TestConnectionCredentialsTest {
+public class TestConnectionCredentialsTest extends BaseTest {
 
   /**
    * A config in the shape plugins take when the credentials are given directly: the base

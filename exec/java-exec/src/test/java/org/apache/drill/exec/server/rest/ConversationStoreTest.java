@@ -36,8 +36,9 @@ import static org.junit.Assert.assertNotNull;
 import static org.junit.Assert.assertNull;
 import static org.junit.Assert.assertTrue;
 import static org.junit.Assert.fail;
+import org.apache.drill.test.BaseTest;
 
-public class ConversationStoreTest {
+public class ConversationStoreTest extends BaseTest {
 
   private ConversationStore store;
 
