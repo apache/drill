@@ -65,7 +65,7 @@ public class MLUtils {
         .message("A model location is required.")
         .build(logger);
     }
-    if (URL_PATTERN.matcher(modelLocation.trim()).matches()) {
+    if (URL_PATTERN.matcher(modelLocation.replace("`", "").trim()).matches()) {
       throw UserException.functionError()
         .message("Models cannot be loaded from URLs. Use a file system storage plugin location "
           + "such as dfs.models.`model.pmml`. Location: " + modelLocation)
@@ -83,6 +83,11 @@ public class MLUtils {
     } catch (PluginException e) {
       throw UserException.functionError(e)
         .message("Unable to access storage plugin '" + pluginInstanceName + "' for model " + modelLocation)
+        .build(logger);
+    }
+    if (plugin == null) {
+      throw UserException.functionError()
+        .message("Storage plugin '" + pluginInstanceName + "' was not found. Location: " + modelLocation)
         .build(logger);
     }
     if (!(plugin instanceof FileSystemPlugin)) {
@@ -112,34 +117,83 @@ public class MLUtils {
   }
 
   /**
-   * Resolves a backtick-free {@code plugin.workspace.path} or {@code plugin.path} string to a
-   * file system path.
+   * Resolves a {@code plugin.workspace.path} or {@code plugin.path} string to a file system
+   * path and confines it to the workspace. A name that resolves outside the workspace root
+   * (through {@code ..} or an absolute path) is refused. Where no workspace location applies
+   * (a plugin without workspaces, such as the classpath plugin, or a missing default
+   * workspace) the name must be relative and must not climb out of its starting folder.
    */
   protected static String getFullFilePath(String location, FileSystemConfig config) {
-    String[] parts = location.replace("`", "").split("\\.", 3);
+    String clean = location.replace("`", "");
+    String[] parts = clean.split("\\.", 3);
     String fileSystemName = parts[0];
     Map<String, WorkspaceConfig> workspaces = config.getWorkspaces();
 
+    String workspaceLocation = null;
+    String fileName;
     if (parts.length == 3 && workspaces.containsKey(parts[1])) {
       // plugin.workspace.path
-      return join(workspaces.get(parts[1]).getLocation(), parts[2]);
+      workspaceLocation = workspaces.get(parts[1]).getLocation();
+      fileName = parts[2];
+    } else {
+      // plugin.path, where the path itself may contain dots
+      fileName = clean.substring(Math.min(clean.length(), fileSystemName.length() + 1));
+      WorkspaceConfig defaultWorkspace = workspaces.get("default");
+      if (defaultWorkspace != null) {
+        workspaceLocation = defaultWorkspace.getLocation();
+      }
     }
 
-    // plugin.path, where the path itself may contain dots
-    String fileName = location.replace("`", "").substring(fileSystemName.length() + 1);
-    if (workspaces.isEmpty()) {
-      // Plugins without workspaces, such as the classpath plugin
-      return fileName;
+    if (workspaceLocation == null || workspaceLocation.isEmpty()) {
+      return confineRelative(fileName, location);
     }
-    WorkspaceConfig defaultWorkspace = workspaces.get("default");
-    return defaultWorkspace == null ? fileName : join(defaultWorkspace.getLocation(), fileName);
+    return resolveInside(new Path(workspaceLocation), fileName, location).toString();
   }
 
-  private static String join(String prefix, String fileName) {
-    if (prefix == null || prefix.isEmpty()) {
-      return fileName;
+  private static String confineRelative(String fileName, String location) {
+    if (fileName.startsWith("/") || safePath(fileName, location).isAbsolute()) {
+      throw outsideWorkspace(location);
     }
-    return prefix.endsWith("/") ? prefix + fileName : prefix + "/" + fileName;
+    String normalized = safePath(fileName, location).toUri().normalize().getPath();
+    if (normalized.isEmpty() || normalized.equals("..") || normalized.startsWith("../")) {
+      throw outsideWorkspace(location);
+    }
+    return fileName;
+  }
+
+  private static Path safePath(String fileName, String location) {
+    try {
+      return new Path(fileName);
+    } catch (IllegalArgumentException e) {
+      throw outsideWorkspace(location);
+    }
+  }
+
+  /**
+   * The path of {@code name} inside {@code dir}. The prefix test is trailing-slash aware so a
+   * workspace at the storage root works, and a name that resolves back onto the folder itself
+   * is refused.
+   */
+  static Path resolveInside(Path dir, String name, String location) {
+    Path target;
+    try {
+      target = new Path(dir, name);
+    } catch (IllegalArgumentException e) {
+      throw outsideWorkspace(location);
+    }
+    String dirUri = dir.toUri().normalize().toString();
+    String prefix = dirUri.endsWith("/") ? dirUri : dirUri + "/";
+    String targetUri = target.toUri().normalize().toString();
+    if (!targetUri.startsWith(prefix) || targetUri.length() == prefix.length()) {
+      throw outsideWorkspace(location);
+    }
+    return new Path(target.toUri().normalize());
+  }
+
+  private static UserException outsideWorkspace(String location) {
+    return UserException.functionError()
+      .message("The model location does not resolve to a file inside its workspace: " + location)
+      .build(logger);
   }
 
   /**

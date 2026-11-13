@@ -19,6 +19,8 @@ package org.apache.drill.exec.udfs.ml;
 
 import org.apache.drill.common.exceptions.UserException;
 import org.apache.drill.exec.server.DrillbitContext;
+import org.apache.drill.exec.store.dfs.FileSystemConfig;
+import org.apache.drill.exec.store.dfs.WorkspaceConfig;
 import org.apache.drill.test.ClusterFixture;
 import org.apache.drill.test.ClusterTest;
 import org.junit.BeforeClass;
@@ -102,13 +104,78 @@ public class TestMLUtils extends ClusterTest {
   @Test
   public void anUnknownPluginIsRejected() {
     String message = expectFailure("nosuchplugin.root.`models/iris_rf.pmml`");
-    assertTrue(message, message.contains("file system storage plugin"));
+    assertTrue(message, message.contains("was not found"));
   }
 
   @Test
   public void aCorruptModelFileFailsWithTheModelPath() {
     String message = expectFailure("dfs.root.`models/corrupt.pmml`");
     assertTrue(message, message.contains("corrupt.pmml"));
+  }
+
+  @Test
+  public void aBacktickedUrlIsRejected() {
+    String message = expectFailure("cp.`http://localhost:1/model.pmml`");
+    assertTrue(message, message.contains("cannot be loaded from URLs"));
+  }
+
+  @Test
+  public void traversalOutOfTheWorkspaceIsRejected() {
+    String message = expectFailure("dfs.tmp.`../../etc/passwd`");
+    assertTrue(message, message.contains("inside its workspace"));
+  }
+
+  @Test
+  public void anAbsolutePathOutOfTheWorkspaceIsRejected() {
+    String message = expectFailure("dfs.tmp.`/etc/passwd`");
+    assertTrue(message, message.contains("inside its workspace"));
+  }
+
+  @Test
+  public void anAbsolutePathOnAWorkspaceLessPluginIsRejected() {
+    String message = expectFailure("cp.`/etc/passwd`");
+    assertTrue(message, message.contains("inside its workspace"));
+    message = expectFailure("cp.`../../etc/passwd`");
+    assertTrue(message, message.contains("inside its workspace"));
+  }
+
+  private static FileSystemConfig configWith(Map<String, WorkspaceConfig> workspaces) {
+    return new FileSystemConfig("file:///", null, workspaces, null, null);
+  }
+
+  private static WorkspaceConfig ws(String location) {
+    return new WorkspaceConfig(location, true, null, false);
+  }
+
+  @Test
+  public void pathJoinHandlesPrefixShapes() {
+    Map<String, WorkspaceConfig> workspaces = new HashMap<>();
+    workspaces.put("noslash", ws("/data/models"));
+    workspaces.put("slash", ws("/data/models/"));
+    workspaces.put("root", ws("/"));
+    workspaces.put("empty", ws(""));
+    workspaces.put("default", ws("/data/default"));
+    FileSystemConfig config = configWith(workspaces);
+
+    assertEquals("/data/models/m.pmml", MLUtils.getFullFilePath("dfs.noslash.`m.pmml`", config));
+    assertEquals("/data/models/m.pmml", MLUtils.getFullFilePath("dfs.slash.`m.pmml`", config));
+    assertEquals("/m.pmml", MLUtils.getFullFilePath("dfs.root.`m.pmml`", config));
+    assertEquals("m.pmml", MLUtils.getFullFilePath("dfs.empty.`m.pmml`", config));
+    assertEquals("/data/default/sub/m.pmml", MLUtils.getFullFilePath("dfs.`sub/m.pmml`", config));
+  }
+
+  @Test
+  public void aRootWorkspaceStillConfinesTraversalToItsRoot() {
+    Map<String, WorkspaceConfig> workspaces = new HashMap<>();
+    workspaces.put("root", ws("/"));
+    FileSystemConfig config = configWith(workspaces);
+    assertEquals("/a/b.pmml", MLUtils.getFullFilePath("dfs.root.`a/b.pmml`", config));
+    try {
+      MLUtils.getFullFilePath("dfs.root.`.`", config);
+      fail("a name resolving onto the workspace itself must be refused");
+    } catch (UserException e) {
+      assertTrue(e.getMessage(), e.getMessage().contains("inside its workspace"));
+    }
   }
 
   @Test

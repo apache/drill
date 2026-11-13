@@ -59,6 +59,7 @@
     <module>format-spss</module>
     <module>format-syslog</module>
     <module>format-xml</module>
+    <module>ml</module>
     <module>storage-accumulo</module>
     <module>storage-cassandra</module>
     <module>storage-drill</module>
@@ -75,7 +76,6 @@
     <module>storage-opentsdb</module>
     <module>storage-phoenix</module>
     <module>storage-splunk</module>
-    <module>ml</module>
     <module>udfs</module>
   </modules>
 
