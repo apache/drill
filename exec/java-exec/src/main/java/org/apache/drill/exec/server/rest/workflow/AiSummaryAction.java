@@ -47,9 +47,22 @@ public class AiSummaryAction implements ActionType {
   @Override
   public Map<String, Object> execute(ActionContext ctx, JsonNode config) throws Exception {
     int maxChars = config.path("maxChars").asInt(DEFAULT_MAX_CHARS);
-    String instructions = ctx.render(config.path("instructions").asText(""));
-    String prompt = buildPrompt(instructions, ctx.run(), ctx.services().sendDataToAi());
+    boolean sendData = ctx.services().sendDataToAi();
+    String template = config.path("instructions").asText("");
+    // With data sharing off, render against a view with no rows, columns or error text so no
+    // template path ({{rows[*].x}}, {{error}}) can carry query data into the prompt.
+    String instructions = sendData ? ctx.render(template) : Templates.render(template, aggregateOnly(ctx.run()));
+    String prompt = buildPrompt(instructions, ctx.run(), sendData);
     return Map.of("summary", ctx.services().summarize(prompt, maxChars));
+  }
+
+  /** A copy of the run carrying only aggregate facts. */
+  static RunContext aggregateOnly(RunContext run) {
+    RunContext v = new RunContext();
+    v.status = run.status;
+    v.rowCount = run.rowCount;
+    v.durationMs = run.durationMs;
+    return v;
   }
 
   /**
@@ -73,11 +86,14 @@ public class AiSummaryAction implements ActionType {
       for (int i = 0; i < n; i++) {
         Map<String, String> row = run.rows.get(i);
         StringBuilder line = new StringBuilder();
+        boolean first = true;
         for (String c : run.columns) {
-          if (line.length() > 0) {
+          if (!first) {
             line.append(" | ");
           }
-          line.append(row.get(c));
+          first = false;
+          String v = row.get(c);
+          line.append(v == null ? "" : v);
         }
         sb.append(line).append('\n');
       }

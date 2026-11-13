@@ -34,6 +34,8 @@ public interface WorkflowServices {
 
   /**
    * Whether the administrator allows query data (columns and row values) to be sent to the model.
+   * The services layer cannot inspect a prompt string, so any action that calls
+   * {@link #summarize} must consult this flag itself; the gate protects ai_summary only.
    * Defaults to false so a services implementation that does not know withholds data.
    */
   default boolean sendDataToAi() {

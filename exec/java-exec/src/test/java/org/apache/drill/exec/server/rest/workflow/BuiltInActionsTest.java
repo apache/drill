@@ -279,4 +279,39 @@ public class BuiltInActionsTest {
     action.preview(new ActionContext(new Workflow(), "select 1", summaryRun(), s), M.readTree("{}"));
     assertTrue(s.prompts.isEmpty());
   }
+
+  @Test
+  public void aiSummaryInstructionsCannotLeakRowsOrErrorWhenSendDataToAiIsOff() throws Exception {
+    RunContext run = summaryRun();
+    run.error = "bad value 'err-leak-text'";
+    SummaryServices s = new SummaryServices(false, "ok", null);
+    new AiSummaryAction().execute(new ActionContext(new Workflow(), "select 1", run, s),
+        M.readTree("{\"instructions\":\"Summarise {{rows[*].host}} {{error}} n={{rowCount}}\"}"));
+    String prompt = s.prompts.get(0);
+    assertFalse(prompt.contains("web-01"), prompt);
+    assertFalse(prompt.contains("err-leak-text"), prompt);
+    assertTrue(prompt.contains("n=42"), prompt);
+  }
+
+  @Test
+  public void aiSummaryInstructionsMayReferenceRowsAndErrorWhenSendDataToAiIsOn() throws Exception {
+    RunContext run = summaryRun();
+    run.error = "bad value 'err-leak-text'";
+    SummaryServices s = new SummaryServices(true, "ok", null);
+    new AiSummaryAction().execute(new ActionContext(new Workflow(), "select 1", run, s),
+        M.readTree("{\"instructions\":\"Summarise {{rows[*].host}} {{error}}\"}"));
+    String prompt = s.prompts.get(0);
+    assertTrue(prompt.contains("web-01"), prompt);
+    assertTrue(prompt.contains("err-leak-text"), prompt);
+  }
+
+  @Test
+  public void aiSummaryKeepsColumnsAlignedForEmptyAndMissingValues() {
+    RunContext run = summaryRun();
+    run.columns = List.of("a", "b", "c");
+    run.rows = List.of(Map.of("a", "", "c", "z"));
+    String prompt = AiSummaryAction.buildPrompt("", run, true);
+    assertTrue(prompt.contains("\n |  | z\n"), prompt);
+    assertFalse(prompt.contains("null"), prompt);
+  }
 }

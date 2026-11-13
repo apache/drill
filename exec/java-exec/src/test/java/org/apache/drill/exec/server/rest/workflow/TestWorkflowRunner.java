@@ -360,4 +360,18 @@ public class TestWorkflowRunner extends ClusterTest {
     Exception e = assertThrows(Exception.class, () -> runner.summarize("p", 100));
     assertTrue(e.getMessage(), e.getMessage().contains("no-such-provider"));
   }
+
+  @Test
+  public void sendDataToAiFollowsTheStoredFlag() throws Exception {
+    assertFalse(runner.sendDataToAi());
+    LlmConfig c = new LlmConfig();
+    c.setProvider(FAKE_PROVIDER);
+    c.setEnabled(true);
+    c.setSendDataToAi(true);
+    aiStore().put("default", c);
+    assertTrue(runner.sendDataToAi());
+    c.setSendDataToAi(false);
+    aiStore().put("default", c);
+    assertFalse(runner.sendDataToAi());
+  }
 }
