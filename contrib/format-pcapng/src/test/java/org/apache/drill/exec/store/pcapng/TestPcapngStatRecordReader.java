@@ -93,12 +93,29 @@ public class TestPcapngStatRecordReader extends ClusterTest {
   }
 
   @Test
+  public void testComments() throws Exception {
+    String sql = "select comment from dfs.`pcapng/metadata.pcapng` where comment is not null";
+    RowSet results = client.queryBuilder().sql(sql).rowSet();
+
+    TupleMetadata schema = new SchemaBuilder()
+        .addNullable("comment", MinorType.VARCHAR)
+        .buildSchema();
+
+    RowSet expected = new RowSetBuilder(client.allocator(), schema)
+        .addRow("capture comment")
+        .addRow("stats comment")
+        .build();
+    new RowSetComparison(expected).verifyAndClearAll(results);
+  }
+
+  @Test
   public void testSerDe() throws Exception {
     String sql = "select count(*) from dfs.`pcapng/*.pcapng`";
     String plan = queryBuilder().sql(sql).explainJson();
     long cnt = queryBuilder().physical(plan).singletonLong();
 
-    assertEquals("Counts should match", 6, cnt);
+    // The error row of bad_block_length.pcapng is counted too
+    assertEquals("Counts should match", 68, cnt);
   }
 
   @Test
@@ -108,6 +125,7 @@ public class TestPcapngStatRecordReader extends ClusterTest {
 
     TupleMetadata schema = new SchemaBuilder()
         .addNullable("path", MinorType.VARCHAR)
+        .addNullable("comment", MinorType.VARCHAR)
         .addNullable("shb_hardware", MinorType.VARCHAR)
         .addNullable("shb_os", MinorType.VARCHAR)
         .addNullable("shb_userappl", MinorType.VARCHAR)
@@ -117,12 +135,12 @@ public class TestPcapngStatRecordReader extends ClusterTest {
         .addNullable("if_ipv6addr", MinorType.VARCHAR)
         .addNullable("if_macaddr", MinorType.VARCHAR)
         .addNullable("if_euiaddr", MinorType.VARCHAR)
-        .addNullable("if_speed", MinorType.INT)
+        .addNullable("if_speed", MinorType.BIGINT)
         .addNullable("if_tsresol", MinorType.INT)
         .addNullable("if_tzone", MinorType.INT)
         .addNullable("if_os", MinorType.VARCHAR)
         .addNullable("if_fcslen", MinorType.INT)
-        .addNullable("if_tsoffset", MinorType.INT)
+        .addNullable("if_tsoffset", MinorType.BIGINT)
         .addNullable("ns_dnsname", MinorType.VARCHAR)
         .addNullable("ns_dnsip4addr", MinorType.VARCHAR)
         .addNullable("ns_dnsip6addr", MinorType.VARCHAR)
@@ -133,6 +151,7 @@ public class TestPcapngStatRecordReader extends ClusterTest {
         .addNullable("isb_filteraccept", MinorType.BIGINT)
         .addNullable("isb_osdrop", MinorType.BIGINT)
         .addNullable("isb_usrdeliv", MinorType.BIGINT)
+        .addNullable("decode_error", MinorType.VARCHAR)
         .build();
 
     RowSet expected = new RowSetBuilder(client.allocator(), schema).build();

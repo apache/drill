@@ -25,6 +25,7 @@ import java.io.IOException;
 import java.io.InputStream;
 import java.net.InetAddress;
 import java.net.UnknownHostException;
+import java.util.Arrays;
 import java.util.Formatter;
 
 import static org.apache.drill.exec.store.pcap.PcapFormatUtils.convertInt;
@@ -48,15 +49,18 @@ public class Packet implements Comparable<Packet> {
   protected byte[] raw;
 
   // index into the raw data where the current ethernet packet starts
-  private int etherOffset;
+  protected int etherOffset;
   // index into the raw data where the current IP packet starts. Should be just after etherOffset
   protected int ipOffset;
+  // index into the raw data where the TCP/UDP header starts, or -1 if not IPv4/IPv6
+  protected int transportOffset = -1;
 
   private int packetLength;
   protected int etherProtocol;
   protected int protocol;
-  protected boolean isRoutingV6;
   protected boolean isCorrupt = false;
+  // Why the packet could not be fully decoded, or null
+  private String decodeError;
 
   private static final Logger logger = LoggerFactory.getLogger(Packet.class);
 
@@ -83,11 +87,14 @@ public class Packet implements Comparable<Packet> {
 
   @SuppressWarnings("WeakerAccess")
   public int decodePcap(final byte[] buffer, final int offset, final boolean byteOrder, final int maxLength) {
-    raw = buffer;
-    etherOffset = offset + PacketConstants.PCAP_HEADER_SIZE;
-    decodePcapHeader(raw, byteOrder, maxLength, offset);
+    decodePcapHeader(buffer, byteOrder, maxLength, offset);
+    // Copy the record: the reader reuses its buffer, and packets kept for
+    // sessionization must not change when it does
+    int end = offset + PacketConstants.PCAP_HEADER_SIZE + originalLength;
+    raw = Arrays.copyOfRange(buffer, offset, end);
+    etherOffset = PacketConstants.PCAP_HEADER_SIZE;
     decodeEtherPacket();
-    return offset + PacketConstants.PCAP_HEADER_SIZE + originalLength;
+    return end;
   }
 
   public String getPacketType() {
@@ -131,12 +138,13 @@ public class Packet implements Comparable<Packet> {
 
   @SuppressWarnings("WeakerAccess")
   public boolean isArpPacket() {
-    return protocol == PacketConstants.ARP_PROTOCOL;
+    return etherProtocol == PacketConstants.ARP_TYPE;
   }
 
   @SuppressWarnings("WeakerAccess")
   public boolean isIcmpPacket() {
-    return protocol == PacketConstants.ICMP_PROTOCOL;
+    return isIpV4Packet() && protocol == PacketConstants.ICMP_PROTOCOL
+        || isIpV6Packet() && protocol == PacketConstants.ICMPV6_PROTOCOL;
   }
 
   public long getSessionHash() {
@@ -169,6 +177,14 @@ public class Packet implements Comparable<Packet> {
 
   public long getTimestampMicro() {
     return timestampMicro;
+  }
+
+  /**
+   * For decoders that read the timestamp from somewhere other than a PCAP record header.
+   */
+  protected void setTimestampMicro(long timestampMicro) {
+    this.timestampMicro = timestampMicro;
+    this.timestamp = timestampMicro / 1000L;
   }
 
   public int getPacketLength() {
@@ -350,56 +366,107 @@ public class Packet implements Comparable<Packet> {
   }
 
   public int getSrc_port() {
+    if (transportUnknown()) {
+      return 0;
+    }
     if (isPPPoV6Packet()) {
       return getPort(64);
-    }
-    if (isIpV6Packet()) {
-      if (isRoutingV6) {
-        return getPort(136);
-      }
-      return getPort(40);
     }
     return getPort(0);
   }
 
   public int getDst_port() {
+    if (transportUnknown()) {
+      return 0;
+    }
     if (isPPPoV6Packet()) {
       return getPort(66);
     }
-    if (isIpV6Packet()) {
-      if (isRoutingV6) {
-        return getPort(138);
-      }
-      return getPort(42);
-    }
     return getPort(2);
+  }
+
+  /** True for an IP packet whose header could not be parsed far enough to find the transport layer. */
+  private boolean transportUnknown() {
+    return (isIpV4Packet() || isIpV6Packet()) && transportOffset < 0;
   }
 
   public boolean isCorrupt(){
     return isCorrupt;
   }
 
+  public String getDecodeError() {
+    return decodeError;
+  }
+
+  protected void setDecodeError(String decodeError) {
+    this.decodeError = decodeError;
+  }
+
   public byte[] getData() {
-    int payloadDataStart = getIPHeaderLength();
+    int payloadStart = ipOffset + getIPHeaderLength();
     if (isTcpPacket()) {
-      payloadDataStart += this.getTCPHeaderLength(raw);
+      payloadStart += getTCPHeaderLength(raw);
     } else if (isUdpPacket()) {
-      payloadDataStart += this.getUDPHeaderLength();
+      payloadStart += getUDPHeaderLength();
     } else {
       return null;
     }
-    byte[] data = null;
-    if (packetLength >= payloadDataStart) {
-      data = new byte[packetLength - payloadDataStart];
-      try {
-        System.arraycopy(raw, ipOffset + payloadDataStart, data, 0, data.length);
-      } catch (Exception e) {
-        isCorrupt = true;
-        String message = "Error while parsing PCAP data: {}";
-        logger.debug(message, e.getMessage());
-        logger.trace(message, e);      }
+    // The IP length excludes link-layer padding and trailers; the captured
+    // length bounds packets truncated by the snapshot length
+    int capturedEnd = Math.min(getFrameEnd(), raw.length);
+    if (payloadStart > capturedEnd) {
+      // The headers themselves were cut off
+      isCorrupt = true;
+      return null;
     }
-    return data;
+    int payloadEnd = Math.min(getIpPacketEnd(), capturedEnd);
+    return payloadStart < payloadEnd ? Arrays.copyOfRange(raw, payloadStart, payloadEnd) : null;
+  }
+
+  /**
+   * The bytes after the link-layer header, up to the end of the captured data:
+   * for example the whole ARP message of an ARP frame.
+   *
+   * @return null if there are none
+   */
+  public byte[] getLinkPayload() {
+    int start = etherOffset + PacketConstants.IP_OFFSET;
+    int end = Math.min(getFrameEnd(), raw.length);
+    return start >= 0 && start < end ? Arrays.copyOfRange(raw, start, end) : null;
+  }
+
+  /**
+   * The bytes after the IP header and any IPv6 extension headers, bounded by the
+   * IP length: for example the whole ICMP message, or a UDP header and its data.
+   *
+   * @return null if this is not an IP packet whose header could be parsed
+   */
+  public byte[] getIpPayload() {
+    if (transportOffset < 0) {
+      return null;
+    }
+    int end = Math.min(Math.min(getIpPacketEnd(), getFrameEnd()), raw.length);
+    return transportOffset < end ? Arrays.copyOfRange(raw, transportOffset, end) : null;
+  }
+
+  /**
+   * @return index just past the captured bytes of this packet
+   */
+  protected int getFrameEnd() {
+    return etherOffset + originalLength;
+  }
+
+  private int getIpPacketEnd() {
+    if (isIpV4Packet()) {
+      int totalLength = convertShort(raw, ipOffset + 2);
+      // Zero when the capture happened before TCP segmentation offload filled it in
+      return totalLength == 0 ? Integer.MAX_VALUE : ipOffset + totalLength;
+    } else if (isIpV6Packet()) {
+      int payloadLength = convertShort(raw, ipOffset + 4);
+      // Zero for jumbograms
+      return payloadLength == 0 ? Integer.MAX_VALUE : ipOffset + 40 + payloadLength;
+    }
+    return Integer.MAX_VALUE;
   }
 
   private InetAddress getIPAddress(final boolean src) {
@@ -417,16 +484,13 @@ public class Packet implements Comparable<Packet> {
   private byte[] getIpAddressBytes(final boolean src) {
     int srcPos;
     byte[] ipBuffer;
-    int byteShift = 0;
     if (isIpV4Packet()) {
       ipBuffer = new byte[4];
       srcPos = src ? PacketConstants.IP4_SRC_OFFSET : PacketConstants.IP4_DST_OFFSET;
     } else if (isIpV6Packet()) {
+      // Always in the fixed header, whatever extension headers follow
       ipBuffer = new byte[16];
-      if (isRoutingV6) {
-        byteShift = 96;
-      }
-      srcPos = src ? PacketConstants.IP6_SRC_OFFSET + byteShift : PacketConstants.IP6_DST_OFFSET + byteShift;
+      srcPos = src ? PacketConstants.IP6_SRC_OFFSET : PacketConstants.IP6_DST_OFFSET;
     } else if (isPPPoV6Packet()) {
       ipBuffer = new byte[16];
       srcPos = src ? PacketConstants.IP6_SRC_OFFSET + PacketConstants.PPPoV6_IP_OFFSET : PacketConstants.IP6_DST_OFFSET + PacketConstants.PPPoV6_IP_OFFSET;
@@ -437,7 +501,13 @@ public class Packet implements Comparable<Packet> {
     return ipBuffer;
   }
 
+  /**
+   * @return length of the IPv4 header, or of the IPv6 header plus extension headers
+   */
   private int getIPHeaderLength() {
+    if (transportOffset >= 0) {
+      return transportOffset - ipOffset;
+    }
     return (raw[etherOffset + PacketConstants.VER_IHL_OFFSET] & 0xF) * 4;
   }
 
@@ -445,8 +515,9 @@ public class Packet implements Comparable<Packet> {
     final int inTCPHeaderDataOffset = 12;
 
     // tcp packet header can have options
-    int dataOffset = etherOffset + getIPHeaderLength() + inTCPHeaderDataOffset;
-    return 20 + ((packet[dataOffset] >> 4) & 0xF) * 4;
+    int dataOffset = ipOffset + getIPHeaderLength() + inTCPHeaderDataOffset;
+    // Data offset is the whole header length in 32-bit words
+    return ((packet[dataOffset] >> 4) & 0xF) * 4;
   }
 
   private int getUDPHeaderLength() {
@@ -478,18 +549,26 @@ public class Packet implements Comparable<Packet> {
   private void decodeEtherPacket() {
     etherProtocol = getShort(raw, etherOffset + PacketConstants.PACKET_PROTOCOL_OFFSET);
     ipOffset = etherOffset + PacketConstants.IP_OFFSET;
-    if (isIpV4Packet()) {
-      protocol = processIpV4Packet();
-    } else if (isIpV6Packet()) {
-      protocol = processIpV6Packet();
-    } else if (isPPPoV6Packet()) {
-      protocol = getByte(raw, etherOffset + 48);
+    try {
+      if (isIpV4Packet()) {
+        protocol = processIpV4Packet();
+      } else if (isIpV6Packet()) {
+        protocol = processIpV6Packet();
+      } else if (isPPPoV6Packet()) {
+        protocol = getByte(raw, etherOffset + 48);
+      }
+    } catch (RuntimeException e) {
+      // Keep what was read (link layer, IP addresses); the transport layer is unknown
+      isCorrupt = true;
+      decodeError = e.getMessage() != null ? e.getMessage() : e.getClass().getSimpleName();
+      transportOffset = -1;
     }
     // everything is decoded lazily
   }
 
   protected int processIpV4Packet() {
     validateIpV4Packet();
+    transportOffset = ipOffset + ipV4HeaderLength();
     return getByte(raw, ipOffset + 9);
   }
 
@@ -497,40 +576,40 @@ public class Packet implements Comparable<Packet> {
     Preconditions.checkState(ipVersion() == 6, "Should have seen IP version 6, got %d", ipVersion());
     int headerLength = 40;
     int nextHeader = raw[ipOffset + 6] & 0xff;
-    while (nextHeader != PacketConstants.TCP_PROTOCOL && nextHeader != PacketConstants.UDP_PROTOCOL && nextHeader != PacketConstants.NO_NEXT_HEADER) {
+    while (true) {
+      int extension = ipOffset + headerLength;
       switch (nextHeader) {
         case PacketConstants.FRAGMENT_V6:
-          nextHeader = getByte(raw, ipOffset + headerLength);
+          nextHeader = getByte(raw, extension);
           headerLength += 8;
           break;
         case PacketConstants.ROUTING_V6:
-          isRoutingV6 = true;
-          nextHeader = getByte(raw, ipOffset + headerLength + 15);
-          headerLength += (getByte(raw, ipOffset + headerLength) + 1) * 8;
-          break;
         case PacketConstants.HOP_BY_HOP_EXTENSION_V6:
         case PacketConstants.DESTINATION_OPTIONS_V6:
-        case PacketConstants.AUTHENTICATION_V6:
-        case PacketConstants.ENCAPSULATING_SECURITY_V6:
         case PacketConstants.MOBILITY_EXTENSION_V6:
         case PacketConstants.HOST_IDENTITY_PROTOCOL:
         case PacketConstants.SHIM6_PROTOCOL:
-          nextHeader = getByte(raw, ipOffset + headerLength);
-          headerLength += (getByte(raw, ipOffset + headerLength) + 1) * 8;
+          // Next header, then length in 8-octet units not counting the first 8
+          nextHeader = getByte(raw, extension);
+          headerLength += (getByte(raw, extension + 1) + 1) * 8;
+          break;
+        case PacketConstants.AUTHENTICATION_V6:
+          // Length in 4-octet units not counting the first 8
+          nextHeader = getByte(raw, extension);
+          headerLength += (getByte(raw, extension + 1) + 2) * 4;
           break;
         default:
-          //noinspection ConstantConditions
-          logger.warn("Unknown V6 extension or protocol: {}", nextHeader);
-          return getByte(raw, ipOffset + headerLength);
+          // Upper-layer protocol, or ESP whose contents are encrypted
+          transportOffset = extension;
+          return nextHeader;
       }
     }
-    return nextHeader;
   }
 
   private void validateIpV4Packet() {
     Preconditions.checkState(ipVersion() == 4, "Should have seen IP version 4, got %d", ipVersion());
     int n = ipV4HeaderLength();
-    Preconditions.checkState(n >= 20 && n < 200, "Invalid header length: ", n);
+    Preconditions.checkState(n >= 20 && n < 200, "Invalid IPv4 header length %s", n);
   }
 
   private String getEthernetAddress(int offset) {
