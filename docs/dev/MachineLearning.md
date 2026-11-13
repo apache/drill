@@ -1,6 +1,6 @@
 # Machine learning and AI summaries
 
-This branch adds two related features: the `predict()` SQL function (the `contrib/ml` module), which scores rows against a PMML model, and the `ai_summary` workflow action, which asks the configured Prospector LLM to summarise a scheduled query run.
+Drill has two related features for this: the `predict()` SQL function (the `contrib/ml` module), which scores rows against a PMML model, and the `ai_summary` workflow action, which asks the configured Prospector LLM to summarise a scheduled query run.
 
 ## Training a model
 
@@ -26,11 +26,23 @@ Syntax: `predict('<plugin>.<workspace>.<path>', feature1, feature2, ...)`.
 * The model is parsed once per fragment and cached. Each call site caches independently.
 * Models load through the Hadoop FileSystem API, so a model held in S3 works like one on local disk.
 
-### Where models may live
+### Feature types
 
-Model paths accept storage-plugin locations only. `http` and `https` URLs are refused by design: fetching a model over HTTP from the Drillbit would be a server-side request forgery surface reachable from any query.
+A feature argument may be `VARCHAR`, `VARDECIMAL`, `FLOAT4`, `FLOAT8`, `INT` or `BIGINT`. Anything else fails the query, naming the column and its type. `VARCHAR` reaches the model as a string; every numeric type reaches it as a double.
 
-The resolved path is confined to its workspace. `..` segments and absolute paths are refused.
+A NULL feature is passed to the model as a missing value, so the model's own missing-value handling decides what the prediction is. One missing value does not fail the query.
+
+On the way out, `mapFields` writes `Double` values as `FLOAT8` and `String` values as `VARCHAR`. A prediction field of any other type is skipped, so it does not appear in the result map at all.
+
+### Where models may live, and who reads them
+
+Model paths accept storage-plugin locations only. `http` and `https` URLs are refused as the first argument, so a model is never fetched from a URL a query names.
+
+The resolved path is confined to its workspace: paths that resolve outside the workspace are refused, whether they get there through `..` segments or by being absolute. An absolute path that lands *inside* the workspace is accepted. The confinement is lexical only. It compares resolved path strings and does not resolve symlinks, so a symlink inside the workspace that points outside it is followed.
+
+The model file is read as the query user when `drill.exec.impersonation.enabled` is on, so `predict()` cannot reach a file the user could not select directly. With impersonation off, the read happens as the Drillbit process user, which is the same identity any other query on that cluster reads files with.
+
+Model file *content* is screened before it is parsed. pmml4s parses PMML with a StAX factory it builds itself, with default settings and no hook to harden; on Drill's classpath that factory resolves external entities and external DTD subsets. A model file carrying a `<!DOCTYPE` could therefore read local files, probe for the existence of absolute paths through the resulting error messages, and make the Drillbit fetch a URL chosen by whoever wrote the file. Since the file-upload feature puts arbitrary user bytes into a `dfs` workspace by design, that is the expected input. So a model whose bytes contain a `<!DOCTYPE` declaration is refused outright, with no parsing attempted; PMML has no legitimate use for a DTD. With no DOCTYPE accepted, there is no server-side request forgery surface in model content either.
 
 ## `ai_summary` workflow action
 
@@ -46,5 +58,6 @@ Output: `summary`, referenced downstream as `{{actions.ai_summary.summary}}`, fo
 Behaviour:
 
 * It has side effects, so a dry run previews the action and does not call the provider.
+* Every call is recorded as an AI usage event under the feature `workflow_ai_summary`, against the workflow's owner, so its tokens and cost show up in `/ai-analytics` like any other provider call.
 * It refuses to run when Prospector is unconfigured or disabled.
 * It honours the `sendDataToAi` setting. When that setting is off, the prompt carries only `status`, `rowCount` and `durationMs`. The user's own `instructions` are rendered against a blanked context in that case, so `{{rows[*].col}}` and `{{error}}` cannot leak data either. This is a privacy guarantee: with `sendDataToAi` off, no row data or error text reaches the provider.

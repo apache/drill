@@ -233,6 +233,8 @@ The `create_workflow` Prospector tool ([PROSPECTOR.md](PROSPECTOR.md)) goes thro
 
 Nothing in an update can turn it on either: `PUT /{id}` copies `schedule.enabled` from the stored workflow. `POST /{id}/enabled` (`setEnabled`) is the only path that flips the flag, and it refuses with 409 when the status is `owner_lost_access`, when the schedule has expired, or when the workflow has no project.
 
+The tool offers every built-in action type, `ai_summary` included: its `type` enum in `useProspector.ts`, the action-type notes in the tool description, and `describeAction` in `WorkflowActivationCard.tsx` all list the same four types. Because `ai_summary` sends run data to an external provider, its line in the activation dialog says so, and the tool description tells the model that column names and up to 20 rows go to the provider unless an admin has turned data sharing off. A new action type has to be added in all three places, or the model cannot ask for it and the activation dialog describes it only by its id and destination-shaped config keys.
+
 In the Conversations page the only caller is `WorkflowActivationCard`, under the workflow's card in the thread. Its Activate button opens a confirm dialog built from the workflow as the server holds it (schedule, each action and its destination, each action's condition), with Cancel as the default focus, and only the dialog's OK calls `setEnabled`. A refusal from the server is shown under the card. The user can also enable it from the Workflows page, as for any workflow. See [conversations.md](ui/pages/conversations.md#canvas).
 
 ## REST reference

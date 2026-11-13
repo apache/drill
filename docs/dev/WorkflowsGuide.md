@@ -1,6 +1,6 @@
 # Workflows: user and admin guide
 
-A workflow runs one of your saved queries on a schedule and then does things with the result: flag the run, save the full result to a table, or send an email. Each step can have a condition, so a workflow can act only when something interesting happens, such as "email the on-call list when there are more than 100 errors."
+A workflow runs one of your saved queries on a schedule and then does things with the result: flag the run, save the full result to a table, send an email, or have the AI provider write a plain-English summary of the run. Each step can have a condition, so a workflow can act only when something interesting happens, such as "email the on-call list when there are more than 100 errors."
 
 This guide is for the people who build and run workflows, and for the admins who set them up. The technical reference (data model, runner internals, REST API) is [WORKFLOWS.md](WORKFLOWS.md).
 
@@ -126,7 +126,29 @@ Sends an email through the server's SMTP settings.
 
 Output: `sent` (true). If SMTP isn't set up, the action fails with "SMTP is not configured" and the rest of the workflow still runs.
 
-More action types (Slack, webhooks, AI summaries) are planned. They will appear in **Add action** when they exist.
+### AI summary (side effects)
+
+Asks the configured AI provider (Prospector) to write a short plain-English summary of the run. Put it before an email action and reference its output in the body, as in `{{actions.summary.summary}}`.
+
+| Setting | Default | |
+|---|---|---|
+| Instructions | empty | Optional [template](#templates) saying what the summary should cover |
+| Maximum characters | 2000 | The summary is cut to this length |
+
+Output: `summary`, the provider's text.
+
+**What leaves your server.** The AI data-sharing setting (`sendDataToAi` in the AI configuration) **defaults to on**. While it is on, every run of this action sends the prompt to the configured provider with all of the result's column names and up to the first 20 rows of data in it. If that is not acceptable for a query's data, an admin turns data sharing off in the AI configuration; the action then sends only the run's status, row count and duration, and the **Instructions** template is rendered against those three fields alone, so `{{rows[*].col}}` or `{{error}}` cannot carry data into the prompt either. The setting is global to the Drillbit, not per workflow.
+
+**Row values are untrusted.** With data sharing on, row values become part of the prompt, so whoever can write a row your query returns can try to steer what the model writes. That text may land in an emailed summary that other people read. Treat a generated summary as data from the query's source, not as a statement from the server.
+
+**Other limits.**
+
+* The action runs within the same 60-second action timeout as every other action. A provider that is slow or unreachable makes the action fail, and the rest of the workflow still runs.
+* It fails with a stated reason when Prospector is not configured or is turned off.
+* A dry run shows a preview and does not call the provider, so it costs nothing.
+* Each call is recorded in AI analytics (`/ai-analytics`) against the workflow's owner, under the feature "Workflow AI summary", so its tokens and cost are visible with the rest of your AI usage.
+
+More action types (Slack, webhooks) are planned. They will appear in **Add action** when they exist.
 
 ## Conditions
 
