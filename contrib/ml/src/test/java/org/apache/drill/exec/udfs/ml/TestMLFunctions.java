@@ -24,6 +24,7 @@ import org.apache.drill.test.ClusterFixture;
 import org.apache.drill.test.ClusterTest;
 import org.junit.BeforeClass;
 import org.junit.Test;
+
 import java.nio.file.Paths;
 
 import static org.junit.Assert.assertEquals;
@@ -50,6 +51,21 @@ public class TestMLFunctions extends ClusterTest {
   private static String species(String features) throws Exception {
     return client.queryBuilder().sql("SELECT t.p.predicted_species AS s FROM (SELECT predict('"
       + MODEL + "', " + features + ") AS p FROM (VALUES(1))) t").singletonString();
+  }
+
+  @Test
+  public void scoresSeveralRowsInOneQueryInOrder() throws Exception {
+    String sql = "SELECT t.p.predicted_species AS s FROM (SELECT predict('" + MODEL
+      + "', a, b, c) AS p FROM (VALUES(5.1, 1.4, 0.2), (6.0, 4.0, 1.3), (6.5, 5.5, 2.0)) AS v(a, b, c)) t";
+    RowSet rs = client.queryBuilder().sql(sql).rowSet();
+    RowSetReader r = rs.reader();
+    String[] expected = {"setosa", "versicolor", "virginica"};
+    for (String label : expected) {
+      assertTrue(r.next());
+      assertEquals(label, r.scalar("s").getString());
+    }
+    assertTrue(!r.next());
+    rs.clear();
   }
 
   @Test
@@ -85,6 +101,7 @@ public class TestMLFunctions extends ClusterTest {
       fail("expected the query to fail");
     } catch (UserException e) {
       assertTrue(e.getMessage(), e.getMessage().contains("nope.pmml"));
+      assertTrue(e.getMessage(), e.getMessage().contains("Unable to open model file"));
     }
   }
 }
