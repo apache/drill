@@ -128,7 +128,7 @@ public class TestWorkflowResources extends ClusterTest {
     call("POST", "/" + id + "/enabled", Map.of("enabled", true), 200);
     assertTrue(call("GET", "/" + id, null, 200).get("schedule").get("enabled").asBoolean());
 
-    assertEquals(3, call("GET", "/action-types", null, 200).size());
+    assertEquals(4, call("GET", "/action-types", null, 200).size());
     assertEquals("all", call("POST", "/parse-condition", Map.of("expr", "a > 1 && b"), 200)
         .get("tree").fieldNames().next());
     assertEquals(10, call("POST", "/parse-condition", Map.of("expr", "rowCount >"), 200).get("position").asInt());

@@ -422,6 +422,12 @@ public class WorkflowRunner implements AutoCloseable, WorkflowServices {
   }
 
   @Override
+  public boolean sendDataToAi() {
+    LlmConfig config = AiConfigResources.current(provider);
+    return config != null && config.isSendDataToAi();
+  }
+
+  @Override
   public String summarize(String prompt, int maxChars) throws Exception {
     LlmConfig config = AiConfigResources.current(provider);
     if (config == null) {

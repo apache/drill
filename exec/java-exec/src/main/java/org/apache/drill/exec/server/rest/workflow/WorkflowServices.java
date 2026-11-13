@@ -31,4 +31,12 @@ public interface WorkflowServices {
    * Never returns null; throws when no provider is configured or the call fails.
    */
   String summarize(String prompt, int maxChars) throws Exception;
+
+  /**
+   * Whether the administrator allows query data (columns and row values) to be sent to the model.
+   * Defaults to false so a services implementation that does not know withholds data.
+   */
+  default boolean sendDataToAi() {
+    return false;
+  }
 }

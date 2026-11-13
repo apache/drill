@@ -25,6 +25,7 @@ import java.util.List;
 import java.util.Map;
 
 import static org.junit.jupiter.api.Assertions.assertEquals;
+import static org.junit.jupiter.api.Assertions.assertFalse;
 import static org.junit.jupiter.api.Assertions.assertThrows;
 import static org.junit.jupiter.api.Assertions.assertTrue;
 
@@ -167,5 +168,115 @@ public class BuiltInActionsTest {
         M.readTree("{\"to\":[\"a@example.com\"],\"subject\":\"{{rowCount}} rows\",\"body\":\"see {{rowCount}}\"}"));
     assertEquals(List.of("[a@example.com]|4 rows|see 4"), sent);
     assertEquals(Map.of("sent", true), out);
+  }
+
+  // ------------------------------------------------------------ ai_summary
+
+  /** Fake services whose summarize records the prompt and returns or throws as configured. */
+  private static final class SummaryServices implements WorkflowServices {
+    final List<String> prompts = new ArrayList<>();
+    final boolean sendData;
+    final String reply;
+    final Exception failure;
+
+    SummaryServices(boolean sendData, String reply, Exception failure) {
+      this.sendData = sendData;
+      this.reply = reply;
+      this.failure = failure;
+    }
+
+    @Override public void executeStatements(List<String> sql, String user, int timeout) { }
+    @Override public void sendMail(List<String> to, String s, String b) { }
+    @Override public boolean sendDataToAi() { return sendData; }
+
+    @Override
+    public String summarize(String prompt, int maxChars) throws Exception {
+      prompts.add(prompt);
+      if (failure != null) {
+        throw failure;
+      }
+      return reply.length() > maxChars ? reply.substring(0, maxChars) : reply;
+    }
+  }
+
+  private static RunContext summaryRun() {
+    RunContext run = new RunContext();
+    run.status = "success";
+    run.rowCount = 42;
+    run.durationMs = 1234;
+    run.columns = List.of("host", "secret_col");
+    run.rows = List.of(Map.of("host", "web-01", "secret_col", "s3cr3t-cell"));
+    return run;
+  }
+
+  private static Map<String, Object> runSummary(SummaryServices services, String config) throws Exception {
+    return new AiSummaryAction().execute(
+        new ActionContext(new Workflow(), "select 1", summaryRun(), services), M.readTree(config));
+  }
+
+  @Test
+  public void aiSummaryReturnsTheProvidersTextUnderSummary() throws Exception {
+    SummaryServices s = new SummaryServices(true, "All quiet.", null);
+    assertEquals(Map.of("summary", "All quiet."), runSummary(s, "{\"instructions\":\"be brief\"}"));
+    assertTrue(s.prompts.get(0).contains("be brief"));
+  }
+
+  @Test
+  public void aiSummaryTruncatesToMaxChars() throws Exception {
+    SummaryServices s = new SummaryServices(true, "x".repeat(50), null);
+    assertEquals("x".repeat(10), runSummary(s, "{\"maxChars\":10}").get("summary"));
+  }
+
+  @Test
+  public void aiSummaryFailsWithAStatedReasonWhenTheProviderThrows() {
+    SummaryServices s = new SummaryServices(true, "", new IllegalStateException("Prospector is not configured"));
+    Exception e = assertThrows(IllegalStateException.class, () -> runSummary(s, "{}"));
+    assertEquals("Prospector is not configured", e.getMessage());
+  }
+
+  @Test
+  public void aiSummaryIncludesRowCountAndColumnsInThePrompt() throws Exception {
+    SummaryServices s = new SummaryServices(true, "ok", null);
+    runSummary(s, "{}");
+    String prompt = s.prompts.get(0);
+    assertTrue(prompt.contains("rowCount: 42"), prompt);
+    assertTrue(prompt.contains("durationMs: 1234"), prompt);
+    assertTrue(prompt.contains("host, secret_col"), prompt);
+    assertTrue(prompt.contains("s3cr3t-cell"), prompt);
+  }
+
+  @Test
+  public void aiSummaryWithholdsColumnsAndRowsWhenSendDataToAiIsOff() throws Exception {
+    SummaryServices s = new SummaryServices(false, "ok", null);
+    runSummary(s, "{}");
+    String prompt = s.prompts.get(0);
+    assertTrue(prompt.contains("status: success"), prompt);
+    assertTrue(prompt.contains("rowCount: 42"), prompt);
+    assertTrue(prompt.contains("durationMs: 1234"), prompt);
+    assertFalse(prompt.contains("s3cr3t-cell"), prompt);
+    assertFalse(prompt.contains("web-01"), prompt);
+    assertFalse(prompt.contains("secret_col"), prompt);
+  }
+
+  @Test
+  public void aiSummaryPromptCapsRowsAtTwenty() {
+    RunContext run = summaryRun();
+    List<Map<String, String>> rows = new ArrayList<>();
+    for (int i = 0; i < 30; i++) {
+      rows.add(Map.of("host", "h" + i, "secret_col", "v" + i));
+    }
+    run.rows = rows;
+    String prompt = AiSummaryAction.buildPrompt("", run, true);
+    assertTrue(prompt.contains("h19 | v19"), prompt);
+    assertFalse(prompt.contains("h20 | v20"), prompt);
+  }
+
+  @Test
+  public void aiSummaryPreviewDoesNotCallTheProvider() throws Exception {
+    SummaryServices s = new SummaryServices(true, "ok", null);
+    AiSummaryAction action = new AiSummaryAction();
+    assertTrue(action.hasSideEffects());
+    action.preview(new ActionContext(new Workflow(), "select 1", summaryRun(), s), M.readTree("{}"));
+    assertTrue(s.prompts.isEmpty());
   }
 }

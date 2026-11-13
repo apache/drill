@@ -30,7 +30,8 @@ public class ActionTypeRegistry {
   }
 
   public static ActionTypeRegistry defaults() {
-    return new ActionTypeRegistry(List.of(new RecordAlertAction(), new SaveToTableAction(), new EmailAction()));
+    return new ActionTypeRegistry(List.of(new RecordAlertAction(), new SaveToTableAction(), new EmailAction(),
+        new AiSummaryAction()));
   }
 
   public ActionType get(String id) {
