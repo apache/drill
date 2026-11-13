@@ -75,7 +75,8 @@ public class AiConfigResources {
   @Inject
   PersistentStoreProvider storeProvider;
 
-  private static volatile PersistentStore<LlmConfig> cachedStore;
+  private static PersistentStoreProvider cachedFor;
+  private static PersistentStore<LlmConfig> cachedStore;
 
   // ==================== Response Models ====================
 
@@ -897,23 +898,27 @@ public class AiConfigResources {
 
   /** Returns the stored LLM config, or null when none has been set. */
   public static LlmConfig current(PersistentStoreProvider provider) {
-    return openStore(provider, new ObjectMapper()).get(CONFIG_KEY);
+    return store(provider).get(CONFIG_KEY);
   }
 
-  private static PersistentStore<LlmConfig> openStore(PersistentStoreProvider provider, ObjectMapper mapper) {
-    if (cachedStore == null) {
-      synchronized (AiConfigResources.class) {
-        if (cachedStore == null) {
-          try {
-            cachedStore = provider.getOrCreateStore(
-                PersistentStoreConfig.newJacksonBuilder(mapper, LlmConfig.class)
-                .name(CONFIG_STORE_NAME)
-                .build()
-            );
-          } catch (StoreException e) {
-            throw new DrillRuntimeException("Failed to access AI config store", e);
-          }
-        }
+  /** The shared config store for this provider; the same instance serves every caller. */
+  public static PersistentStore<LlmConfig> store(PersistentStoreProvider provider) {
+    return openStore(provider, null);
+  }
+
+  // Keyed by provider so a restarted or second cluster in one JVM does not reuse a stale store.
+  private static synchronized PersistentStore<LlmConfig> openStore(
+      PersistentStoreProvider provider, ObjectMapper mapper) {
+    if (cachedStore == null || cachedFor != provider) {
+      try {
+        cachedStore = provider.getOrCreateStore(
+            PersistentStoreConfig.newJacksonBuilder(mapper != null ? mapper : new ObjectMapper(), LlmConfig.class)
+            .name(CONFIG_STORE_NAME)
+            .build()
+        );
+        cachedFor = provider;
+      } catch (StoreException e) {
+        throw new DrillRuntimeException("Failed to access AI config store", e);
       }
     }
     return cachedStore;

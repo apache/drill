@@ -17,7 +17,17 @@
  */
 package org.apache.drill.exec.server.rest.workflow;
 
+import org.apache.drill.exec.server.rest.AiConfigResources;
 import org.apache.drill.exec.server.rest.SavedQueryResources;
+import org.apache.drill.exec.server.rest.ai.ChatMessage;
+import org.apache.drill.exec.server.rest.ai.LlmCallResult;
+import org.apache.drill.exec.server.rest.ai.LlmConfig;
+import org.apache.drill.exec.server.rest.ai.LlmProvider;
+import org.apache.drill.exec.server.rest.ai.LlmProviderRegistry;
+import org.apache.drill.exec.server.rest.ai.ToolDefinition;
+import org.apache.drill.exec.server.rest.ai.UsageObserver;
+import org.apache.drill.exec.server.rest.ai.ValidationResult;
+import org.apache.drill.exec.store.sys.PersistentStore;
 import org.apache.drill.exec.work.WorkManager;
 import org.apache.drill.test.ClusterFixture;
 import org.apache.drill.test.ClusterTest;
@@ -26,6 +36,7 @@ import org.junit.BeforeClass;
 import org.junit.Test;
 
 import java.io.File;
+import java.io.OutputStream;
 import java.time.Instant;
 import java.util.Iterator;
 import java.util.List;
@@ -267,5 +278,86 @@ public class TestWorkflowRunner extends ClusterTest {
     assertFalse(stored.isRunning);
     assertEquals(null, stored.runStartedAt);
     assertEquals("success", stored.lastStatus);
+  }
+
+  // ---------------------------------------------------------------- summarize
+
+  private static final String FAKE_PROVIDER = "fake-summary-provider";
+
+  private static PersistentStore<LlmConfig> aiStore() throws Exception {
+    return AiConfigResources.store(cluster.drillbit().getContext().getStoreProvider());
+  }
+
+  private static void configure(String providerId, boolean enabled) throws Exception {
+    LlmConfig c = new LlmConfig();
+    c.setProvider(providerId);
+    c.setEnabled(enabled);
+    aiStore().put("default", c);
+  }
+
+  private static void registerFake(String reply) {
+    LlmProviderRegistry.register(new LlmProvider() {
+      @Override public String getId() {
+        return FAKE_PROVIDER;
+      }
+
+      @Override public String getDisplayName() {
+        return "Fake";
+      }
+
+      @Override public LlmCallResult streamChatCompletion(LlmConfig config, List<ChatMessage> messages,
+          List<ToolDefinition> tools, OutputStream out, UsageObserver usage) {
+        LlmCallResult r = new LlmCallResult();
+        r.appendResponseText(reply);
+        return r;
+      }
+
+      @Override public ValidationResult validateConfig(LlmConfig config) {
+        return null;
+      }
+    });
+  }
+
+  @org.junit.After
+  public void clearAiConfig() throws Exception {
+    aiStore().delete("default");
+  }
+
+  @Test
+  public void summarizeRefusesWhenProspectorIsNotConfigured() {
+    Exception e = assertThrows(Exception.class, () -> runner.summarize("p", 100));
+    assertEquals("Prospector is not configured; an administrator must set it up before ai_summary can run.",
+        e.getMessage());
+  }
+
+  @Test
+  public void summarizeRefusesWhenProspectorIsDisabled() throws Exception {
+    registerFake("hello");
+    configure(FAKE_PROVIDER, false);
+    Exception e = assertThrows(Exception.class, () -> runner.summarize("p", 100));
+    assertEquals("Prospector is disabled; an administrator must enable it before ai_summary can run.",
+        e.getMessage());
+  }
+
+  @Test
+  public void summarizeReturnsTheModelText() throws Exception {
+    registerFake("hello world");
+    configure(FAKE_PROVIDER, true);
+    assertEquals("hello world", runner.summarize("p", 100));
+  }
+
+  @Test
+  public void summarizeTruncatesToMaxChars() throws Exception {
+    registerFake("hello world");
+    configure(FAKE_PROVIDER, true);
+    assertEquals("hello", runner.summarize("p", 5));
+    assertEquals("", runner.summarize("p", -3));
+  }
+
+  @Test
+  public void summarizeRejectsAnUnknownProvider() throws Exception {
+    configure("no-such-provider", true);
+    Exception e = assertThrows(Exception.class, () -> runner.summarize("p", 100));
+    assertTrue(e.getMessage(), e.getMessage().contains("no-such-provider"));
   }
 }

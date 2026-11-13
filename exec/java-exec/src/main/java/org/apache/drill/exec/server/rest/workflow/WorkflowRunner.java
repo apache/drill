@@ -428,6 +428,10 @@ public class WorkflowRunner implements AutoCloseable, WorkflowServices {
       throw new IllegalStateException(
           "Prospector is not configured; an administrator must set it up before ai_summary can run.");
     }
+    if (!config.isEnabled()) {
+      throw new IllegalStateException(
+          "Prospector is disabled; an administrator must enable it before ai_summary can run.");
+    }
     LlmProvider llm = LlmProviderRegistry.get(config.getProvider());
     if (llm == null) {
       throw new IllegalStateException("Unknown Prospector provider: " + config.getProvider());
@@ -439,7 +443,8 @@ public class WorkflowRunner implements AutoCloseable, WorkflowServices {
     if (text == null) {
       text = "";
     }
-    return text.length() > maxChars ? text.substring(0, maxChars) : text;
+    int limit = Math.max(0, maxChars);
+    return text.length() > limit ? text.substring(0, limit) : text;
   }
 
   /**
