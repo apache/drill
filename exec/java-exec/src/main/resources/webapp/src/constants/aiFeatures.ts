@@ -23,14 +23,15 @@
  * the feature filter dropdown, so a slug missing here is unselectable in the UI. Every
  * client-side slug is passed as `context.feature` on a Prospector chat request; the
  * server-side slugs come from AiConfigResources (config_test), TranspileResources
- * (transpile), and ProspectorResources' default (prospector_chat).
+ * (transpile), WorkflowRunner (workflow_ai_summary), and ProspectorResources' default
+ * (prospector_chat).
  *
  * Keep this in sync with the table in docs/dev/ui/pages/ai-analytics.md. `AiFeature`
  * (below) is derived from this map's keys, so `ChatContext.feature` — a required field
  * — can only ever hold a slug already labelled here: `tsc` rejects an unlabelled or
  * misspelled slug at the call site that emits it. Server-emitted slugs (config_test,
- * transpile, prospector_chat) have no TypeScript literal to check against and stay
- * manually maintained.
+ * transpile, workflow_ai_summary, prospector_chat) have no TypeScript literal to check
+ * against and stay manually maintained.
  */
 export const FEATURE_LABEL = {
   // SQL Lab
@@ -56,6 +57,7 @@ export const FEATURE_LABEL = {
   // Server-originated
   config_test: 'AI config test',
   transpile: 'SQL transpile',
+  workflow_ai_summary: 'Workflow AI summary',
   prospector_chat: 'Prospector chat',
 } as const;
 

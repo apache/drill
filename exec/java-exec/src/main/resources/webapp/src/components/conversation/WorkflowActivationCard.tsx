@@ -46,6 +46,9 @@ function describeAction(a: WorkflowAction): string {
     }
     case 'record_alert':
       return 'Record an alert in the run history';
+    case 'ai_summary':
+      // Worth spelling out before activation: this one sends the run to an outside provider.
+      return 'Ask the AI provider to summarise the run, sending it the run\'s columns and rows';
     default: {
       // A type this dialog does not know. It may well send somewhere (a webhook, say), so
       // show every config entry that looks like a destination rather than only the type.

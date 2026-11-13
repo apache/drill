@@ -183,4 +183,17 @@ describe('WorkflowActivationCard', () => {
     expect(await screen.findByText(/no longer exists/i)).toBeInTheDocument();
     expect(screen.queryByRole('button', { name: 'Activate' })).not.toBeInTheDocument();
   });
+
+  it('says an AI summary sends the run to the provider', async () => {
+    vi.mocked(getWorkflow).mockResolvedValue(workflow({
+      actions: [
+        { id: 'sum', type: 'ai_summary', condition: { always: true }, config: { maxChars: 500 } },
+      ],
+    }));
+    renderCard();
+    await activate();
+    const d = await dialog();
+    expect(d.textContent).toContain('summarise the run');
+    expect(d.textContent).toContain('columns and rows');
+  });
 });

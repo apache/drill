@@ -223,9 +223,16 @@ export const TOOL_DEFINITIONS: ToolDefinition[] = [
       + 'record_alert {message: string}; '
       + 'save_to_table {location: "workspace" such as "dfs.tmp" (optional), format: '
       + '"parquet" | "json" | "csv" (optional), mode: "overwrite" | "append" | "newTablePerRun" '
-      + '(optional)}. Text fields may use {{field}} templates: rowCount, rowCountDelta, '
+      + '(optional)}; '
+      + 'ai_summary {instructions: string (optional, what the summary should cover), maxChars: '
+      + 'number (optional, default 2000)} asks the configured AI provider to summarise the run '
+      + 'in plain English, and sends the run\'s column names and up to 20 rows to that provider '
+      + 'unless an administrator has turned data sharing off. Put it before an email action and '
+      + 'reference {{actions.<id>.summary}} in the body. '
+      + 'Text fields may use {{field}} templates: rowCount, rowCountDelta, '
       + 'deltaPercent, status, error, durationMs, and {{actions.<earlierActionId>.<output>}} '
-      + '(email has no outputs, record_alert outputs message, save_to_table outputs path). '
+      + '(email has no outputs, record_alert outputs message, save_to_table outputs path, '
+      + 'ai_summary outputs summary). '
       + 'Each action may carry a "when" condition over the same fields, for example '
       + '"rowCount > 0" or "status == \'error\' || deltaPercent > 20"; leave it out to run '
       + 'the action every time. If the server rejects the workflow the error lists each '
@@ -268,7 +275,10 @@ export const TOOL_DEFINITIONS: ToolDefinition[] = [
                 description: 'Letters, digits and underscores, starting with a letter, unique '
                   + 'in the workflow. Defaults to the type and position.',
               },
-              type: { type: 'string', enum: ['email', 'record_alert', 'save_to_table'] },
+              type: {
+                type: 'string',
+                enum: ['email', 'record_alert', 'save_to_table', 'ai_summary'],
+              },
               when: {
                 type: 'string',
                 description: 'Condition for running this action, e.g. "rowCount > 0". Omit to '
