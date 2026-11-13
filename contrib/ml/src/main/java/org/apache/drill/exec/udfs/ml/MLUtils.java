@@ -189,19 +189,29 @@ public class MLUtils {
    * a UTF-16 encoded file cannot hide the declaration from the scan.
    */
   static void rejectDoctype(byte[] model, String fullFilePath, String modelLocation) {
-    StringBuilder prolog = new StringBuilder();
-    for (byte b : model) {
-      if (b != 0) {
-        prolog.append((char) (b & 0xFF));
-      }
-    }
-    if (prolog.indexOf("<!DOCTYPE") >= 0) {
+    if (hasDoctype(model)) {
       throw UserException.functionError()
         .message("Unable to read model file " + fullFilePath + " (" + modelLocation
           + ") as a PMML model: it declares a DOCTYPE. A model file must not contain a DOCTYPE "
           + "declaration, because a DTD can read local files and make the server fetch URLs.")
         .build(logger);
     }
+  }
+
+  /**
+   * True when these bytes declare a DOCTYPE. Shared with the {@code pmml} format plugin, which
+   * screens model files the same way but reports the refusal as a read error rather than a
+   * function error. NUL bytes are dropped first so a UTF-16 encoded file cannot hide the
+   * declaration from the scan.
+   */
+  public static boolean hasDoctype(byte[] model) {
+    StringBuilder prolog = new StringBuilder();
+    for (byte b : model) {
+      if (b != 0) {
+        prolog.append((char) (b & 0xFF));
+      }
+    }
+    return prolog.indexOf("<!DOCTYPE") >= 0;
   }
 
   /**

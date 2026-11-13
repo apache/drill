@@ -44,6 +44,40 @@ The model file is read as the query user when `drill.exec.impersonation.enabled`
 
 Model file *content* is screened before it is parsed. pmml4s parses PMML with a StAX factory it builds itself, with default settings and no hook to harden; on Drill's classpath that factory resolves external entities and external DTD subsets. A model file carrying a `<!DOCTYPE` could therefore read local files, probe for the existence of absolute paths through the resulting error messages, and make the Drillbit fetch a URL chosen by whoever wrote the file. Since the file-upload feature puts arbitrary user bytes into a `dfs` workspace by design, that is the expected input. So a model whose bytes contain a `<!DOCTYPE` declaration is refused outright, with no parsing attempted; PMML has no legitimate use for a DTD. With no DOCTYPE accepted, there is no server-side request forgery surface in model content either.
 
+## The `pmml` format plugin
+
+`predict()` takes its features positionally, in the order the model declares them, so the first
+question anyone has is "what does this model expect?". The `pmml` format plugin answers it by
+making a model file queryable:
+
+```sql
+SELECT * FROM dfs.models.`churn.pmml`
+```
+
+One row per file, with this schema:
+
+| Column | Type | Contents |
+|---|---|---|
+| `model_name` | VARCHAR | the model's declared name, null if it has none |
+| `model_type` | VARCHAR | the PMML model element, for example `TreeModel` |
+| `classification` | BIT | true for a classifier |
+| `clustering` | BIT | true for a clusterer |
+| `regression` | BIT | true for a regression model |
+| `input_fields` | repeated VARCHAR | the active input fields, **in the order `predict()` expects them** |
+| `prediction_classes` | repeated VARCHAR | the labels a classifier can emit; empty for regression |
+| `input_schema` | repeated map | `field_name` and `data_type` per input field |
+
+Nothing is scored by this plugin. It reads metadata only; scoring is `predict()`.
+
+The `pmml` extension is registered for `dfs` and `cp` out of the box, so no configuration is
+needed. The same DOCTYPE screening described above applies here, because the plugin parses with
+the same library — a model declaring a DOCTYPE is refused as a read error rather than a function
+error. Unlike `predict()`, this plugin reads through Drill's normal scan path, so workspace
+resolution and impersonation are handled by the framework.
+
+Model files are XML metadata rather than data, so a file larger than 64 MB is refused rather than
+buffered.
+
 ## `ai_summary` workflow action
 
 `ai_summary` asks the configured LLM to summarise a run. See [WORKFLOWS.md](WORKFLOWS.md) for the action framework.
