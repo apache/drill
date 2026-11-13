@@ -19,10 +19,13 @@ package org.apache.drill.exec.udfs.ml;
 
 import org.apache.drill.common.exceptions.UserException;
 import org.apache.drill.exec.server.DrillbitContext;
+import org.apache.drill.exec.store.dfs.DrillFileSystem;
 import org.apache.drill.exec.store.dfs.FileSystemConfig;
+import org.apache.drill.exec.store.dfs.FileSystemPlugin;
 import org.apache.drill.exec.store.dfs.WorkspaceConfig;
 import org.apache.drill.test.ClusterFixture;
 import org.apache.drill.test.ClusterTest;
+import org.apache.hadoop.fs.Path;
 import org.junit.BeforeClass;
 import org.junit.Test;
 import org.pmml4s.model.Model;
@@ -32,7 +35,9 @@ import java.util.HashMap;
 import java.util.Map;
 
 import static org.junit.Assert.assertEquals;
+import static org.junit.Assert.assertFalse;
 import static org.junit.Assert.assertNotNull;
+import static org.junit.Assert.assertNull;
 import static org.junit.Assert.assertTrue;
 import static org.junit.Assert.fail;
 
@@ -44,13 +49,20 @@ public class TestMLUtils extends ClusterTest {
     dirTestWatcher.copyResourceToRoot(Paths.get("models/"));
   }
 
+  /** The query user handed to getModel; it is the identity reads happen as under impersonation. */
+  private static final String USER = "testuser";
+
   private static DrillbitContext context() {
     return cluster.drillbit().getContext();
   }
 
+  private static Model model(String location) {
+    return MLUtils.getModel(location, context(), USER);
+  }
+
   private static String expectFailure(String location) {
     try {
-      MLUtils.getModel(location, context());
+      MLUtils.getModel(location, context(), USER);
     } catch (UserException e) {
       return e.getMessage();
     }
@@ -60,14 +72,14 @@ public class TestMLUtils extends ClusterTest {
 
   @Test
   public void loadsAModelFromAFileSystemPlugin() {
-    Model model = MLUtils.getModel("dfs.root.`models/iris_rf.pmml`", context());
+    Model model = model("dfs.root.`models/iris_rf.pmml`");
     assertNotNull(model);
     assertEquals(3, model.inputFields().length);
   }
 
   @Test
   public void theFixtureScoresDifferentRowsToDifferentClasses() {
-    Model model = MLUtils.getModel("dfs.root.`models/iris_rf.pmml`", context());
+    Model model = model("dfs.root.`models/iris_rf.pmml`");
     assertEquals("setosa", predictClass(model, 5.1, 1.4, 0.2));
     assertEquals("versicolor", predictClass(model, 6.0, 4.0, 1.3));
     assertEquals("virginica", predictClass(model, 6.5, 5.5, 2.0));
@@ -85,7 +97,7 @@ public class TestMLUtils extends ClusterTest {
 
   @Test
   public void loadsAModelFromAPluginWithoutWorkspaces() {
-    Model model = MLUtils.getModel("cp.`models/iris_rf.pmml`", context());
+    Model model = model("cp.`models/iris_rf.pmml`");
     assertNotNull(model);
   }
 
@@ -165,17 +177,71 @@ public class TestMLUtils extends ClusterTest {
   }
 
   @Test
-  public void aRootWorkspaceStillConfinesTraversalToItsRoot() {
+  public void aRootWorkspaceRefusesNamesThatDoNotLandUnderIt() {
     Map<String, WorkspaceConfig> workspaces = new HashMap<>();
     workspaces.put("root", ws("/"));
     FileSystemConfig config = configWith(workspaces);
     assertEquals("/a/b.pmml", MLUtils.getFullFilePath("dfs.root.`a/b.pmml`", config));
-    try {
-      MLUtils.getFullFilePath("dfs.root.`.`", config);
-      fail("a name resolving onto the workspace itself must be refused");
-    } catch (UserException e) {
-      assertTrue(e.getMessage(), e.getMessage().contains("inside its workspace"));
+    for (String name : new String[] {".", "..", "../etc/passwd", "a/../..", "a/../../etc/passwd"}) {
+      try {
+        MLUtils.getFullFilePath("dfs.root.`" + name + "`", config);
+        fail("a name that does not land under the workspace must be refused: " + name);
+      } catch (UserException e) {
+        assertTrue(e.getMessage(), e.getMessage().contains("inside its workspace"));
+      }
     }
+  }
+
+
+  @Test
+  public void aModelDeclaringADoctypeIsRefused() {
+    String message = expectFailure("dfs.root.`models/xxe.pmml`");
+    assertTrue(message, message.contains("DOCTYPE"));
+    assertTrue(message, message.contains("xxe.pmml"));
+  }
+
+  @Test
+  public void anExternalEntityCannotReadAFileOutsideTheWorkspace() {
+    // The fixture's entity points at file:///etc/passwd. The guard must refuse the model
+    // before any parser resolves it, so no part of that file can appear anywhere.
+    String message = expectFailure("dfs.root.`models/xxe.pmml`");
+    assertFalse(message, message.contains("root:"));
+    assertFalse(message, message.contains("/bin/"));
+  }
+
+  @Test
+  public void anExternalDtdSubsetIsRefused() {
+    String message = expectFailure("dfs.root.`models/external_dtd.pmml`");
+    assertTrue(message, message.contains("DOCTYPE"));
+    assertTrue(message, message.contains("external_dtd.pmml"));
+  }
+
+  @Test
+  public void theQueryUserReadsTheModelOnlyWhenImpersonationIsOn() {
+    assertEquals("alice", MLUtils.fileSystemUser(true, "alice"));
+    assertNull(MLUtils.fileSystemUser(false, "alice"));
+    assertNull(MLUtils.fileSystemUser(true, null));
+    assertNull(MLUtils.fileSystemUser(true, "   "));
+    // The test cluster runs without impersonation, so reads stay on the process user.
+    assertNull(MLUtils.fileSystemUser(context(), "alice"));
+  }
+
+  @Test
+  public void anImpersonatedFileSystemReadsTheModel() throws Exception {
+    FileSystemPlugin dfs = (FileSystemPlugin) context().getStorage().getPlugin("dfs");
+    String path = MLUtils.getFullFilePath("dfs.root.`models/iris_rf.pmml`",
+        (FileSystemConfig) dfs.getConfig());
+    try (DrillFileSystem fs = MLUtils.openFileSystem(dfs.getFsConf(), "alice")) {
+      assertTrue(path, fs.exists(new Path(path)));
+    }
+  }
+
+  @Test
+  public void aUriFormWorkspaceLocationResolvesInsideItself() {
+    Map<String, WorkspaceConfig> workspaces = new HashMap<>();
+    workspaces.put("uri", ws("file:///data/tmp"));
+    FileSystemConfig config = configWith(workspaces);
+    assertTrue(MLUtils.getFullFilePath("dfs.uri.`m.pmml`", config).endsWith("/data/tmp/m.pmml"));
   }
 
   @Test

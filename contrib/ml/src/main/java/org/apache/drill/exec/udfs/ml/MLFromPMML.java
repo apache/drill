@@ -24,6 +24,7 @@ import org.apache.drill.exec.expr.annotations.Output;
 import org.apache.drill.exec.expr.annotations.Param;
 import org.apache.drill.exec.expr.annotations.Workspace;
 import org.apache.drill.exec.expr.holders.VarCharHolder;
+import org.apache.drill.exec.ops.ContextInformation;
 import org.apache.drill.exec.server.DrillbitContext;
 import org.apache.drill.exec.vector.complex.reader.FieldReader;
 import org.apache.drill.exec.vector.complex.writer.BaseWriter.ComplexWriter;
@@ -57,6 +58,9 @@ public class MLFromPMML {
     @Inject
     DrillbitContext drillbitContext;
 
+    @Inject
+    ContextInformation contextInformation;
+
     @Workspace
     org.pmml4s.model.Model model;
 
@@ -69,7 +73,8 @@ public class MLFromPMML {
       if (model == null) {
         String location = org.apache.drill.exec.expr.fn.impl.StringFunctionHelpers
           .toStringFromUTF8(rawPath.start, rawPath.end, rawPath.buffer);
-        model = org.apache.drill.exec.udfs.ml.MLUtils.getModel(location, drillbitContext);
+        model = org.apache.drill.exec.udfs.ml.MLUtils.getModel(location, drillbitContext,
+          contextInformation.getQueryUser());
       }
       java.util.Map predictions = org.apache.drill.exec.udfs.ml.MLUtils.predict(model, features);
       outBuffer = org.apache.drill.exec.udfs.ml.MLUtils.mapFields(predictions, outWriter, outBuffer);

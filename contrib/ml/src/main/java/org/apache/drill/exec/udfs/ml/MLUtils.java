@@ -20,6 +20,7 @@ package org.apache.drill.exec.udfs.ml;
 import io.netty.buffer.DrillBuf;
 import org.apache.drill.common.exceptions.UserException;
 import org.apache.drill.common.types.TypeProtos.MinorType;
+import org.apache.drill.exec.ExecConstants;
 import org.apache.drill.exec.expr.holders.VarCharHolder;
 import org.apache.drill.exec.server.DrillbitContext;
 import org.apache.drill.exec.store.StoragePlugin;
@@ -28,9 +29,11 @@ import org.apache.drill.exec.store.dfs.DrillFileSystem;
 import org.apache.drill.exec.store.dfs.FileSystemConfig;
 import org.apache.drill.exec.store.dfs.FileSystemPlugin;
 import org.apache.drill.exec.store.dfs.WorkspaceConfig;
+import org.apache.drill.exec.util.ImpersonationUtil;
 import org.apache.drill.exec.vector.complex.reader.FieldReader;
 import org.apache.drill.exec.vector.complex.writer.BaseWriter.ComplexWriter;
 import org.apache.drill.exec.vector.complex.writer.BaseWriter.MapWriter;
+import org.apache.hadoop.conf.Configuration;
 import org.apache.hadoop.fs.FSDataInputStream;
 import org.apache.hadoop.fs.Path;
 import org.pmml4s.data.Series;
@@ -38,7 +41,10 @@ import org.pmml4s.model.Model;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
+import java.io.ByteArrayInputStream;
+import java.io.ByteArrayOutputStream;
 import java.io.IOException;
+import java.io.InputStream;
 import java.nio.charset.StandardCharsets;
 import java.util.Map;
 import java.util.regex.Pattern;
@@ -57,9 +63,11 @@ public class MLUtils {
    *
    * @param modelLocation The location of the model file.
    * @param context A {@link DrillbitContext}
+   * @param queryUser The user running the query. Under impersonation the model file is read
+   *     as this user, so {@code predict()} cannot reach a file the user could not select.
    * @return The Model contained in the file referenced by modelLocation
    */
-  public static Model getModel(String modelLocation, DrillbitContext context) {
+  public static Model getModel(String modelLocation, DrillbitContext context, String queryUser) {
     if (modelLocation == null || modelLocation.trim().isEmpty()) {
       throw UserException.functionError()
         .message("A model location is required.")
@@ -71,10 +79,10 @@ public class MLUtils {
           + "such as dfs.models.`model.pmml`. Location: " + modelLocation)
         .build(logger);
     }
-    return getModelFromFile(modelLocation, context);
+    return getModelFromFile(modelLocation, context, queryUser);
   }
 
-  private static Model getModelFromFile(String modelLocation, DrillbitContext context) {
+  private static Model getModelFromFile(String modelLocation, DrillbitContext context, String queryUser) {
     String location = modelLocation.replace("`", "");
     String pluginInstanceName = location.split("\\.", 2)[0];
     StoragePlugin plugin;
@@ -100,9 +108,21 @@ public class MLUtils {
     FileSystemPlugin fileSystemPlugin = (FileSystemPlugin) plugin;
     String fullFilePath = getFullFilePath(location, (FileSystemConfig) fileSystemPlugin.getConfig());
 
-    try (DrillFileSystem dfs = new DrillFileSystem(fileSystemPlugin.getFsConf());
+    String fsUser = fileSystemUser(context, queryUser);
+    byte[] modelBytes;
+    try (DrillFileSystem dfs = openFileSystem(fileSystemPlugin.getFsConf(), fsUser);
          FSDataInputStream inputStream = dfs.open(new Path(fullFilePath))) {
-      return Model.fromInputStream(inputStream);
+      modelBytes = readFully(inputStream);
+    } catch (IOException e) {
+      throw UserException.functionError(e)
+        .message("Unable to open model file " + fullFilePath + " (" + modelLocation + "): " + e.getMessage())
+        .build(logger);
+    }
+
+    rejectDoctype(modelBytes, fullFilePath, modelLocation);
+
+    try (InputStream clean = new ByteArrayInputStream(modelBytes)) {
+      return Model.fromInputStream(clean);
     } catch (IOException e) {
       throw UserException.functionError(e)
         .message("Unable to open model file " + fullFilePath + " (" + modelLocation + "): " + e.getMessage())
@@ -112,6 +132,74 @@ public class MLUtils {
       throw UserException.functionError(e)
         .message("Unable to read model file " + fullFilePath + " (" + modelLocation
           + ") as a PMML model: " + e.getMessage())
+        .build(logger);
+    }
+  }
+
+  /**
+   * The identity that opens the model file: the query user when impersonation is on, and
+   * {@code null} (meaning the Drillbit process user) when it is off. Without this, a user
+   * who may not select a file could still make the Drillbit read it through {@code predict()}.
+   */
+  static String fileSystemUser(DrillbitContext context, String queryUser) {
+    boolean impersonation = context != null
+      && context.getConfig().getBoolean(ExecConstants.IMPERSONATION_ENABLED);
+    return fileSystemUser(impersonation, queryUser);
+  }
+
+  static String fileSystemUser(boolean impersonationEnabled, String queryUser) {
+    if (impersonationEnabled && queryUser != null && !queryUser.trim().isEmpty()) {
+      return queryUser;
+    }
+    return null;
+  }
+
+  /** Opens the file system as {@code fsUser}, or as the process user when that is null. */
+  static DrillFileSystem openFileSystem(Configuration fsConf, String fsUser) throws IOException {
+    if (fsUser != null) {
+      return ImpersonationUtil.createFileSystem(fsUser, fsConf);
+    }
+    return new DrillFileSystem(fsConf);
+  }
+
+  private static byte[] readFully(InputStream in) throws IOException {
+    ByteArrayOutputStream out = new ByteArrayOutputStream();
+    byte[] chunk = new byte[8192];
+    int read;
+    while ((read = in.read(chunk)) >= 0) {
+      out.write(chunk, 0, read);
+    }
+    return out.toByteArray();
+  }
+
+  /**
+   * Refuses a model file that declares a DOCTYPE, before pmml4s ever sees it.
+   *
+   * <p>pmml4s parses PMML through its own {@link javax.xml.stream.XMLInputFactory} with default
+   * settings and exposes no hook on it. On Drill's classpath that factory is Woodstox, which
+   * resolves external entities and external DTD subsets, so the content of a model file could
+   * otherwise read local files, probe for their existence, and make the Drillbit fetch a URL of
+   * the file author's choosing. File uploads land arbitrary user bytes in a workspace by design,
+   * so untrusted XML is the expected input here.
+   *
+   * <p>PMML has no legitimate use for a DTD, and every one of those attacks needs a DOCTYPE: an
+   * internal subset to declare entities, an external subset to fetch one. Refusing the literal
+   * closes all of them without depending on parser properties, which Woodstox honours by
+   * silently ignoring the declaration rather than reporting it. NUL bytes are dropped first so
+   * a UTF-16 encoded file cannot hide the declaration from the scan.
+   */
+  static void rejectDoctype(byte[] model, String fullFilePath, String modelLocation) {
+    StringBuilder prolog = new StringBuilder();
+    for (byte b : model) {
+      if (b != 0) {
+        prolog.append((char) (b & 0xFF));
+      }
+    }
+    if (prolog.indexOf("<!DOCTYPE") >= 0) {
+      throw UserException.functionError()
+        .message("Unable to read model file " + fullFilePath + " (" + modelLocation
+          + ") as a PMML model: it declares a DOCTYPE. A model file must not contain a DOCTYPE "
+          + "declaration, because a DTD can read local files and make the server fetch URLs.")
         .build(logger);
     }
   }
@@ -181,13 +269,26 @@ public class MLUtils {
     } catch (IllegalArgumentException e) {
       throw outsideWorkspace(location);
     }
-    String dirUri = dir.toUri().normalize().toString();
+    String dirUri = stripEmptyAuthority(dir.toUri().normalize().toString());
     String prefix = dirUri.endsWith("/") ? dirUri : dirUri + "/";
-    String targetUri = target.toUri().normalize().toString();
+    String targetUri = stripEmptyAuthority(target.toUri().normalize().toString());
+    // A workspace at the storage root leaves a climbing segment in place: /.. normalizes to
+    // itself, so the prefix test alone would accept it.
+    if (targetUri.endsWith("/..") || targetUri.contains("/../")) {
+      throw outsideWorkspace(location);
+    }
     if (!targetUri.startsWith(prefix) || targetUri.length() == prefix.length()) {
       throw outsideWorkspace(location);
     }
     return new Path(target.toUri().normalize());
+  }
+
+  /**
+   * Drops an empty URI authority, so a workspace written as {@code file:///data} compares
+   * against the {@code file:/data/...} form that resolving a name against it produces.
+   */
+  private static String stripEmptyAuthority(String uri) {
+    return uri.replaceFirst("^([a-zA-Z][a-zA-Z0-9+.-]*):///", "$1:/");
   }
 
   private static UserException outsideWorkspace(String location) {
@@ -202,7 +303,8 @@ public class MLUtils {
    * attributes of the prediction.
    *
    * @param model The trained model.
-   * @param featureHolders An array of {@link FieldReader} containing observations
+   * @param featureHolders An array of {@link FieldReader} containing observations. An unset
+   *     (NULL) reader is passed to the model as a missing value.
    * @return A Map of the predicted classes or values as well as the probabilities.
    */
   public static Map<String, Object> predict(Model model, FieldReader[] featureHolders) {
@@ -216,7 +318,11 @@ public class MLUtils {
     for (int i = 0; i < featureHolders.length; i++) {
       FieldReader currentReader = featureHolders[i];
       MinorType dataType = currentReader.getType().getMinorType();
-      if (dataType == MinorType.VARCHAR) {
+      if (!currentReader.isSet()) {
+        // A NULL column is a missing value, which pmml4s applies the model's own
+        // missing-value handling to. Throwing here would fail a whole query over one gap.
+        features[i] = null;
+      } else if (dataType == MinorType.VARCHAR) {
         features[i] = currentReader.readText().toString();
       } else if (dataType == MinorType.VARDECIMAL) {
         features[i] = currentReader.readBigDecimal().doubleValue();

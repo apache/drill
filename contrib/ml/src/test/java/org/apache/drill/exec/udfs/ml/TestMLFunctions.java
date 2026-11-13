@@ -28,6 +28,8 @@ import org.junit.Test;
 import java.nio.file.Paths;
 
 import static org.junit.Assert.assertEquals;
+import static org.junit.Assert.assertFalse;
+import static org.junit.Assert.assertNotNull;
 import static org.junit.Assert.assertTrue;
 import static org.junit.Assert.fail;
 
@@ -64,7 +66,7 @@ public class TestMLFunctions extends ClusterTest {
       assertTrue(r.next());
       assertEquals(label, r.scalar("s").getString());
     }
-    assertTrue(!r.next());
+    assertFalse(r.next());
     rs.clear();
   }
 
@@ -80,6 +82,41 @@ public class TestMLFunctions extends ClusterTest {
     assertTrue(r.scalar("a").getDouble() > r.scalar("b").getDouble());
     assertEquals(1.0, sum, 1e-6);
     rs.clear();
+  }
+
+
+  @Test
+  public void aNullFeatureInANonFloatColumnIsAMissingValue() throws Exception {
+    // An INT column: before NULLs were treated as missing values this threw a raw NPE.
+    String sql = "SELECT predict('" + MODEL + "', CAST(NULL AS INT), 1.4, 0.2) AS p "
+      + "FROM (VALUES(1))";
+    RowSet rs = client.queryBuilder().sql(sql).rowSet();
+    RowSetReader r = rs.reader();
+    assertTrue(r.next());
+    assertNotNull(r.column("p"));
+    rs.clear();
+  }
+
+  @Test
+  public void aNullFeatureInAFloatColumnIsAMissingValue() throws Exception {
+    String sql = "SELECT predict('" + MODEL + "', CAST(NULL AS DOUBLE), 1.4, 0.2) AS p "
+      + "FROM (VALUES(1))";
+    RowSet rs = client.queryBuilder().sql(sql).rowSet();
+    RowSetReader r = rs.reader();
+    assertTrue(r.next());
+    assertNotNull(r.column("p"));
+    rs.clear();
+  }
+
+  @Test
+  public void aModelDeclaringADoctypeFailsTheQuery() throws Exception {
+    try {
+      client.queryBuilder().sql("SELECT predict('dfs.root.`models/xxe.pmml`', 5.1, 1.4, 0.2) AS p "
+        + "FROM (VALUES(1))").run();
+      fail("expected the query to fail");
+    } catch (UserException e) {
+      assertTrue(e.getMessage(), e.getMessage().contains("DOCTYPE"));
+    }
   }
 
   @Test
