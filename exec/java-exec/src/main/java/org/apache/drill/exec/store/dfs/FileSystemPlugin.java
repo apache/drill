@@ -92,7 +92,6 @@ public class FileSystemPlugin extends AbstractStoragePlugin {
   private final Map<FormatPluginConfig, FormatPlugin> formatPluginsByConfig;
   private final FileSystemConfig config;
   private final Configuration fsConf;
-  private TokenRegistry tokenRegistry;
   private final boolean mountCommandsEnabled;
 
   public FileSystemPlugin(FileSystemConfig config, DrillbitContext context, String name) throws ExecutionSetupException {
@@ -232,28 +231,51 @@ public class FileSystemPlugin extends AbstractStoragePlugin {
 
   @VisibleForTesting
   public void initializeOauthTokenTable(String username) {
-    OAuthTokenProvider tokenProvider = context.getOauthTokenProvider();
-    tokenRegistry = tokenProvider.getOauthTokenRegistry(username);
-    tokenRegistry.createTokenTable(getName());
+    getTokenRegistry(username);
   }
 
+  /**
+   * The token registry for the shared service identity. Only meaningful for a
+   * plugin that does not translate users; see {@link #getTokenRegistry(String)}.
+   */
   public TokenRegistry getTokenRegistry() {
+    return getTokenRegistry(null);
+  }
+
+  /**
+   * Returns the {@link TokenRegistry} holding {@code username}'s tokens, creating
+   * this plugin's token table in it if absent.
+   *
+   * <p>Resolved on every call rather than cached on the plugin. A plugin instance
+   * is shared by all queries, so a cached registry field would be re-pointed by
+   * whichever user planned a query most recently, and a concurrent query by
+   * another user could then read it and authenticate at the data source as the
+   * wrong user.
+   *
+   * @param username the user whose tokens are wanted; ignored unless this plugin
+   *                 uses {@code USER_TRANSLATION}, since every other auth mode
+   *                 shares one token table
+   */
+  public TokenRegistry getTokenRegistry(String username) {
+    String identity = config.getAuthMode() == AuthMode.USER_TRANSLATION ? username : null;
+    OAuthTokenProvider tokenProvider = context.getOauthTokenProvider();
+    TokenRegistry tokenRegistry = tokenProvider.getOauthTokenRegistry(identity);
+    tokenRegistry.createTokenTable(getName());
     return tokenRegistry;
   }
 
   /**
-   * This method returns the {@link TokenRegistry} for a given user.  It is only used for testing user translation
-   * with OAuth 2.0.
-   * @param username A {@link String} of the current active user.
-   * @return A {@link TokenRegistry} for the given user.
+   * This plugin's token table for the shared service identity. Prefer
+   * {@link #getTokenTable(String)} on any path that knows the query user.
    */
-  @VisibleForTesting
-  public TokenRegistry getTokenRegistry(String username) {
-    initializeOauthTokenTable(username);
-    return tokenRegistry;
+  public PersistentTokenTable getTokenTable() {
+    return getTokenTable(null);
   }
 
-  public PersistentTokenTable getTokenTable() { return tokenRegistry.getTokenTable(getName()); }
+  /** This plugin's token table holding {@code username}'s tokens. */
+  public PersistentTokenTable getTokenTable(String username) {
+    return getTokenRegistry(username).getTokenTable(getName());
+  }
 
   /**
    * Creates a new FormatCreator instance.
@@ -372,8 +394,7 @@ public class FileSystemPlugin extends AbstractStoragePlugin {
    */
   @VisibleForTesting
   public void initializeTokenTableForTesting() {
-    OAuthTokenProvider tokenProvider = context.getOauthTokenProvider();
-    tokenRegistry = tokenProvider.getOauthTokenRegistry(null);
+    getTokenRegistry(null);
   }
 
   /**

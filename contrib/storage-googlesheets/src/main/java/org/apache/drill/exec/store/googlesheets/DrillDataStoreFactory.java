@@ -28,10 +28,24 @@ import java.io.Serializable;
 public class DrillDataStoreFactory extends AbstractDataStoreFactory {
   private final OAuthTokenProvider tokenProvider;
   private final String pluginName;
+  private final String registryIdentity;
 
-  public DrillDataStoreFactory(OAuthTokenProvider tokenProvider, String pluginName) {
+  /**
+   * @param registryIdentity the identity whose Drill token registry backs these
+   *     data stores: the query user for a {@code USER_TRANSLATION} plugin, or
+   *     null for the shared registry. This is deliberately separate from the
+   *     Google-side data store id passed to {@link #createDataStore(String)},
+   *     which must be a non-null string and is not a Drill identity.
+   */
+  public DrillDataStoreFactory(OAuthTokenProvider tokenProvider, String pluginName,
+                               String registryIdentity) {
     this.tokenProvider = tokenProvider;
     this.pluginName = pluginName;
+    this.registryIdentity = registryIdentity;
+  }
+
+  public String getRegistryIdentity() {
+    return registryIdentity;
   }
 
   @Override
@@ -44,6 +58,7 @@ public class DrillDataStoreFactory extends AbstractDataStoreFactory {
     return new PlanStringBuilder(this)
       .field("tokenProvider", tokenProvider)
       .field("pluginName", pluginName)
+      .field("registryIdentity", registryIdentity)
       .toString();
   }
 }
