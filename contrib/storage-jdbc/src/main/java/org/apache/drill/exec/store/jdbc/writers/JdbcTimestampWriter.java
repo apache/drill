@@ -23,8 +23,16 @@ import org.apache.drill.exec.physical.resultSet.RowSetLoader;
 import java.sql.ResultSet;
 import java.sql.SQLException;
 import java.sql.Timestamp;
+import java.util.Calendar;
+import java.util.GregorianCalendar;
+import java.util.TimeZone;
 
 public class JdbcTimestampWriter extends JdbcColumnWriter {
+
+  private static final TimeZone UTC = TimeZone.getTimeZone("UTC");
+
+  /** Reused across rows: a scan reads its columns on one thread. */
+  private final Calendar utc = new GregorianCalendar(UTC);
 
   public JdbcTimestampWriter(String colName, RowSetLoader rowWriter, int columnIndex) {
     super(colName, rowWriter, columnIndex);
@@ -32,7 +40,11 @@ public class JdbcTimestampWriter extends JdbcColumnWriter {
 
   @Override
   public void load(ResultSet results) throws SQLException {
-    Timestamp value = results.getTimestamp(columnIndex);
+    // A JDBC TIMESTAMP carries no zone, so read it as UTC rather than letting the driver
+    // resolve it in the session zone: a wall clock inside a DST gap (2:30 on the morning
+    // the clocks go forward) has no instant in a zone that has the gap, and drivers throw
+    // ("HOUR_OF_DAY: 2 -> 3") instead of returning the row. UTC has no transitions.
+    Timestamp value = results.getTimestamp(columnIndex, utc);
     if (value != null) {
       columnWriter.setTimestamp(value.toInstant());
     }

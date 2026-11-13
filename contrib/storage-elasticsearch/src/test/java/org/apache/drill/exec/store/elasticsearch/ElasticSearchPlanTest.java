@@ -67,6 +67,12 @@ public class ElasticSearchPlanTest extends ClusterTest {
 
   @AfterClass
   public static void cleanUp() throws IOException {
+    // The suite skips these tests when Docker is unavailable, which leaves the client null.
+    // Without this guard the NPE here turns an intended skip into a failure, and the real
+    // reason the class could not start is lost (JUnit reports TestCouldNotBeSkippedException).
+    if (elasticsearchClient == null) {
+      return;
+    }
     DeleteIndexRequest deleteIndexRequest = new DeleteIndexRequest.Builder()
       .index(indexNames)
       .build();

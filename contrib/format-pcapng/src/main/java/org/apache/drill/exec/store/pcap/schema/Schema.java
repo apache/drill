@@ -67,6 +67,7 @@ public class Schema {
       columns.add(new ColumnDto("connection_time", PcapTypes.DURATION));
       columns.add(new ColumnDto("tcp_session", PcapTypes.LONG));
       columns.add(new ColumnDto("is_corrupt", PcapTypes.BOOLEAN));
+      columns.add(new ColumnDto("session_closed", PcapTypes.BOOLEAN));
       columns.add(new ColumnDto("data_from_originator", PcapTypes.STRING));
       columns.add(new ColumnDto("data_from_remote", PcapTypes.STRING));
     } else {
@@ -115,10 +116,14 @@ public class Schema {
   }
 
   public TupleMetadata buildSchema(SchemaBuilder builder) {
+    addColumns(builder);
+    return builder.buildSchema();
+  }
+
+  /** Adds the columns to a schema that the caller may extend before building it. */
+  public void addColumns(SchemaBuilder builder) {
     for (ColumnDto column : columns) {
       builder.addNullable(column.getColumnName(), typeMap[column.getColumnType().ordinal()]);
     }
-
-    return builder.buildSchema();
   }
 }

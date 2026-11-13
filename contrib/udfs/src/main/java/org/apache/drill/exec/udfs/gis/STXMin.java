@@ -31,7 +31,8 @@ import javax.inject.Inject;
  * Returns X minima of a bounding box 2d or 3d or a geometry
  */
 @FunctionTemplate(name = "st_xmin", scope = FunctionTemplate.FunctionScope.SIMPLE,
-  nulls = FunctionTemplate.NullHandling.NULL_IF_NULL)
+  nulls = FunctionTemplate.NullHandling.NULL_IF_NULL,
+  desc = "Returns the minimum X coordinate of the bounding box of a geometry.")
 public class STXMin implements DrillSimpleFunc {
   @Param
   VarBinaryHolder geom1Param;

@@ -17,6 +17,7 @@
  */
 package org.apache.drill.exec.server.rest.stream;
 
+import java.io.IOException;
 import java.io.OutputStream;
 
 import org.apache.calcite.tools.ValidationException;
@@ -25,12 +26,15 @@ import org.apache.drill.exec.server.rest.BaseQueryRunner;
 import org.apache.drill.exec.server.rest.QueryWrapper;
 import org.apache.drill.exec.server.rest.WebUserConnection;
 import org.apache.drill.exec.work.WorkManager;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 
 /**
  * Query runner for streaming JSON results. This version is backward-compatible
  * with pre-Drill 1.19 JSON queries.
  */
 public class QueryRunner extends BaseQueryRunner {
+  private static final Logger logger = LoggerFactory.getLogger(QueryRunner.class);
 
   private StreamingHttpConnection userConn;
 
@@ -66,6 +70,11 @@ public class QueryRunner extends BaseQueryRunner {
         userConn.finish();
       } catch (InterruptedException e) {
         // No-op
+      } catch (IOException e) {
+        // The client closed the connection before the response could be fully written.
+        // This is benign — the rows were already streamed. Log at DEBUG to avoid
+        // flooding server logs with EofException noise from normal client disconnects.
+        logger.debug("Streaming response could not be completed (client disconnect?): {}", e.getMessage());
       }
     } finally {
       // no-op for authenticated user

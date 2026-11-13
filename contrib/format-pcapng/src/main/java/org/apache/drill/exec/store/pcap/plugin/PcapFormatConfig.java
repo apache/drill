@@ -38,14 +38,21 @@ public class PcapFormatConfig implements FormatPluginConfig {
   private final List<String> extensions;
   private final boolean stat;
   private final boolean sessionizeTCPStreams;
+  private final boolean exposeCredentials;
+
+  public PcapFormatConfig(List<String> extensions, boolean stat, Boolean sessionizeTCPStreams) {
+    this(extensions, stat, sessionizeTCPStreams, null);
+  }
 
   @JsonCreator
   public PcapFormatConfig(@JsonProperty("extensions") List<String> extensions,
                           @JsonProperty("stat") boolean stat,
-                          @JsonProperty("sessionizeTCPStreams") Boolean sessionizeTCPStreams) {
+                          @JsonProperty("sessionizeTCPStreams") Boolean sessionizeTCPStreams,
+                          @JsonProperty("exposeCredentials") Boolean exposeCredentials) {
     this.extensions = extensions == null ? DEFAULT_EXTNS : ImmutableList.copyOf(extensions);
     this.stat = stat;
     this.sessionizeTCPStreams = sessionizeTCPStreams != null && sessionizeTCPStreams;
+    this.exposeCredentials = exposeCredentials != null && exposeCredentials;
   }
 
   @JsonProperty("extensions")
@@ -63,6 +70,12 @@ public class PcapFormatConfig implements FormatPluginConfig {
     return sessionizeTCPStreams;
   }
 
+  /** True if protocol decoders may return cleartext passwords. */
+  @JsonProperty("exposeCredentials")
+  public boolean getExposeCredentials() {
+    return exposeCredentials;
+  }
+
   @Override
   public boolean equals(Object o) {
     if (this == o) {
@@ -73,12 +86,13 @@ public class PcapFormatConfig implements FormatPluginConfig {
     }
     PcapFormatConfig that = (PcapFormatConfig) o;
     return Objects.equals(extensions, that.extensions) && Objects.equals(stat, that.getStat()) &&
-            Objects.equals(sessionizeTCPStreams, that.sessionizeTCPStreams);
+            Objects.equals(sessionizeTCPStreams, that.sessionizeTCPStreams) &&
+            Objects.equals(exposeCredentials, that.exposeCredentials);
   }
 
   @Override
   public int hashCode() {
-    return Objects.hash(extensions, stat, sessionizeTCPStreams);
+    return Objects.hash(extensions, stat, sessionizeTCPStreams, exposeCredentials);
   }
 
   @Override
@@ -87,6 +101,7 @@ public class PcapFormatConfig implements FormatPluginConfig {
             .field("extensions", extensions)
             .field("stat", stat)
             .field("sessionizeTCPStreams", sessionizeTCPStreams)
+            .field("exposeCredentials", exposeCredentials)
             .toString();
   }
 }

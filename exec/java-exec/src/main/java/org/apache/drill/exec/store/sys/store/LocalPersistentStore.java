@@ -42,8 +42,6 @@ import java.util.Iterator;
 import java.util.LinkedHashMap;
 import java.util.List;
 import java.util.Map;
-import java.util.function.Function;
-import java.util.stream.Collectors;
 
 import static org.apache.drill.exec.ExecConstants.DRILL_SYS_FILE_SUFFIX;
 
@@ -120,18 +118,23 @@ public class LocalPersistentStore<V> extends BasePersistentStore<V> {
       return Collections.emptyIterator();
     }
 
-    return fileStatuses.stream()
+    LinkedHashMap<String, V> result = new LinkedHashMap<>();
+    fileStatuses.stream()
       .map(this::extractKeyName)
       .sorted()
       .skip(skip)
       .limit(take)
-      .collect(Collectors.toMap(
-        Function.identity(),
-        this::get,
-        (o, n) -> n,
-        LinkedHashMap::new))
-      .entrySet()
-      .iterator();
+      .forEach(key -> {
+        try {
+          V value = get(key);
+          if (value != null) {
+            result.put(key, value);
+          }
+        } catch (Exception e) {
+          logger.warn("Skipping corrupted store entry [{}]: {}", key, e.getMessage());
+        }
+      });
+    return result.entrySet().iterator();
   }
 
   @Override

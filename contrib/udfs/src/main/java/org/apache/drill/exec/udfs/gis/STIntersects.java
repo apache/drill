@@ -31,7 +31,8 @@ import javax.inject.Inject;
  * Returns TRUE if the Geometries/Geography "spatially intersect in 2D" - (share any portion of space) and FALSE if they don't (they are Disjoint)
  */
 @FunctionTemplate(name = "st_intersects", scope = FunctionTemplate.FunctionScope.SIMPLE,
-  nulls = FunctionTemplate.NullHandling.NULL_IF_NULL)
+  nulls = FunctionTemplate.NullHandling.NULL_IF_NULL,
+  desc = "Returns true when two geometries share any portion of space.")
 public class STIntersects implements DrillSimpleFunc {
   @Param
   VarBinaryHolder geom1Param;

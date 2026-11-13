@@ -1,0 +1,47 @@
+/*
+ * Licensed to the Apache Software Foundation (ASF) under one
+ * or more contributor license agreements.  See the NOTICE file
+ * distributed with this work for additional information
+ * regarding copyright ownership.  The ASF licenses this file
+ * to you under the Apache License, Version 2.0 (the
+ * "License"); you may not use this file except in compliance
+ * with the License.  You may obtain a copy of the License at
+ *
+ * http://www.apache.org/licenses/LICENSE-2.0
+ *
+ * Unless required by applicable law or agreed to in writing, software
+ * distributed under the License is distributed on an "AS IS" BASIS,
+ * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+ * See the License for the specific language governing permissions and
+ * limitations under the License.
+ */
+package org.apache.drill.exec.server.rest.workflow;
+
+import java.util.List;
+
+/** Side-effecting capabilities the runner lends to actions; faked in tests. */
+public interface WorkflowServices {
+  /** Runs the statements in order on one Drill session as the given user. */
+  void executeStatements(List<String> sql, String userName, int timeoutSeconds) throws Exception;
+
+  void sendMail(List<String> to, String subject, String body) throws Exception;
+
+  /**
+   * Asks the configured model to complete the prompt and returns its text, truncated to maxChars.
+   * Never returns null; throws when no provider is configured or the call fails.
+   *
+   * @param user the identity the call is recorded against in AI analytics, normally the
+   *     workflow's owner, since nobody is at a keyboard when a scheduled run spends tokens
+   */
+  String summarize(String prompt, int maxChars, String user) throws Exception;
+
+  /**
+   * Whether the administrator allows query data (columns and row values) to be sent to the model.
+   * The services layer cannot inspect a prompt string, so any action that calls
+   * {@link #summarize} must consult this flag itself; the gate protects ai_summary only.
+   * Defaults to false so a services implementation that does not know withholds data.
+   */
+  default boolean sendDataToAi() {
+    return false;
+  }
+}

@@ -1,0 +1,1073 @@
+/*
+ * Licensed to the Apache Software Foundation (ASF) under one
+ * or more contributor license agreements.  See the NOTICE file
+ * distributed with this work for additional information
+ * regarding copyright ownership.  The ASF licenses this file
+ * to you under the Apache License, Version 2.0 (the
+ * "License"); you may not use this file except in compliance
+ * with the License.  You may obtain a copy of the License at
+ *
+ * http://www.apache.org/licenses/LICENSE-2.0
+ *
+ * Unless required by applicable law or agreed to in writing, software
+ * distributed under the License is distributed on an "AS IS" BASIS,
+ * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+ * See the License for the specific language governing permissions and
+ * limitations under the License.
+ */
+package org.apache.drill.exec.server.rest;
+
+import static org.junit.Assert.assertEquals;
+import static org.junit.Assert.assertFalse;
+import static org.junit.Assert.assertNull;
+import static org.junit.Assert.assertTrue;
+
+import java.io.File;
+import java.nio.charset.StandardCharsets;
+import java.nio.file.Files;
+import java.util.ArrayList;
+import java.util.Arrays;
+import java.util.Collections;
+import java.util.List;
+import java.util.UUID;
+import java.util.concurrent.TimeUnit;
+import java.util.stream.Collectors;
+
+import com.fasterxml.jackson.databind.JsonNode;
+import com.fasterxml.jackson.databind.ObjectMapper;
+import okhttp3.MediaType;
+import okhttp3.MultipartBody;
+import okhttp3.OkHttpClient;
+import okhttp3.Request;
+import okhttp3.RequestBody;
+import okhttp3.Response;
+import org.apache.drill.common.logical.FormatPluginConfig;
+import org.apache.drill.exec.ExecConstants;
+import org.apache.drill.exec.server.rest.ProjectResources.DatasetRef;
+import org.apache.drill.exec.server.rest.ProjectResources.Project;
+import org.apache.drill.exec.server.rest.auth.DrillUserPrincipal;
+import org.apache.drill.exec.store.dfs.FileSystemConfig;
+import org.apache.drill.exec.store.dfs.WorkspaceConfig;
+import org.apache.drill.exec.store.sys.PersistentStore;
+import org.apache.drill.test.ClusterFixtureBuilder;
+import org.apache.drill.test.ClusterTest;
+import org.junit.BeforeClass;
+import org.junit.Test;
+
+/**
+ * The project file upload endpoint. Uploads land in the cluster's configured upload
+ * target, here the stock writable {@code dfs.tmp} workspace, so each assertion about
+ * "nothing written" can be made against the real directory on disk.
+ */
+public class TestProjectFileResources extends ClusterTest {
+
+  private static final MediaType JSON = MediaType.parse("application/json");
+  private static final MediaType OCTET = MediaType.parse("application/octet-stream");
+  private static final ObjectMapper MAPPER = new ObjectMapper();
+  private static int portNumber;
+  private static final OkHttpClient client = new OkHttpClient.Builder()
+      .connectTimeout(30, TimeUnit.SECONDS)
+      .readTimeout(30, TimeUnit.SECONDS)
+      .build();
+
+  @BeforeClass
+  public static void setup() throws Exception {
+    startCluster(new ClusterFixtureBuilder(dirTestWatcher)
+        .configProperty(ExecConstants.HTTP_ENABLE, true)
+        .configProperty(ExecConstants.HTTP_PORT_HUNT, true));
+    portNumber = cluster.drillbit().getWebServerPort();
+  }
+
+  // ==================== Fixtures ====================
+
+  /** Points the cluster's upload target at {@code dfs.tmp} with the given size cap. */
+  private static void configureUploads(long maxSizeBytes) throws Exception {
+    configureUploads("dfs", "tmp", maxSizeBytes);
+  }
+
+  private static void configureUploads(String plugin, String workspace, long maxSizeBytes)
+      throws Exception {
+    Request request = new Request.Builder()
+        .url("http://localhost:" + portNumber + "/api/v1/uploads/config")
+        .put(RequestBody.create("{\"plugin\":\"" + plugin + "\",\"workspace\":\"" + workspace
+            + "\",\"maxSizeBytes\":" + maxSizeBytes + "}", JSON))
+        .build();
+    try (Response r = client.newCall(request).execute()) {
+      assertEquals(r.body().string(), 200, r.code());
+    }
+  }
+
+  private static void clearUploadConfig() {
+    UploadConfigResources.clearForTest(cluster.drillbit().getContext().getStoreProvider());
+  }
+
+  private static PersistentStore<Project> projectStore() {
+    return ProjectResources.openStore(cluster.drillbit().getContext().getStoreProvider(),
+        cluster.drillbit().getManager());
+  }
+
+  /** Seeds a project the requesting (anonymous) user may write to. */
+  private static String seedWritableProject() {
+    return seedProject(DrillUserPrincipal.ANONYMOUS_USER,
+        Collections.<String>emptyList(), Collections.<String>emptyList());
+  }
+
+  private static String seedProject(String owner, List<String> sharedWith, List<String> viewers) {
+    String id = UUID.randomUUID().toString();
+    projectStore().put(id, new Project(id, "Uploads", null, null, owner, false,
+        sharedWith, viewers, null, null, null, null, null, false, 1L, 1L, null, null, 0L));
+    return id;
+  }
+
+  private static File projectFolder(String projectId) {
+    return new File(dirTestWatcher.getDfsTestTmpDir(), projectId);
+  }
+
+  private static Response post(String projectId, String fileName, byte[] content,
+      boolean overwrite) throws Exception {
+    MultipartBody body = new MultipartBody.Builder()
+        .setType(MultipartBody.FORM)
+        .addFormDataPart("file", fileName, RequestBody.create(content, OCTET))
+        .build();
+    Request request = new Request.Builder()
+        .url("http://localhost:" + portNumber + "/api/v1/projects/" + projectId + "/files"
+            + (overwrite ? "?overwrite=true" : ""))
+        .post(body)
+        .build();
+    return client.newCall(request).execute();
+  }
+
+  /** Posts a part and asserts the status code, returning the parsed body. */
+  private static JsonNode upload(String projectId, String fileName, String content,
+      boolean overwrite, int expected) throws Exception {
+    try (Response r = post(projectId, fileName, content.getBytes(StandardCharsets.UTF_8),
+        overwrite)) {
+      String responseBody = r.body().string();
+      assertEquals(responseBody, expected, r.code());
+      return MAPPER.readTree(responseBody);
+    }
+  }
+
+  private static List<DatasetRef> folderRefs(String projectId) {
+    List<DatasetRef> all = projectStore().get(projectId).getDatasets();
+    return all.stream().filter(d -> "folder".equals(d.getType()))
+        .collect(Collectors.toList());
+  }
+
+  // ==================== Tests ====================
+
+  @Test
+  public void testRejectsPathTraversal() throws Exception {
+    configureUploads(1000);
+    String id = seedWritableProject();
+
+    // "." and "foo:bar" pass safeName and are stopped only by the normalize-and-prefix
+    // check: Hadoop resolves the first back onto the folder itself and the second, which
+    // it reads as a scheme-bearing URI, outside the folder entirely.
+    for (String name : Arrays.asList("../../etc/passwd", "a/b.csv", "..\\win.csv", "..",
+        ".", "foo:bar")) {
+      JsonNode body = upload(id, name, "x,y\n1,2\n", false, 400);
+      assertTrue(body.get("message").asText(), body.get("message").asText().contains("name"));
+    }
+
+    assertFalse(projectFolder(id).exists());
+    assertFalse(new File(dirTestWatcher.getDfsTestTmpDir(), "b.csv").exists());
+    assertTrue(folderRefs(id).isEmpty());
+  }
+
+  @Test
+  public void testRejectsWhenUnconfigured() throws Exception {
+    clearUploadConfig();
+    String id = seedWritableProject();
+    try {
+      JsonNode body = upload(id, "a.csv", "x\n1\n", false, 409);
+      assertTrue(body.get("message").asText(),
+          body.get("message").asText().contains("upload folder"));
+      assertEquals("NOT_CONFIGURED", body.get("code").asText());
+    } finally {
+      configureUploads(1000);
+    }
+  }
+
+  @Test
+  public void testRejectsWithoutWriteAccess() throws Exception {
+    configureUploads(1000);
+    // A viewer may read the project but not write to it.
+    String id = seedProject("someone-else", Collections.<String>emptyList(),
+        Arrays.asList(DrillUserPrincipal.ANONYMOUS_USER));
+    upload(id, "a.csv", "x\n1\n", false, 403);
+    assertFalse(projectFolder(id).exists());
+  }
+
+  @Test
+  public void testRejectsOversizeFile() throws Exception {
+    configureUploads(10);
+    String id = seedWritableProject();
+    JsonNode body = upload(id, "big.csv", "12345678901", false, 413);
+    assertTrue(body.get("message").asText(), body.get("message").asText().contains("10"));
+    assertFalse(new File(projectFolder(id), "big.csv").exists());
+    assertTrue(folderRefs(id).isEmpty());
+  }
+
+  @Test
+  public void testAcceptsFileAtExactlyTheSizeLimit() throws Exception {
+    configureUploads(10);
+    String id = seedWritableProject();
+    upload(id, "exact.csv", "1234567890", false, 201);
+    assertEquals(10, new File(projectFolder(id), "exact.csv").length());
+  }
+
+  @Test
+  public void testCollisionRequiresOverwrite() throws Exception {
+    configureUploads(1000);
+    String id = seedWritableProject();
+    File target = new File(projectFolder(id), "dup.csv");
+
+    upload(id, "dup.csv", "first", false, 201);
+    assertEquals("first", contents(target));
+
+    JsonNode conflict = upload(id, "dup.csv", "second", false, 409);
+    assertTrue(conflict.get("message").asText(),
+        conflict.get("message").asText().contains("overwrite"));
+    assertEquals("EXISTS", conflict.get("code").asText());
+    assertEquals("first", contents(target));
+
+    upload(id, "dup.csv", "second", true, 201);
+    assertEquals("second", contents(target));
+  }
+
+  @Test
+  public void testUploadWritesFileAndRegistersFolderDataset() throws Exception {
+    configureUploads(1000);
+    String id = seedWritableProject();
+
+    JsonNode body = upload(id, "sales.csv", "x,y\n1,2\n", false, 201);
+    assertEquals("sales.csv", body.get("name").asText());
+    assertEquals("sales.csv", body.get("path").asText());
+    assertEquals("dfs.tmp." + id, body.get("schema").asText());
+    assertEquals("x,y\n1,2\n", contents(new File(projectFolder(id), "sales.csv")));
+
+    List<DatasetRef> refs = folderRefs(id);
+    assertEquals(1, refs.size());
+    assertEquals("dfs.tmp", refs.get(0).getSchema());
+    assertEquals(id, refs.get(0).getTable());
+    assertEquals("Uploaded files", refs.get(0).getLabel());
+
+    // A second upload reuses the one folder reference.
+    upload(id, "costs.csv", "a\n1\n", false, 201);
+    assertEquals(1, folderRefs(id).size());
+    assertTrue(new File(projectFolder(id), "costs.csv").exists());
+  }
+
+  @Test
+  public void testRejectsUnknownProject() throws Exception {
+    configureUploads(1000);
+    upload("no-such-project", "a.csv", "x\n1\n", false, 404);
+  }
+
+  @Test
+  public void testRejectsMissingPart() throws Exception {
+    configureUploads(1000);
+    String id = seedWritableProject();
+    MultipartBody body = new MultipartBody.Builder()
+        .setType(MultipartBody.FORM)
+        .addFormDataPart("notthefile", "a.csv", RequestBody.create("x", OCTET))
+        .build();
+    Request request = new Request.Builder()
+        .url("http://localhost:" + portNumber + "/api/v1/projects/" + id + "/files")
+        .post(body)
+        .build();
+    try (Response r = client.newCall(request).execute()) {
+      assertEquals(400, r.code());
+    }
+  }
+
+  @Test
+  public void testSafeNameRefusesSeparatorsAndParentReferences() {
+    assertNull(ProjectFileResources.safeName("a/b.csv"));
+    assertNull(ProjectFileResources.safeName("a\\b.csv"));
+    assertNull(ProjectFileResources.safeName("../../etc/passwd"));
+    assertNull(ProjectFileResources.safeName(".."));
+    assertNull(ProjectFileResources.safeName("  "));
+    assertNull(ProjectFileResources.safeName(null));
+    assertNull(ProjectFileResources.safeName("a\nFAKE LOG LINE.csv"));
+    // Long enough that the staging suffix would push the path component past 255 bytes.
+    assertNull(ProjectFileResources.safeName(new String(new char[212]).replace('\0', 'a')));
+    assertEquals(211, ProjectFileResources.safeName(
+        new String(new char[211]).replace('\0', 'a')).length());
+    assertNull(ProjectFileResources.safeName("a\rb.csv"));
+    assertEquals("sales.csv", ProjectFileResources.safeName(" sales.csv "));
+    // Format-agnostic: an extension Drill cannot read is still a legal upload name.
+    assertEquals("notes.zzz", ProjectFileResources.safeName("notes.zzz"));
+  }
+
+  /**
+   * A declared length past the cap is refused from the request header, before Jersey
+   * spools the part to the Drillbit's temp directory to inject it.
+   */
+  @Test
+  public void testRejectsOversizeContentLengthBeforeReadingTheEntity() throws Exception {
+    configureUploads(10);
+    String id = seedWritableProject();
+    byte[] tooBig = new byte[(int) ProjectFileResources.allowedRequestBytes(10) + 1];
+    try (Response r = post(id, "huge.csv", tooBig, false)) {
+      assertEquals(413, r.code());
+    }
+    // The discriminator: the handler creates the project folder before it starts copying,
+    // so an absent folder is proof the request never reached the handler at all.
+    assertFalse(projectFolder(id).exists());
+  }
+
+  @Test
+  public void testRequestAllowanceCoversTheMultipartEnvelopeAndSaturates() {
+    assertTrue(ProjectFileResources.allowedRequestBytes(10) > 10);
+    assertEquals(Long.MAX_VALUE, ProjectFileResources.allowedRequestBytes(Long.MAX_VALUE));
+  }
+
+  /**
+   * An aborted upload must not cost the file already in place. The staged-then-renamed
+   * write is what makes this pass; truncating the target up front would not.
+   */
+  @Test
+  public void testOversizeOverwriteLeavesTheExistingFileIntact() throws Exception {
+    configureUploads(1000);
+    String id = seedWritableProject();
+    upload(id, "keep.csv", "original", false, 201);
+
+    configureUploads(5);
+    upload(id, "keep.csv", "12345678901", true, 413);
+
+    assertEquals("original", contents(new File(projectFolder(id), "keep.csv")));
+    assertEquals(0, stagedFiles(id).length);
+  }
+
+  /** No {@code .upload-} leftovers after a successful write either. */
+  @Test
+  public void testSuccessfulUploadLeavesNoStagingFile() throws Exception {
+    configureUploads(1000);
+    String id = seedWritableProject();
+    upload(id, "clean.csv", "a\n1\n", false, 201);
+    assertEquals(0, stagedFiles(id).length);
+  }
+
+  /**
+   * A workspace location given without a leading slash. Pinned because the composition
+   * resolves it against the connection root rather than any process directory.
+   */
+  @Test
+  public void testProjectDirResolvesARelativeWorkspaceLocation() {
+    UploadConfigResources.UploadConfig cfg =
+        new UploadConfigResources.UploadConfig("dfs", "rel", 100L);
+    FileSystemConfig fsConfig = new FileSystemConfig("file:///",
+        Collections.<String, String>emptyMap(),
+        Collections.singletonMap("rel", new WorkspaceConfig("uploads", true, null, false)),
+        Collections.<String, FormatPluginConfig>emptyMap(), null);
+    assertEquals("file:/uploads/p1",
+        ProjectFileResources.projectDir(cfg, fsConfig, "p1").toUri().toString());
+
+    FileSystemConfig s3 = new FileSystemConfig("s3a://bucket",
+        Collections.<String, String>emptyMap(),
+        Collections.singletonMap("rel", new WorkspaceConfig("/uploads", true, null, false)),
+        Collections.<String, FormatPluginConfig>emptyMap(), null);
+    assertEquals("s3a://bucket/uploads/p1",
+        ProjectFileResources.projectDir(cfg, s3, "p1").toUri().toString());
+  }
+
+  /**
+   * The window the staging exists for: the move onto the target fails, so neither the
+   * bytes already there nor the ones just uploaded may be thrown away. Forced by putting
+   * a non-empty directory where the file would go, which no rename can land on and no
+   * non-recursive delete can clear. No production code is bent to make this happen.
+   */
+  @Test
+  public void testFailedMoveKeepsThePriorContentAndTheUploadedBytes() throws Exception {
+    configureUploads(1000);
+    String id = seedWritableProject();
+    File blocked = new File(projectFolder(id), "blocked.csv");
+    File prior = new File(blocked, "part-0");
+    assertTrue(blocked.mkdirs());
+    Files.write(prior.toPath(), "prior".getBytes(StandardCharsets.UTF_8));
+
+    upload(id, "blocked.csv", "new bytes", true, 500);
+
+    assertEquals("prior", contents(prior));
+    File[] staged = stagedFiles(id);
+    assertEquals(1, staged.length);
+    assertEquals("new bytes", contents(staged[0]));
+  }
+
+  @Test
+  public void testRejectsOverlongName() throws Exception {
+    configureUploads(1000);
+    String id = seedWritableProject();
+    String tooLong = new String(new char[212]).replace('\0', 'a') + ".csv";
+    JsonNode body = upload(id, tooLong, "x\n1\n", false, 400);
+    assertTrue(body.get("message").asText(), body.get("message").asText().contains("name"));
+    assertFalse(projectFolder(id).exists());
+  }
+
+  /**
+   * Staged uploads left in a project folder. Hidden files are skipped: the local file
+   * system keeps a {@code .<name>.crc} sidecar beside each one, which Drill ignores when
+   * it reads the folder.
+   */
+  private static File[] stagedFiles(String projectId) {
+    File[] staged = projectFolder(projectId)
+        .listFiles((d, n) -> n.contains(".upload-") && !n.startsWith("."));
+    return staged == null ? new File[0] : staged;
+  }
+
+  private static String contents(File file) throws Exception {
+    return new String(Files.readAllBytes(file.toPath()), StandardCharsets.UTF_8);
+  }
+
+  // ==================== Delete and download ====================
+
+  private static Response send(String method, String projectId, String nameSegment,
+      String suffix) throws Exception {
+    Request.Builder b = new Request.Builder().url("http://localhost:" + portNumber
+        + "/api/v1/projects/" + projectId + "/files/" + nameSegment + suffix);
+    if ("DELETE".equals(method)) {
+      b.delete();
+    } else if ("HEAD".equals(method)) {
+      b.head();
+    } else {
+      b.get();
+    }
+    return client.newCall(b.build()).execute();
+  }
+
+  @Test
+  public void testDeleteRemovesFile() throws Exception {
+    configureUploads(1000);
+    String id = seedWritableProject();
+    upload(id, "gone.csv", "a\n1\n", false, 201);
+    File file = new File(projectFolder(id), "gone.csv");
+    assertTrue(file.exists());
+
+    try (Response r = send("DELETE", id, "gone.csv", "")) {
+      assertEquals(204, r.code());
+    }
+    assertFalse(file.exists());
+
+    try (Response r = send("DELETE", id, "gone.csv", "")) {
+      assertEquals(404, r.code());
+    }
+  }
+
+  @Test
+  public void testDeleteRejectsPathTraversal() throws Exception {
+    configureUploads(1000);
+    String id = seedWritableProject();
+    upload(id, "keep.csv", "a\n1\n", false, 201);
+    File outside = new File(dirTestWatcher.getDfsTestTmpDir(), "outside.csv");
+    Files.write(outside.toPath(), "x".getBytes(StandardCharsets.UTF_8));
+    try {
+      // The backslash and parent-reference forms fail safeName; "foo:bar" passes it and
+      // is stopped only by the normalize-and-prefix check.
+      for (String name : Arrays.asList("..%5Coutside.csv", "a%5Cb.csv", "foo:bar")) {
+        try (Response r = send("DELETE", id, name, "")) {
+          assertEquals(name, 400, r.code());
+        }
+      }
+      assertTrue(outside.exists());
+      assertTrue(new File(projectFolder(id), "keep.csv").exists());
+    } finally {
+      outside.delete();
+    }
+  }
+
+  @Test
+  public void testDeleteRejectsWithoutWriteAccess() throws Exception {
+    configureUploads(1000);
+    String id = seedProject("someone-else", Collections.<String>emptyList(),
+        Arrays.asList(DrillUserPrincipal.ANONYMOUS_USER));
+    File file = new File(projectFolder(id), "mine.csv");
+    assertTrue(file.getParentFile().mkdirs());
+    Files.write(file.toPath(), "x".getBytes(StandardCharsets.UTF_8));
+
+    try (Response r = send("DELETE", id, "mine.csv", "")) {
+      assertEquals(403, r.code());
+    }
+    assertTrue(file.exists());
+  }
+
+  @Test
+  public void testDownloadStreamsBytes() throws Exception {
+    configureUploads(1000);
+    String id = seedWritableProject();
+    byte[] bytes = new byte[] {0, 1, 2, (byte) 0xff, 10, 13, 65};
+    try (Response up = post(id, "blob.bin", bytes, false)) {
+      assertEquals(201, up.code());
+    }
+    try (Response r = send("GET", id, "blob.bin", "/content")) {
+      assertEquals(200, r.code());
+      assertTrue(r.header("Content-Type"), r.header("Content-Type").startsWith(
+          "application/octet-stream"));
+      assertTrue(r.header("Content-Disposition"),
+          r.header("Content-Disposition").contains("filename=\"blob.bin\""));
+      assertTrue(Arrays.equals(bytes, r.body().bytes()));
+    }
+  }
+
+  @Test
+  public void testDownloadAllowsViewer() throws Exception {
+    configureUploads(1000);
+    String id = seedProject("someone-else", Collections.<String>emptyList(),
+        Arrays.asList(DrillUserPrincipal.ANONYMOUS_USER));
+    File file = new File(projectFolder(id), "shared.csv");
+    assertTrue(file.getParentFile().mkdirs());
+    Files.write(file.toPath(), "viewable".getBytes(StandardCharsets.UTF_8));
+
+    try (Response r = send("GET", id, "shared.csv", "/content")) {
+      assertEquals(200, r.code());
+      assertEquals("viewable", r.body().string());
+    }
+  }
+
+  @Test
+  public void testDownloadMissingFileIsNotFound() throws Exception {
+    configureUploads(1000);
+    String id = seedWritableProject();
+    // Same answer whether or not the project folder exists.
+    try (Response r = send("GET", id, "nope.csv", "/content")) {
+      assertEquals(404, r.code());
+    }
+    upload(id, "there.csv", "a\n", false, 201);
+    try (Response r = send("GET", id, "nope.csv", "/content")) {
+      assertEquals(404, r.code());
+    }
+  }
+
+  @Test
+  public void testDownloadRejectsPathTraversal() throws Exception {
+    configureUploads(1000);
+    String id = seedWritableProject();
+    for (String name : Arrays.asList("..%5Cx.csv", "foo:bar")) {
+      try (Response r = send("GET", id, name, "/content")) {
+        assertEquals(name, 400, r.code());
+      }
+    }
+  }
+
+  /** HEAD is auto-served from the GET handler with the body dropped; it must not leak. */
+  @Test
+  public void testHeadOnDownloadSucceedsWithoutBody() throws Exception {
+    configureUploads(1000);
+    String id = seedWritableProject();
+    upload(id, "h.csv", "a\n1\n", false, 201);
+    try (Response r = send("HEAD", id, "h.csv", "/content")) {
+      assertEquals(200, r.code());
+      assertEquals(0, r.body().bytes().length);
+    }
+    try (Response r = send("HEAD", id, "nope.csv", "/content")) {
+      assertEquals(404, r.code());
+    }
+  }
+
+  @Test
+  public void testDeleteOfADirectoryIsNotFoundAndLeavesItIntact() throws Exception {
+    configureUploads(1000);
+    String id = seedWritableProject();
+    File dir = new File(projectFolder(id), "sub");
+    assertTrue(dir.mkdirs());
+    Files.write(new File(dir, "inner.csv").toPath(), "x".getBytes(StandardCharsets.UTF_8));
+    try (Response r = send("DELETE", id, "sub", "")) {
+      assertEquals(404, r.code());
+    }
+    assertTrue(new File(dir, "inner.csv").exists());
+  }
+
+  /**
+   * Called directly: Jetty and OkHttp normalize "." away before any handler sees it, so
+   * it cannot be sent over HTTP. This is the check upload, delete and download share.
+   */
+  @Test
+  public void testResolveInsideRefusesNamesThatEscapeTheFolder() {
+    org.apache.hadoop.fs.Path dir = new org.apache.hadoop.fs.Path(new org.apache.hadoop.fs.Path("file:///"), "data/p1");
+    for (String name : Arrays.asList(".", "foo:bar")) {
+      try {
+        ProjectFileResources.resolveInside(dir, name);
+        org.junit.Assert.fail("expected a refusal for " + name);
+      } catch (IllegalArgumentException expected) {
+        assertTrue(expected.getMessage(), expected.getMessage().contains("name"));
+      }
+    }
+    assertEquals("file:/data/p1/a.csv",
+        ProjectFileResources.resolveInside(dir, "a.csv").toUri().toString());
+  }
+
+  // ==================== Schema cache ====================
+  //
+  // ProjectSchemaCache's file scanning is exercised from here rather than from
+  // TestProjectSchemaCache: it needs a live Drillbit to run SHOW FILES and the
+  // per-file probe, and TestProjectSchemaCache is a store-only unit test with no
+  // cluster. The upload and delete fixtures above are also what makes a real file
+  // appear in a project folder, which is what the scan is for.
+  //
+  // Two paths reach the cache and the tests keep them apart. An upload merges the one
+  // file it wrote; a POST to /schema-cache/refresh runs the whole-folder scan.
+
+  /** The project's cached {@code dfs.tmp} schema, as the REST endpoint reports it. */
+  private static JsonNode cachedUploadSchema(String projectId) throws Exception {
+    Request request = new Request.Builder()
+        .url("http://localhost:" + portNumber + "/api/v1/projects/" + projectId
+            + "/schema-cache")
+        .build();
+    try (Response r = client.newCall(request).execute()) {
+      assertEquals(200, r.code());
+      return MAPPER.readTree(r.body().string()).path("schemas").path("dfs.tmp");
+    }
+  }
+
+  /** Runs the whole-folder scan: the dataset-scan path, not the upload path. */
+  private static void rescan(String projectId) throws Exception {
+    Request request = new Request.Builder()
+        .url("http://localhost:" + portNumber + "/api/v1/projects/" + projectId
+            + "/schema-cache/refresh")
+        .post(RequestBody.create("", JSON))
+        .build();
+    try (Response r = client.newCall(request).execute()) {
+      assertEquals(r.body().string(), 200, r.code());
+    }
+  }
+
+  /**
+   * The cached tables that belong to this project's upload folder, by name. The scan
+   * covers all of {@code dfs.tmp}, which other tests in this class also write to, so
+   * the project's own prefix is what makes an assertion about "its files" exact.
+   */
+  private static List<String> cachedFileNames(String projectId) throws Exception {
+    List<String> names = new ArrayList<>();
+    for (JsonNode t : cachedUploadSchema(projectId).path("tables")) {
+      if (t.path("name").asText().startsWith(projectId + "/")) {
+        names.add(t.path("name").asText());
+      }
+    }
+    Collections.sort(names);
+    return names;
+  }
+
+  private static List<String> cachedTableNames(String projectId) throws Exception {
+    List<String> names = new ArrayList<>();
+    for (JsonNode t : cachedUploadSchema(projectId).path("tables")) {
+      names.add(t.path("name").asText());
+    }
+    Collections.sort(names);
+    return names;
+  }
+
+  private static JsonNode cachedTable(String projectId, String name) throws Exception {
+    for (JsonNode t : cachedUploadSchema(projectId).path("tables")) {
+      if (name.equals(t.path("name").asText())) {
+        return t;
+      }
+    }
+    return null;
+  }
+
+  private static List<String> columnNames(JsonNode table) {
+    List<String> names = new ArrayList<>();
+    for (JsonNode c : table.path("columns")) {
+      names.add(c.path("name").asText());
+    }
+    return names;
+  }
+
+  @Test
+  public void testFileScanReturnsOneTablePerFile() throws Exception {
+    configureUploads(1000);
+    String id = seedWritableProject();
+    upload(id, "one.csvh", "a,b\n1,2\n", false, 201);
+    upload(id, "two.csvh", "a,b\n3,4\n", false, 201);
+    rescan(id);
+
+    // Names are the paths relative to the cached schema, so they are queryable as
+    // dfs.tmp.`<project id>/one.csvh`.
+    assertEquals(Arrays.asList(id + "/one.csvh", id + "/two.csvh"), cachedFileNames(id));
+    assertEquals("FILE", cachedTable(id, id + "/one.csvh").path("type").asText());
+  }
+
+  @Test
+  public void testFileScanCachesColumnsFromTheProbe() throws Exception {
+    configureUploads(1000);
+    String id = seedWritableProject();
+    upload(id, "headers.csvh", "a,b\n1,2\n", false, 201);
+    rescan(id);
+
+    assertEquals(Arrays.asList("a", "b"),
+        columnNames(cachedTable(id, id + "/headers.csvh")));
+  }
+
+  /**
+   * One file Drill cannot read must not cost the project its schema cache: the probe
+   * fails, that file is cached with no columns, and the readable file beside it still
+   * carries its own.
+   */
+  @Test
+  public void testUnparseableFileIsCachedWithNoColumns() throws Exception {
+    configureUploads(1000);
+    String id = seedWritableProject();
+    upload(id, "notes.docx", "PK\u0003\u0004 not really a document", false, 201);
+    upload(id, "good.csvh", "a,b\n1,2\n", false, 201);
+    rescan(id);
+
+    assertEquals(Arrays.asList(id + "/good.csvh", id + "/notes.docx"), cachedFileNames(id));
+    assertEquals(Collections.<String>emptyList(),
+        columnNames(cachedTable(id, id + "/notes.docx")));
+    assertEquals(Arrays.asList("a", "b"), columnNames(cachedTable(id, id + "/good.csvh")));
+  }
+
+  /**
+   * Uploads are flat, but a folder can hold subdirectories put there another way, and
+   * Drill reads them as part of the same table set.
+   */
+  @Test
+  public void testFileScanDescendsIntoSubdirectories() throws Exception {
+    configureUploads(1000);
+    String id = seedWritableProject();
+    upload(id, "top.csvh", "a\n1\n", false, 201);
+    File sub = new File(projectFolder(id), "nested");
+    assertTrue(sub.mkdirs());
+    Files.write(new File(sub, "deep.csvh").toPath(),
+        "a,b\n1,2\n".getBytes(StandardCharsets.UTF_8));
+    rescan(id);
+
+    assertEquals(Arrays.asList(id + "/nested/deep.csvh", id + "/top.csvh"),
+        cachedFileNames(id));
+    assertEquals(Arrays.asList("a", "b"),
+        columnNames(cachedTable(id, id + "/nested/deep.csvh")));
+  }
+
+  /**
+   * A failed upload can leave a {@code <name>.upload-<uuid>} file behind. Those are not
+   * data the user asked for, so the scan skips them rather than spending a probe on them
+   * and offering a phantom table for completion.
+   */
+  @Test
+  public void testScanSkipsStagedUploadLeftovers() throws Exception {
+    configureUploads(1000);
+    String id = seedWritableProject();
+    upload(id, "real.csvh", "a\n1\n", false, 201);
+    Files.write(new File(projectFolder(id), "real.csvh.upload-" + UUID.randomUUID()).toPath(),
+        "a\n9\n".getBytes(StandardCharsets.UTF_8));
+    rescan(id);
+
+    assertEquals(Collections.singletonList(id + "/real.csvh"), cachedFileNames(id));
+  }
+
+  /**
+   * The staging rule may only match what a staged write produces. Nothing in safeName
+   * stops a client naming a file this way, and such a file is queryable, so hiding it
+   * from autocomplete and from the AI assistant with no diagnostic would be a silent
+   * loss.
+   */
+  @Test
+  public void testScanKeepsAFileWhoseNameResemblesAStagedUpload() throws Exception {
+    configureUploads(1000);
+    String id = seedWritableProject();
+    upload(id, "notes.upload-draft.csvh", "a,b\n1,2\n", false, 201);
+    rescan(id);
+
+    assertEquals(Collections.singletonList(id + "/notes.upload-draft.csvh"),
+        cachedFileNames(id));
+    assertEquals(Arrays.asList("a", "b"),
+        columnNames(cachedTable(id, id + "/notes.upload-draft.csvh")));
+  }
+
+  /**
+   * One schema, two kinds of reference. The cache holds a single entry per schema path,
+   * so a scan has to cover both: a scanner chosen per reference would let the schema
+   * reference's views evict the uploaded files, taking them out of autocomplete and the
+   * AI assistant's context until the next upload put one back.
+   */
+  @Test
+  public void testFolderAndSchemaRefsOnOneSchemaAreScannedTogether() throws Exception {
+    configureUploads(1000);
+    String id = seedWritableProject();
+    upload(id, "both.csvh", "a,b\n1,2\n", false, 201);
+
+    String view = "v_" + id.replace("-", "").substring(0, 12);
+    run("CREATE VIEW dfs.tmp.`%s` AS SELECT 1 AS x", view);
+    try {
+      // A second reference on dfs.tmp, which INFORMATION_SCHEMA is the only way to read.
+      Request addRef = new Request.Builder()
+          .url("http://localhost:" + portNumber + "/api/v1/projects/" + id + "/datasets")
+          .post(RequestBody.create(
+              "{\"type\":\"schema\",\"schema\":\"dfs.tmp\",\"label\":\"tmp\"}", JSON))
+          .build();
+      try (Response r = client.newCall(addRef).execute()) {
+        assertEquals(r.body().string(), 200, r.code());
+      }
+
+      // Adding the reference scanned the schema. Both halves must be in the one entry.
+      assertEquals(Collections.singletonList(id + "/both.csvh"), cachedFileNames(id));
+      assertTrue(cachedTableNames(id).toString(), cachedTableNames(id).contains(view));
+
+      // And again through the refresh endpoint, which dedupes by schema.
+      rescan(id);
+      assertEquals(Collections.singletonList(id + "/both.csvh"), cachedFileNames(id));
+      assertTrue(cachedTableNames(id).toString(), cachedTableNames(id).contains(view));
+    } finally {
+      run("DROP VIEW dfs.tmp.`%s`", view);
+    }
+  }
+
+  /**
+   * Nothing stops a project holding two references to one upload folder. Scanning it
+   * once per reference would double the probes and put two tables of the same name in
+   * the entry, which is a worse answer than either reference alone.
+   */
+  @Test
+  public void testTwoReferencesToOneFolderScanItOnce() throws Exception {
+    configureUploads(1000);
+    String id = seedWritableProject();
+    upload(id, "once.csvh", "a,b\n1,2\n", false, 201);
+
+    Request addRef = new Request.Builder()
+        .url("http://localhost:" + portNumber + "/api/v1/projects/" + id + "/datasets")
+        .post(RequestBody.create("{\"type\":\"folder\",\"schema\":\"dfs.tmp\",\"table\":\""
+            + id + "\",\"label\":\"Uploaded files again\"}", JSON))
+        .build();
+    try (Response r = client.newCall(addRef).execute()) {
+      assertEquals(r.body().string(), 200, r.code());
+    }
+    assertEquals(2, folderRefs(id).size());
+
+    rescan(id);
+    assertEquals(Collections.singletonList(id + "/once.csvh"), cachedFileNames(id));
+  }
+
+  /**
+   * The upload path does not re-scan the folder: it merges the one file it wrote. The
+   * discriminator is a file put into the folder behind Drill's back, which a whole-folder
+   * scan would pick up and a merge cannot.
+   */
+  @Test
+  public void testUploadRefreshesTheCache() throws Exception {
+    configureUploads(1000);
+    String id = seedWritableProject();
+    upload(id, "first.csvh", "a\n1\n", false, 201);
+    assertEquals(Collections.singletonList(id + "/first.csvh"), cachedFileNames(id));
+
+    Files.write(new File(projectFolder(id), "sideways.csvh").toPath(),
+        "a\n3\n".getBytes(StandardCharsets.UTF_8));
+
+    // The second upload lands inside the staleness window of the first, so only a cache
+    // update on write can put it in the entry.
+    upload(id, "second.csvh", "a\n2\n", false, 201);
+    assertEquals(Arrays.asList(id + "/first.csvh", id + "/second.csvh"),
+        cachedFileNames(id));
+
+    // The file nobody uploaded appears only once the folder is actually scanned.
+    rescan(id);
+    assertEquals(Arrays.asList(id + "/first.csvh", id + "/second.csvh",
+        id + "/sideways.csvh"), cachedFileNames(id));
+  }
+
+  /** An overwrite re-probes the file in place rather than adding a second entry. */
+  @Test
+  public void testOverwriteReplacesTheCachedColumns() throws Exception {
+    configureUploads(1000);
+    String id = seedWritableProject();
+    upload(id, "shifting.csvh", "a,b\n1,2\n", false, 201);
+    assertEquals(Arrays.asList("a", "b"),
+        columnNames(cachedTable(id, id + "/shifting.csvh")));
+
+    upload(id, "shifting.csvh", "c,d,e\n1,2,3\n", true, 201);
+    assertEquals(Collections.singletonList(id + "/shifting.csvh"), cachedFileNames(id));
+    assertEquals(Arrays.asList("c", "d", "e"),
+        columnNames(cachedTable(id, id + "/shifting.csvh")));
+  }
+
+  // ==================== Review fixes ====================
+
+  /**
+   * The 201's {@code tablePath} is the field a client may put in a query. {@code schema}
+   * names the directory with the project id unquoted, and a project id is a UUID, so
+   * {@code dfs.tmp.3fa85f64-5717-...} is not valid Drill SQL: the hyphens parse as
+   * subtraction and the first segment starts with a digit. The assertion is that the
+   * field parses and reads the file, not merely that it has the right spelling.
+   */
+  @Test
+  public void testUploadResponseCarriesAQueryableTablePath() throws Exception {
+    configureUploads(1000);
+    String id = seedWritableProject();
+
+    JsonNode body = upload(id, "queryable.csvh", "a,b\n7,8\n", false, 201);
+    String tablePath = body.get("tablePath").asText();
+    assertEquals("dfs.`tmp`.`" + id + "/queryable.csvh`", tablePath);
+    assertEquals("7", queryBuilder().sql("SELECT a FROM " + tablePath).singletonString());
+
+    // And the shape the two broken consumers interpolated instead does not parse.
+    String schema = body.get("schema").asText();
+    assertEquals("dfs.tmp." + id, schema);
+    boolean parsed;
+    try {
+      queryBuilder().sql("SELECT * FROM " + schema + ".`queryable.csvh`").run();
+      parsed = true;
+    } catch (Exception expected) {
+      parsed = false;
+    }
+    assertFalse("the unquoted directory path should not parse", parsed);
+  }
+
+  /**
+   * An administrator who repoints the cluster target leaves every project that has
+   * already uploaded holding a reference to the old schema. Matching on the dataset type
+   * alone meant those projects never gained one for the new schema: later uploads landed
+   * where the project could not see them while the tree went on showing the dead folder.
+   */
+  @Test
+  public void testRepointedTargetGivesTheProjectAReferenceToTheNewFolder() throws Exception {
+    configureUploads(1000);
+    String id = seedWritableProject();
+    upload(id, "before.csvh", "a\n1\n", false, 201);
+    assertEquals(1, folderRefs(id).size());
+    assertEquals("dfs.tmp", folderRefs(id).get(0).getSchema());
+
+    cluster.defineWorkspace("dfs", "moved",
+        new File(dirTestWatcher.getRootDir(), "moved").getAbsolutePath(), null);
+    try {
+      configureUploads("dfs", "moved", 1000);
+      upload(id, "after.csvh", "a\n2\n", false, 201);
+
+      List<String> schemas = folderRefs(id).stream().map(DatasetRef::getSchema)
+          .sorted().collect(Collectors.toList());
+      assertEquals(Arrays.asList("dfs.moved", "dfs.tmp"), schemas);
+      for (DatasetRef ref : folderRefs(id)) {
+        assertEquals(id, ref.getTable());
+      }
+
+      // A second upload onto the new target still reuses its one reference.
+      upload(id, "again.csvh", "a\n3\n", false, 201);
+      assertEquals(2, folderRefs(id).size());
+    } finally {
+      configureUploads(1000);
+    }
+  }
+
+  /**
+   * {@code writable} is a Drill planner concept, not a file system permission, so
+   * nothing in {@code fs.create} refuses a write to a workspace an administrator has
+   * since marked read-only. The setting is validated when it is saved; this is the
+   * re-check at upload time.
+   */
+  @Test
+  public void testRefusesAnUploadOntoAWorkspaceThatIsNoLongerWritable() throws Exception {
+    String location = new File(dirTestWatcher.getRootDir(), "flipped").getAbsolutePath();
+    cluster.defineWorkspace("dfs", "flipped", location, null);
+    configureUploads("dfs", "flipped", 1000);
+    String id = seedWritableProject();
+    try {
+      // The administrator marks the configured workspace read-only after the fact.
+      cluster.defineImmutableWorkspace("dfs", "flipped", location, null, null);
+      JsonNode body = upload(id, "nope.csvh", "a\n1\n", false, 409);
+      assertEquals("NOT_CONFIGURED", body.get("code").asText());
+      assertTrue(body.get("message").asText(),
+          body.get("message").asText().contains("not writable"));
+      assertFalse(new File(new File(location), id).exists());
+      assertTrue(folderRefs(id).isEmpty());
+    } finally {
+      cluster.defineWorkspace("dfs", "flipped", location, null);
+      configureUploads(1000);
+    }
+  }
+
+  /**
+   * A project id becomes a path component without ever passing {@link
+   * ProjectFileResources#safeName}. Most ids are UUIDs, but a scratch project's id is a
+   * fixed prefix plus the owner's principal name, so a principal carrying {@code ..}
+   * reaches here without a crafted request.
+   */
+  @Test
+  public void testRejectsAProjectIdThatCannotBeAFolderName() throws Exception {
+    configureUploads(1000);
+    String id = "scratch_a..b";
+    projectStore().put(id, new Project(id, "Scratch", null, null,
+        DrillUserPrincipal.ANONYMOUS_USER, false, null, null, null, null, null, null,
+        null, false, 1L, 1L, null, null, 0L));
+
+    JsonNode body = upload(id, "a.csvh", "a\n1\n", false, 400);
+    assertTrue(body.get("message").asText(),
+        body.get("message").asText().contains("project id"));
+    assertFalse(projectFolder(id).exists());
+    assertTrue(folderRefs(id).isEmpty());
+
+    // Delete and download share the locator, so they refuse it too.
+    try (Response r = send("DELETE", id, "a.csvh", "")) {
+      assertEquals(400, r.code());
+    }
+    try (Response r = send("GET", id, "a.csvh", "/content")) {
+      assertEquals(400, r.code());
+    }
+  }
+
+  /** And the resolver refuses the ids that cannot travel through a URL path at all. */
+  @Test
+  public void testProjectDirRefusesAnIdThatEscapesTheWorkspace() {
+    UploadConfigResources.UploadConfig cfg =
+        new UploadConfigResources.UploadConfig("dfs", "rel", 100L);
+    FileSystemConfig fsConfig = new FileSystemConfig("file:///",
+        Collections.<String, String>emptyMap(),
+        Collections.singletonMap("rel", new WorkspaceConfig("/uploads", true, null, false)),
+        Collections.<String, FormatPluginConfig>emptyMap(), null);
+
+    for (String id : Arrays.asList("a/b", "..", ".", "../../etc", "a\\b", "",
+        "scratch_../evil")) {
+      assertNull(id, ProjectFileResources.projectDir(cfg, fsConfig, id));
+    }
+    assertEquals("file:/uploads/p1",
+        ProjectFileResources.projectDir(cfg, fsConfig, "p1").toUri().toString());
+  }
+
+  /**
+   * A workspace at the root of its storage. The containment check compares the resolved
+   * path against the folder plus a separator, and a root folder already prints with one,
+   * so appending a second refused every id: a bucket given over to uploads, which is the
+   * shape the docs recommend, could not be used at all.
+   */
+  @Test
+  public void testProjectDirAcceptsAWorkspaceAtTheStorageRoot() {
+    UploadConfigResources.UploadConfig cfg =
+        new UploadConfigResources.UploadConfig("dfs", "rel", 100L);
+
+    assertEquals("file:/p1", rootWorkspaceDir(cfg, "file:///").toUri().toString());
+    assertEquals("s3a://bucket/p1", rootWorkspaceDir(cfg, "s3a://bucket/").toUri().toString());
+    assertEquals("hdfs://nn:8020/p1",
+        rootWorkspaceDir(cfg, "hdfs://nn:8020/").toUri().toString());
+
+    // The guard is still a guard at the root: an id that resolves back onto the
+    // workspace itself, or out of it, is refused there too.
+    FileSystemConfig root = rootWorkspaceConfig("s3a://bucket/");
+    for (String id : Arrays.asList(".", "..", "a/b", "foo:bar")) {
+      assertNull(id, ProjectFileResources.projectDir(cfg, root, id));
+    }
+  }
+
+  private static org.apache.hadoop.fs.Path rootWorkspaceDir(
+      UploadConfigResources.UploadConfig cfg, String connection) {
+    return ProjectFileResources.projectDir(cfg, rootWorkspaceConfig(connection), "p1");
+  }
+
+  private static FileSystemConfig rootWorkspaceConfig(String connection) {
+    return new FileSystemConfig(connection,
+        Collections.<String, String>emptyMap(),
+        Collections.singletonMap("rel", new WorkspaceConfig("/", true, null, false)),
+        Collections.<String, FormatPluginConfig>emptyMap(), null);
+  }
+
+  @Test
+  public void testDeleteRefreshesTheCache() throws Exception {
+    configureUploads(1000);
+    String id = seedWritableProject();
+    upload(id, "keep.csvh", "a\n1\n", false, 201);
+    upload(id, "drop.csvh", "a\n2\n", false, 201);
+    assertEquals(2, cachedFileNames(id).size());
+
+    try (Response r = send("DELETE", id, "drop.csvh", "")) {
+      assertEquals(204, r.code());
+    }
+    assertEquals(Collections.singletonList(id + "/keep.csvh"), cachedFileNames(id));
+  }
+}

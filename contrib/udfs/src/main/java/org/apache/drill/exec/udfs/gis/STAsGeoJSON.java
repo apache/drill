@@ -31,7 +31,8 @@ import org.apache.drill.exec.expr.holders.VarCharHolder;
 import javax.inject.Inject;
 
 @FunctionTemplate(name = "st_asgeojson", scope = FunctionTemplate.FunctionScope.SIMPLE,
-  nulls = FunctionTemplate.NullHandling.NULL_IF_NULL)
+  nulls = FunctionTemplate.NullHandling.NULL_IF_NULL,
+  desc = "Returns the GeoJSON representation of a geometry.")
 // Naming convention from PostGIS documentation
 public class STAsGeoJSON implements DrillSimpleFunc {
   @Param

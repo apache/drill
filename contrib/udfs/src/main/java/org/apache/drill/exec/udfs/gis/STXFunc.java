@@ -31,7 +31,8 @@ import javax.inject.Inject;
  * Return the X coordinate of the point, or NaN if not available
  */
 @FunctionTemplate(name = "st_x", scope = FunctionTemplate.FunctionScope.SIMPLE,
-  nulls = FunctionTemplate.NullHandling.NULL_IF_NULL)
+  nulls = FunctionTemplate.NullHandling.NULL_IF_NULL,
+  desc = "Returns the X, or longitude, coordinate of a point, or NaN when unavailable.")
 public class STXFunc implements DrillSimpleFunc {
   @Param
   VarBinaryHolder geomParam;

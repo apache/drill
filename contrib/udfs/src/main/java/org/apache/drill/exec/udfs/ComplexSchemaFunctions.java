@@ -37,7 +37,9 @@ public class ComplexSchemaFunctions {
    */
   @FunctionTemplate(names = {"get_map_schema", "getMapSchema"},
     scope = FunctionTemplate.FunctionScope.SIMPLE,
-    nulls = NullHandling.INTERNAL)
+    nulls = NullHandling.INTERNAL,
+    desc = "Returns the schema of a map column as a map of field name to type name. Not recursive: a "
+      + "nested map is reported as MAP without its inner fields.")
   public static class GetMapSchemaFunction implements DrillSimpleFunc {
 
     @Param

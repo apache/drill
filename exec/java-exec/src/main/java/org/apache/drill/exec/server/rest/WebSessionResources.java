@@ -42,8 +42,8 @@ public class WebSessionResources implements AutoCloseable {
 
   private Promise<Void> closeFuture;
 
-  WebSessionResources(BufferAllocator allocator, SocketAddress remoteAddress,
-                      UserSession userSession, Promise<Void> closeFuture) {
+  public WebSessionResources(BufferAllocator allocator, SocketAddress remoteAddress,
+                             UserSession userSession, Promise<Void> closeFuture) {
     this.allocator = allocator;
     this.remoteAddress = remoteAddress;
     this.webUserSession = userSession;

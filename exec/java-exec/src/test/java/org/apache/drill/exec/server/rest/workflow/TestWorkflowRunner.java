@@ -1,0 +1,458 @@
+/*
+ * Licensed to the Apache Software Foundation (ASF) under one
+ * or more contributor license agreements.  See the NOTICE file
+ * distributed with this work for additional information
+ * regarding copyright ownership.  The ASF licenses this file
+ * to you under the Apache License, Version 2.0 (the
+ * "License"); you may not use this file except in compliance
+ * with the License.  You may obtain a copy of the License at
+ *
+ * http://www.apache.org/licenses/LICENSE-2.0
+ *
+ * Unless required by applicable law or agreed to in writing, software
+ * distributed under the License is distributed on an "AS IS" BASIS,
+ * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+ * See the License for the specific language governing permissions and
+ * limitations under the License.
+ */
+package org.apache.drill.exec.server.rest.workflow;
+
+import ch.qos.logback.classic.Level;
+import ch.qos.logback.classic.spi.ILoggingEvent;
+import ch.qos.logback.core.read.ListAppender;
+import org.apache.drill.exec.server.rest.AiConfigResources;
+import org.apache.drill.exec.server.rest.SavedQueryResources;
+import org.apache.drill.exec.server.rest.ai.ChatMessage;
+import org.apache.drill.exec.server.rest.ai.LlmCallResult;
+import org.apache.drill.exec.server.rest.ai.LlmConfig;
+import org.apache.drill.exec.server.rest.ai.LlmProvider;
+import org.apache.drill.exec.server.rest.ai.LlmProviderRegistry;
+import org.apache.drill.exec.server.rest.ai.ToolDefinition;
+import org.apache.drill.exec.server.rest.ai.UsageObserver;
+import org.apache.drill.exec.server.rest.ai.ValidationResult;
+import org.apache.drill.exec.store.sys.PersistentStore;
+import org.apache.drill.exec.work.WorkManager;
+import org.apache.drill.test.ClusterFixture;
+import org.apache.drill.test.ClusterTest;
+import org.junit.AfterClass;
+import org.junit.BeforeClass;
+import org.junit.Test;
+import org.slf4j.LoggerFactory;
+
+import java.io.File;
+import java.io.OutputStream;
+import java.time.Instant;
+import java.util.Iterator;
+import java.util.List;
+import java.util.Map;
+import java.util.UUID;
+import java.util.concurrent.TimeoutException;
+
+import static org.junit.Assert.assertEquals;
+import static org.junit.Assert.assertFalse;
+import static org.junit.Assert.assertNotNull;
+import static org.junit.Assert.assertThrows;
+import static org.junit.Assert.assertTrue;
+
+/** Runner paths that need a live Drillbit: statement execution and dry runs. */
+public class TestWorkflowRunner extends ClusterTest {
+
+  private static WorkflowRunner runner;
+
+  @BeforeClass
+  public static void setup() throws Exception {
+    startCluster(ClusterFixture.builder(dirTestWatcher));
+    runner = WorkflowRunner.getOrCreate(cluster.drillbit().getManager(),
+        cluster.drillbit().getContext().getStoreProvider());
+  }
+
+  @AfterClass
+  public static void tearDown() {
+    runner.close();
+  }
+
+  private static final String NLJ_OFF = "ALTER SESSION SET `planner.enable_nljoin_for_scalar_only` = false";
+  private static final String SMALL_CROSS_JOIN = "SELECT COUNT(*) FROM cp.`employee.json` a, cp.`employee.json` b"
+      + " WHERE a.employee_id < 3 AND b.employee_id < 3";
+
+  @Test
+  public void alterSessionCarriesOverToLaterStatementsInTheSameCall() throws Exception {
+    // A non-scalar cross join only plans once the ALTER SESSION has applied to the shared session.
+    assertThrows(Exception.class, () -> runner.executeStatements(List.of(SMALL_CROSS_JOIN), null, 60));
+    runner.executeStatements(List.of(NLJ_OFF, SMALL_CROSS_JOIN), null, 60);
+  }
+
+  @Test(timeout = 120_000)
+  public void timeoutCancelsTheQueryAndSkipsLaterStatements() throws Exception {
+    String slow = "SELECT COUNT(*) FROM cp.`employee.json` a, cp.`employee.json` b, cp.`employee.json` c,"
+        + " cp.`employee.json` d";
+    String marker = "CREATE TABLE dfs.tmp.wf_timeout_marker AS SELECT 1 AS x FROM (VALUES(1))";
+    long start = System.currentTimeMillis();
+    assertThrows(TimeoutException.class, () -> runner.executeStatements(List.of(NLJ_OFF, slow, marker), null, 1));
+    assertTrue("cancel should land well within the grace period",
+        System.currentTimeMillis() - start < WorkflowRunner.CANCEL_GRACE_SECONDS * 1000L);
+
+    WorkManager wm = cluster.drillbit().getManager();
+    long deadline = System.currentTimeMillis() + 10_000;
+    while (wm.getRemainingQueries().get("queriesCount") > 0 && System.currentTimeMillis() < deadline) {
+      Thread.sleep(100);
+    }
+    assertEquals(Integer.valueOf(0), wm.getRemainingQueries().get("queriesCount"));
+    assertFalse("statement after the timeout must not run",
+        new File(dirTestWatcher.getDfsTestTmpDir(), "wf_timeout_marker").exists());
+  }
+
+  @Test
+  public void executeStatementsReportsAFailureAfterTheFirstStatement() {
+    assertThrows(Exception.class,
+        () -> runner.executeStatements(List.of("SELECT 1", "SELECT * FROM nonexistent_tbl"), null, 60));
+  }
+
+  @Test
+  public void dryRunOfUnsavedWorkflowDoesNotNeedAnId() {
+    WorkflowRun existing = new WorkflowRun();
+    existing.id = UUID.randomUUID().toString();
+    existing.scheduleId = "some-other-workflow";
+    existing.executedAt = "2026-10-20T00:00:00Z";
+    existing.status = "success";
+    existing.rowCount = 3L;
+    runner.stores().runs().put(existing.id, existing);
+
+    Workflow wf = new Workflow();
+    wf.savedQueryId = "missing-query";
+    WorkflowRunner.DryRunResult r = runner.dryRun(wf);
+    assertNotNull(r.context);
+    assertEquals("error", r.context.status);
+  }
+
+  private static String saveQuery(String sql) {
+    return saveQuery(sql, "anonymous");
+  }
+
+  private static String saveQuery(String sql, String owner) {
+    String id = UUID.randomUUID().toString();
+    runner.stores().savedQueries().put(id,
+        new SavedQueryResources.SavedQuery(id, "q", null, sql, null, owner, 0, 0, null, false, 0));
+    return id;
+  }
+
+  /** An enabled, orphan (so no membership check) daily workflow stored under a fresh id. */
+  private static Workflow scheduled(Instant nextRunAt) {
+    Workflow wf = new Workflow();
+    wf.id = UUID.randomUUID().toString();
+    wf.owner = "anonymous";
+    wf.savedQueryId = saveQuery("SELECT 1 AS x");
+    wf.schedule.enabled = true;
+    wf.schedule.timeoutSeconds = 60;
+    wf.nextRunAt = nextRunAt.toString();
+    runner.stores().workflows().put(wf.id, wf);
+    return wf;
+  }
+
+  private static WorkflowMigration.LegacySchedule legacy(String id) {
+    WorkflowMigration.LegacySchedule o = new WorkflowMigration.LegacySchedule();
+    o.id = id;
+    o.savedQueryId = "none";
+    o.owner = "anonymous";
+    o.frequency = "daily";
+    return o;
+  }
+
+  @Test
+  public void migrationSkipsACorruptEntryAndKeepsGoing() {
+    String first = UUID.randomUUID().toString();
+    String last = UUID.randomUUID().toString();
+    List<Object> entries = List.of(Map.entry("a", legacy(first)), "corrupt", Map.entry("c", legacy(last)));
+    Iterator<Object> backing = entries.iterator();
+    // Like Iterators.transform over a store: the backing iterator advances, then deserialization throws.
+    Iterator<Map.Entry<String, WorkflowMigration.LegacySchedule>> it = new Iterator<>() {
+      @Override public boolean hasNext() { return backing.hasNext(); }
+      @SuppressWarnings("unchecked")
+      @Override public Map.Entry<String, WorkflowMigration.LegacySchedule> next() {
+        Object o = backing.next();
+        if (o instanceof String) {
+          throw new IllegalStateException("cannot deserialize " + o);
+        }
+        return (Map.Entry<String, WorkflowMigration.LegacySchedule>) o;
+      }
+    };
+
+    assertEquals(1, runner.migrateEntries(it));
+    assertNotNull(runner.stores().workflows().get(first));
+    assertNotNull(runner.stores().workflows().get(last));
+    assertEquals(0, runner.migrateEntries(List.of(Map.entry("a", legacy(first))).iterator()));
+  }
+
+  @Test
+  public void isStaleOnlyAfterTheLongestHealthyRun() {
+    WorkflowConfig cfg = new WorkflowConfig();
+    Workflow wf = new Workflow();
+    wf.schedule.timeoutSeconds = 60;
+    wf.actions.add(new Workflow.ActionSpec());
+    long bound = WorkflowRunner.maxRunSeconds(wf, cfg);
+    assertEquals(2 * (60 + 30) + Math.max(cfg.actionTimeoutSeconds, 60) + 30 + WorkflowRunner.STALE_GRACE_SECONDS, bound);
+    Instant now = Instant.now();
+    assertFalse("not running is never stale", WorkflowRunner.isStale(wf, now, cfg));
+    wf.isRunning = true;
+    assertTrue("a flag with no start time predates runStartedAt", WorkflowRunner.isStale(wf, now, cfg));
+    wf.runStartedAt = now.minusSeconds(bound - 60).toString();
+    assertFalse(WorkflowRunner.isStale(wf, now, cfg));
+    wf.runStartedAt = now.minusSeconds(bound + 60).toString();
+    assertTrue(WorkflowRunner.isStale(wf, now, cfg));
+  }
+
+  @Test
+  public void processDueClearsAStaleRunningFlag() {
+    Instant now = Instant.now();
+    Workflow wf = scheduled(now.plusSeconds(3600));
+    wf.isRunning = true;
+    wf.runStartedAt = now.minusSeconds(86_400).toString();
+    runner.stores().workflows().put(wf.id, wf);
+
+    runner.processDue(wf, now, new WorkflowConfig());
+    Workflow stored = runner.stores().workflows().get(wf.id);
+    assertFalse(stored.isRunning);
+    assertEquals(null, stored.runStartedAt);
+  }
+
+  @Test
+  public void processDueAdvancesASlotAbandonedByADeadDrillbit() {
+    Instant now = Instant.now();
+    WorkflowConfig cfg = new WorkflowConfig();
+    Workflow wf = scheduled(now.minusSeconds(86_400));
+    assertTrue(new RunClaims(runner.stores().claims())
+        .claim(wf.id + "_" + Instant.parse(wf.nextRunAt).toEpochMilli(), "dead-drillbit"));
+
+    runner.processDue(wf, now, cfg);
+    Workflow stored = runner.stores().workflows().get(wf.id);
+    assertTrue(Instant.parse(stored.nextRunAt).isAfter(now));
+    assertFalse(stored.isRunning);
+    assertEquals(null, stored.lastRunAt);
+  }
+
+  @Test
+  public void processDueLeavesARecentlyClaimedSlotAlone() {
+    Instant now = Instant.now();
+    Workflow wf = scheduled(now.minusSeconds(5));
+    String slot = wf.nextRunAt;
+    assertTrue(new RunClaims(runner.stores().claims())
+        .claim(wf.id + "_" + Instant.parse(slot).toEpochMilli(), "busy-drillbit"));
+
+    runner.processDue(wf, now, new WorkflowConfig());
+    assertEquals(slot, runner.stores().workflows().get(wf.id).nextRunAt);
+  }
+
+  @Test
+  public void runFailsWhenTheSavedQueryBelongsToSomeoneElse() {
+    Workflow wf = new Workflow();
+    wf.id = UUID.randomUUID().toString();
+    wf.owner = "anonymous";
+    wf.savedQueryId = saveQuery("SELECT 1 AS x", "olivia");
+    runner.stores().workflows().put(wf.id, wf);
+
+    WorkflowRun run = runner.runNow(wf);
+    assertEquals("error", run.status);
+    assertTrue(run.errorMessage, run.errorMessage.contains("Saved query is owned by olivia, workflow runs as anonymous"));
+    assertFalse(runner.stores().workflows().get(wf.id).isRunning);
+  }
+
+  @Test
+  public void dryRunCountsBeyondThePreviewWhenSqlEndsInSemicolon() {
+    Workflow wf = new Workflow();
+    wf.savedQueryId = saveQuery("SELECT * FROM cp.`employee.json`;");
+    WorkflowRunner.DryRunResult r = runner.dryRun(wf);
+    assertEquals(r.context.error, "success", r.context.status);
+    assertEquals(WorkflowRunner.PREVIEW_ROWS, r.context.rows.size());
+    assertEquals(1155L, r.context.rowCount);
+  }
+
+  @Test
+  public void runNowRecordsTheRunAndClearsIsRunning() {
+    Workflow wf = new Workflow();
+    wf.id = UUID.randomUUID().toString();
+    wf.savedQueryId = saveQuery("SELECT 1 AS x");
+    runner.stores().workflows().put(wf.id, wf);
+
+    WorkflowRun run = runner.runNow(wf);
+    assertEquals("success", run.status);
+    assertEquals("manual", run.trigger);
+    assertEquals(Long.valueOf(1), run.rowCount);
+    assertNotNull(runner.stores().runs().get(run.id));
+    Workflow stored = runner.stores().workflows().get(wf.id);
+    assertFalse(stored.isRunning);
+    assertEquals(null, stored.runStartedAt);
+    assertEquals("success", stored.lastStatus);
+  }
+
+  // ---------------------------------------------------------------- summarize
+
+  private static final String FAKE_PROVIDER = "fake-summary-provider";
+
+  private static PersistentStore<LlmConfig> aiStore() throws Exception {
+    return AiConfigResources.store(cluster.drillbit().getContext().getStoreProvider(),
+        cluster.drillbit().getContext().getLpPersistence().getMapper());
+  }
+
+  private static void configure(String providerId, boolean enabled) throws Exception {
+    LlmConfig c = new LlmConfig();
+    c.setProvider(providerId);
+    c.setEnabled(enabled);
+    aiStore().put("default", c);
+  }
+
+  private static void registerFake(String reply) {
+    LlmProviderRegistry.register(new LlmProvider() {
+      @Override public String getId() {
+        return FAKE_PROVIDER;
+      }
+
+      @Override public String getDisplayName() {
+        return "Fake";
+      }
+
+      @Override public LlmCallResult streamChatCompletion(LlmConfig config, List<ChatMessage> messages,
+          List<ToolDefinition> tools, OutputStream out, UsageObserver usage) {
+        usage.onUsage(11, 7);
+        LlmCallResult r = new LlmCallResult();
+        r.appendResponseText(reply);
+        return r;
+      }
+
+      @Override public ValidationResult validateConfig(LlmConfig config) {
+        return null;
+      }
+    });
+  }
+
+  @org.junit.After
+  public void clearAiConfig() throws Exception {
+    aiStore().delete("default");
+  }
+
+  @Test
+  public void summarizeRefusesWhenProspectorIsNotConfigured() {
+    Exception e = assertThrows(Exception.class, () -> runner.summarize("p", 100, "alice"));
+    assertEquals("Prospector is not configured; an administrator must set it up before ai_summary can run.",
+        e.getMessage());
+  }
+
+  @Test
+  public void summarizeRefusesWhenProspectorIsDisabled() throws Exception {
+    registerFake("hello");
+    configure(FAKE_PROVIDER, false);
+    Exception e = assertThrows(Exception.class, () -> runner.summarize("p", 100, "alice"));
+    assertEquals("Prospector is disabled; an administrator must enable it before ai_summary can run.",
+        e.getMessage());
+  }
+
+  @Test
+  public void summarizeReturnsTheModelText() throws Exception {
+    registerFake("hello world");
+    configure(FAKE_PROVIDER, true);
+    assertEquals("hello world", runner.summarize("p", 100, "alice"));
+  }
+
+  @Test
+  public void summarizeTruncatesToMaxChars() throws Exception {
+    registerFake("hello world");
+    configure(FAKE_PROVIDER, true);
+    assertEquals("hello", runner.summarize("p", 5, "alice"));
+    assertEquals("", runner.summarize("p", -3, "alice"));
+  }
+
+  @Test
+  public void summarizeRejectsAnUnknownProvider() throws Exception {
+    configure("no-such-provider", true);
+    Exception e = assertThrows(Exception.class, () -> runner.summarize("p", 100, "alice"));
+    assertTrue(e.getMessage(), e.getMessage().contains("no-such-provider"));
+  }
+
+
+  /** Captures the ai.events JSON lines written while the body runs. */
+  private static List<String> captureAiEvents(ThrowingRunnable body) throws Exception {
+    ch.qos.logback.classic.Logger events =
+        (ch.qos.logback.classic.Logger) LoggerFactory.getLogger("ai.events");
+    Level previous = events.getLevel();
+    ListAppender<ILoggingEvent> appender = new ListAppender<>();
+    appender.start();
+    events.setLevel(Level.INFO);
+    events.addAppender(appender);
+    try {
+      body.run();
+    } finally {
+      events.detachAppender(appender);
+      events.setLevel(previous);
+      appender.stop();
+    }
+    return appender.list.stream().map(ILoggingEvent::getFormattedMessage)
+        .collect(java.util.stream.Collectors.toList());
+  }
+
+  private interface ThrowingRunnable {
+    void run() throws Exception;
+  }
+
+  @Test
+  public void summarizeRecordsItsTokenUsage() throws Exception {
+    registerFake("hello world");
+    configure(FAKE_PROVIDER, true);
+    List<String> lines = captureAiEvents(() -> runner.summarize("prompt text", 100, "alice"));
+    assertEquals(lines.toString(), 1, lines.size());
+    String line = lines.get(0);
+    assertTrue(line, line.contains("\"feature\":\"workflow_ai_summary\""));
+    assertTrue(line, line.contains("\"user\":\"alice\""));
+    assertTrue(line, line.contains("\"promptTokens\":11"));
+    assertTrue(line, line.contains("\"responseTokens\":7"));
+    assertTrue(line, line.contains("\"totalTokens\":18"));
+    assertTrue(line, line.contains("\"success\":true"));
+  }
+
+  @Test
+  public void aFailedSummarizeIsStillRecorded() throws Exception {
+    configure("no-such-provider", true);
+    List<String> lines = captureAiEvents(
+        () -> assertThrows(Exception.class, () -> runner.summarize("p", 100, "alice")));
+    // An unknown provider never reaches a provider call, so nothing is recorded for it.
+    assertTrue(lines.toString(), lines.isEmpty());
+
+    LlmProviderRegistry.register(new LlmProvider() {
+      @Override public String getId() {
+        return "exploding-provider";
+      }
+
+      @Override public String getDisplayName() {
+        return "Exploding";
+      }
+
+      @Override public LlmCallResult streamChatCompletion(LlmConfig config, List<ChatMessage> messages,
+          List<ToolDefinition> tools, OutputStream out, UsageObserver usage) throws Exception {
+        throw new IllegalStateException("provider exploded");
+      }
+
+      @Override public ValidationResult validateConfig(LlmConfig config) {
+        return null;
+      }
+    });
+    configure("exploding-provider", true);
+    lines = captureAiEvents(
+        () -> assertThrows(Exception.class, () -> runner.summarize("p", 100, "bob")));
+    assertEquals(lines.toString(), 1, lines.size());
+    assertTrue(lines.get(0), lines.get(0).contains("\"success\":false"));
+    assertTrue(lines.get(0), lines.get(0).contains("provider exploded"));
+    assertTrue(lines.get(0), lines.get(0).contains("\"feature\":\"workflow_ai_summary\""));
+  }
+
+  @Test
+  public void sendDataToAiFollowsTheStoredFlag() throws Exception {
+    assertFalse(runner.sendDataToAi());
+    LlmConfig c = new LlmConfig();
+    c.setProvider(FAKE_PROVIDER);
+    c.setEnabled(true);
+    c.setSendDataToAi(true);
+    aiStore().put("default", c);
+    assertTrue(runner.sendDataToAi());
+    c.setSendDataToAi(false);
+    aiStore().put("default", c);
+    assertFalse(runner.sendDataToAi());
+  }
+}
