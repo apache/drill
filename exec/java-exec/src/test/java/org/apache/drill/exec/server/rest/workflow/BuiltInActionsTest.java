@@ -77,6 +77,7 @@ public class BuiltInActionsTest {
       }
 
       @Override public void sendMail(List<String> to, String s, String b) { }
+      @Override public String summarize(String prompt, int maxChars) { return "summary"; }
     };
     Workflow wf = new Workflow();
     wf.id = "wf-1";
@@ -96,6 +97,7 @@ public class BuiltInActionsTest {
       }
 
       @Override public void sendMail(List<String> to, String s, String b) { }
+      @Override public String summarize(String prompt, int maxChars) { return "summary"; }
     };
     Workflow wf = new Workflow();
     wf.id = "wf-1";
@@ -157,6 +159,7 @@ public class BuiltInActionsTest {
     WorkflowServices services = new WorkflowServices() {
       @Override public void executeStatements(List<String> sql, String user, int timeout) { }
       @Override public void sendMail(List<String> to, String s, String b) { sent.add(to + "|" + s + "|" + b); }
+      @Override public String summarize(String prompt, int maxChars) { return "summary"; }
     };
     RunContext ctx = new RunContext();
     ctx.rowCount = 4;

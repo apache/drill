@@ -25,4 +25,10 @@ public interface WorkflowServices {
   void executeStatements(List<String> sql, String userName, int timeoutSeconds) throws Exception;
 
   void sendMail(List<String> to, String subject, String body) throws Exception;
+
+  /**
+   * Asks the configured model to complete the prompt and returns its text, truncated to maxChars.
+   * Never returns null; throws when no provider is configured or the call fails.
+   */
+  String summarize(String prompt, int maxChars) throws Exception;
 }

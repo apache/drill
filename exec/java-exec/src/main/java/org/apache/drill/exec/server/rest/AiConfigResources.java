@@ -19,6 +19,7 @@ package org.apache.drill.exec.server.rest;
 
 import com.fasterxml.jackson.annotation.JsonCreator;
 import com.fasterxml.jackson.annotation.JsonProperty;
+import com.fasterxml.jackson.databind.ObjectMapper;
 import io.swagger.v3.oas.annotations.Operation;
 import io.swagger.v3.oas.annotations.tags.Tag;
 import org.apache.drill.common.exceptions.DrillRuntimeException;
@@ -891,15 +892,21 @@ public class AiConfigResources {
   }
 
   private PersistentStore<LlmConfig> getStore() {
+    return openStore(storeProvider, workManager.getContext().getLpPersistence().getMapper());
+  }
+
+  /** Returns the stored LLM config, or null when none has been set. */
+  public static LlmConfig current(PersistentStoreProvider provider) {
+    return openStore(provider, new ObjectMapper()).get(CONFIG_KEY);
+  }
+
+  private static PersistentStore<LlmConfig> openStore(PersistentStoreProvider provider, ObjectMapper mapper) {
     if (cachedStore == null) {
       synchronized (AiConfigResources.class) {
         if (cachedStore == null) {
           try {
-            cachedStore = storeProvider.getOrCreateStore(
-                PersistentStoreConfig.newJacksonBuilder(
-                    workManager.getContext().getLpPersistence().getMapper(),
-                    LlmConfig.class
-                )
+            cachedStore = provider.getOrCreateStore(
+                PersistentStoreConfig.newJacksonBuilder(mapper, LlmConfig.class)
                 .name(CONFIG_STORE_NAME)
                 .build()
             );

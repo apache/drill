@@ -27,18 +27,27 @@ import org.apache.drill.exec.memory.BufferAllocator;
 import org.apache.drill.exec.proto.CoordinationProtos.DrillbitEndpoint;
 import org.apache.drill.exec.proto.UserBitShared;
 import org.apache.drill.exec.rpc.user.UserSession;
+import org.apache.drill.exec.server.rest.AiConfigResources;
 import org.apache.drill.exec.server.rest.ProjectResources;
 import org.apache.drill.exec.server.rest.QueryWrapper;
 import org.apache.drill.exec.server.rest.RestQueryRunner;
 import org.apache.drill.exec.server.rest.SavedQueryResources;
 import org.apache.drill.exec.server.rest.WebSessionResources;
 import org.apache.drill.exec.server.rest.WebUserConnection;
+import org.apache.drill.exec.server.rest.ai.ChatMessage;
+import org.apache.drill.exec.server.rest.ai.LlmCallResult;
+import org.apache.drill.exec.server.rest.ai.LlmConfig;
+import org.apache.drill.exec.server.rest.ai.LlmProvider;
+import org.apache.drill.exec.server.rest.ai.LlmProviderRegistry;
+import org.apache.drill.exec.server.rest.ai.ToolDefinition;
+import org.apache.drill.exec.server.rest.ai.UsageObserver;
 import org.apache.drill.exec.server.rest.auth.DrillUserPrincipal;
 import org.apache.drill.exec.store.sys.PersistentStoreProvider;
 import org.apache.drill.exec.work.WorkManager;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
+import java.io.ByteArrayOutputStream;
 import java.time.Duration;
 import java.time.Instant;
 import java.time.ZoneId;
@@ -80,6 +89,7 @@ public class WorkflowRunner implements AutoCloseable, WorkflowServices {
   }
 
   private final WorkManager workManager;
+  private final PersistentStoreProvider provider;
   private final WorkflowStores stores;
   private final ActionTypeRegistry registry = ActionTypeRegistry.defaults();
   private final RunClaims claims;
@@ -90,6 +100,7 @@ public class WorkflowRunner implements AutoCloseable, WorkflowServices {
 
   private WorkflowRunner(WorkManager workManager, PersistentStoreProvider provider) {
     this.workManager = workManager;
+    this.provider = provider;
     this.stores = new WorkflowStores(provider, workManager);
     this.claims = new RunClaims(stores.claims());
   }
@@ -408,6 +419,27 @@ public class WorkflowRunner implements AutoCloseable, WorkflowServices {
   @Override
   public void sendMail(List<String> to, String subject, String body) throws Exception {
     SmtpMailer.send(stores.smtp().get(WorkflowStores.DEFAULT_KEY), to, subject, body);
+  }
+
+  @Override
+  public String summarize(String prompt, int maxChars) throws Exception {
+    LlmConfig config = AiConfigResources.current(provider);
+    if (config == null) {
+      throw new IllegalStateException(
+          "Prospector is not configured; an administrator must set it up before ai_summary can run.");
+    }
+    LlmProvider llm = LlmProviderRegistry.get(config.getProvider());
+    if (llm == null) {
+      throw new IllegalStateException("Unknown Prospector provider: " + config.getProvider());
+    }
+    LlmCallResult result = llm.streamChatCompletion(
+        config, List.of(ChatMessage.user(prompt)), List.<ToolDefinition>of(),
+        new ByteArrayOutputStream(), UsageObserver.NOOP);
+    String text = result.getResponseText();
+    if (text == null) {
+      text = "";
+    }
+    return text.length() > maxChars ? text.substring(0, maxChars) : text;
   }
 
   /**
