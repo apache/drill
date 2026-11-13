@@ -75,6 +75,7 @@
     <module>storage-opentsdb</module>
     <module>storage-phoenix</module>
     <module>storage-splunk</module>
+    <module>ml</module>
     <module>udfs</module>
   </modules>
 

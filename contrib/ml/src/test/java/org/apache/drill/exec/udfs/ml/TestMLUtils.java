@@ -1,0 +1,121 @@
+/*
+ * Licensed to the Apache Software Foundation (ASF) under one
+ * or more contributor license agreements.  See the NOTICE file
+ * distributed with this work for additional information
+ * regarding copyright ownership.  The ASF licenses this file
+ * to you under the Apache License, Version 2.0 (the
+ * "License"); you may not use this file except in compliance
+ * with the License.  You may obtain a copy of the License at
+ *
+ * http://www.apache.org/licenses/LICENSE-2.0
+ *
+ * Unless required by applicable law or agreed to in writing, software
+ * distributed under the License is distributed on an "AS IS" BASIS,
+ * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+ * See the License for the specific language governing permissions and
+ * limitations under the License.
+ */
+package org.apache.drill.exec.udfs.ml;
+
+import org.apache.drill.common.exceptions.UserException;
+import org.apache.drill.exec.server.DrillbitContext;
+import org.apache.drill.test.ClusterFixture;
+import org.apache.drill.test.ClusterTest;
+import org.junit.BeforeClass;
+import org.junit.Test;
+import org.pmml4s.model.Model;
+
+import java.nio.file.Paths;
+import java.util.HashMap;
+import java.util.Map;
+
+import static org.junit.Assert.assertEquals;
+import static org.junit.Assert.assertNotNull;
+import static org.junit.Assert.assertTrue;
+import static org.junit.Assert.fail;
+
+public class TestMLUtils extends ClusterTest {
+
+  @BeforeClass
+  public static void setup() throws Exception {
+    startCluster(ClusterFixture.builder(dirTestWatcher));
+    dirTestWatcher.copyResourceToRoot(Paths.get("models/"));
+  }
+
+  private static DrillbitContext context() {
+    return cluster.drillbit().getContext();
+  }
+
+  private static String expectFailure(String location) {
+    try {
+      MLUtils.getModel(location, context());
+    } catch (UserException e) {
+      return e.getMessage();
+    }
+    fail("Expected a UserException for " + location);
+    return null;
+  }
+
+  @Test
+  public void loadsAModelFromAFileSystemPlugin() {
+    Model model = MLUtils.getModel("dfs.root.`models/iris_rf.pmml`", context());
+    assertNotNull(model);
+    assertEquals(3, model.inputFields().length);
+  }
+
+  @Test
+  public void theFixtureScoresDifferentRowsToDifferentClasses() {
+    Model model = MLUtils.getModel("dfs.root.`models/iris_rf.pmml`", context());
+    assertEquals("setosa", predictClass(model, 5.1, 1.4, 0.2));
+    assertEquals("versicolor", predictClass(model, 6.0, 4.0, 1.3));
+    assertEquals("virginica", predictClass(model, 6.5, 5.5, 2.0));
+  }
+
+  private static String predictClass(Model model, double sepalLength, double petalLength, double petalWidth) {
+    Map<String, Object> row = new HashMap<>();
+    row.put("sepal_length", sepalLength);
+    row.put("petal_length", petalLength);
+    row.put("petal_width", petalWidth);
+    Map<String, Object> result = model.predict(row);
+    assertTrue(result.containsKey("probability_setosa"));
+    return (String) result.get("predicted_species");
+  }
+
+  @Test
+  public void loadsAModelFromAPluginWithoutWorkspaces() {
+    Model model = MLUtils.getModel("cp.`models/iris_rf.pmml`", context());
+    assertNotNull(model);
+  }
+
+  @Test
+  public void missingModelFileFailsWithThePathInTheMessage() {
+    String message = expectFailure("dfs.root.`models/no_such_model.pmml`");
+    assertTrue(message, message.contains("no_such_model.pmml"));
+  }
+
+  @Test
+  public void aNonFileSystemPluginIsRejected() {
+    String message = expectFailure("sys.`models/iris_rf.pmml`");
+    assertTrue(message, message.contains("file system storage plugin"));
+  }
+
+  @Test
+  public void anUnknownPluginIsRejected() {
+    String message = expectFailure("nosuchplugin.root.`models/iris_rf.pmml`");
+    assertTrue(message, message.contains("file system storage plugin"));
+  }
+
+  @Test
+  public void aCorruptModelFileFailsWithTheModelPath() {
+    String message = expectFailure("dfs.root.`models/corrupt.pmml`");
+    assertTrue(message, message.contains("corrupt.pmml"));
+  }
+
+  @Test
+  public void anHttpUrlIsRejected() {
+    String message = expectFailure("http://localhost:1/model.pmml");
+    assertTrue(message, message.contains("cannot be loaded from URLs"));
+    message = expectFailure("https://example.com/model.pmml");
+    assertTrue(message, message.contains("cannot be loaded from URLs"));
+  }
+}
