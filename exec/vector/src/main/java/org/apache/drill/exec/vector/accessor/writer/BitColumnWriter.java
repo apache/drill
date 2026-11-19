@@ -60,7 +60,7 @@ public class BitColumnWriter extends AbstractFixedWidthWriter {
     // Please be thoughtful when changing the code.
 
     final int writeIndex = vectorIndex.vectorIndex();
-    prepareWrite(writeIndex);
+    prepareWrite(writeIndex - 1);
 
     // Track the last write location for zero-fill use next time around.
 
@@ -84,7 +84,7 @@ public class BitColumnWriter extends AbstractFixedWidthWriter {
 
   @Override
   public void setValueCount(int valueCount) {
-    prepareWrite(valueCount);
+    prepareWrite(valueCount - 1);
     mutator.setValueCount(valueCount);
   }
 
