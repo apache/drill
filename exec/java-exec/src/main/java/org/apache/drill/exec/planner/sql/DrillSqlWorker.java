@@ -316,11 +316,11 @@ public class DrillSqlWorker {
     boolean parameterizedPlanning = false;
     String parameterizedTemplate = null;
     Consumer<PhysicalPlan> prepareCacheInsert = null;
-    if (usePlanCache && context.getOptions().getOption(PlannerSettings.PLAN_CACHE)
-        && !context.getSession().hasTemporaryTables()
-        && !hasMutableAliases(context)
-        && PlanCacheEligibility.isSafeToCache(sqlNode, context.getFunctionRegistry())) {
-      try {
+    try {
+      if (usePlanCache && context.getOptions().getOption(PlannerSettings.PLAN_CACHE)
+          && !context.getSession().hasTemporaryTables()
+          && !hasMutableAliases(context)
+          && PlanCacheEligibility.isSafeToCache(sqlNode, context.getFunctionRegistry())) {
         PlanCache cache = context.getDrillbitContext().getPlanCache();
         long cacheGeneration = cache.getGeneration();
         // Capture the context once, before lookup and planning. Changes during
@@ -377,9 +377,9 @@ public class DrillSqlWorker {
           parameterizedPlanning = !candidate.literals.isEmpty();
           parameterizedTemplate = candidate.template;
         }
-      } catch (RuntimeException e) {
-        logger.debug("Plan cache attempt fell back to ordinary planning", e);
       }
+    } catch (RuntimeException e) {
+      logger.debug("Plan cache attempt fell back to ordinary planning", e);
     }
 
     // This planning path handles both cache bypass and cache misses.

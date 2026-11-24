@@ -95,6 +95,54 @@ public class TestTextPlanCache extends ClusterTest {
   }
 
   @Test
+  public void testExplicitTableInvalidatesOnFileChange() throws Exception {
+    try (ClientFixture connection = cluster.clientBuilder().property(DrillProperties.USER, "explicit-table").build()) {
+      connection.run("USE dfs.tmp");
+      connection.alterSession(PlannerSettings.ENABLE_PLAN_CACHE_OPTION, true);
+      String explicitTable = "TABLE `" + file.getFileName() + "`";
+      for (String sql : Arrays.asList(explicitTable, "WITH t AS (" + explicitTable + ") SELECT * FROM t")) {
+        Files.write(file, Arrays.asList("id,label", "1,one", "2,two", "3,three"), StandardCharsets.UTF_8);
+        cache().awaitWrites();
+        cache().clear();
+        long hits = cache().getHitCount();
+        long misses = metric("misses");
+        rows(connection, sql, "1", "one", "2", "two", "3", "three");
+        cache().awaitWrites();
+        assertEquals(misses + 1, metric("misses"));
+        rows(connection, sql, "1", "one", "2", "two", "3", "three");
+        assertEquals(hits + 1, cache().getHitCount());
+
+        Files.write(file, Arrays.asList("4,four"), StandardCharsets.UTF_8, StandardOpenOption.APPEND);
+        rows(connection, sql, "1", "one", "2", "two", "3", "three", "4", "four");
+        cache().awaitWrites();
+        assertEquals(hits + 1, cache().getHitCount());
+        assertEquals(misses + 2, metric("misses"));
+        rows(connection, sql, "1", "one", "2", "two", "3", "three", "4", "four");
+        assertEquals(hits + 2, cache().getHitCount());
+      }
+    }
+  }
+
+  @Test
+  public void testExplicitTableWithUnsupportedFormatBypassesCache() throws Exception {
+    Path json = file.resolveSibling(file.getFileName() + ".json");
+    Files.write(json, Arrays.asList("{\"id\":1}", "{\"id\":2}"), StandardCharsets.UTF_8);
+    try (ClientFixture connection = cluster.clientBuilder().property(DrillProperties.USER, "unsupported-table").build()) {
+      connection.run("USE dfs.tmp");
+      connection.alterSession(PlannerSettings.ENABLE_PLAN_CACHE_OPTION, true);
+      String sql = "TABLE `" + json.getFileName() + "`";
+      long hits = cache().getHitCount();
+      long misses = metric("misses");
+      assertEquals(2, connection.queryBuilder().sql(sql).run().recordCount());
+      cache().awaitWrites();
+      assertEquals(2, connection.queryBuilder().sql(sql).run().recordCount());
+      assertEquals(hits, cache().getHitCount());
+      assertEquals(misses, metric("misses"));
+      assertEquals(0L, metric("entries"));
+    }
+  }
+
+  @Test
   public void testStringToNumericCastsOnMissAndHit() throws Exception {
     for (String type : Arrays.asList("INTEGER", "BIGINT", "DOUBLE", "DECIMAL(10, 2)")) {
       String sql = "SELECT id, label FROM " + table

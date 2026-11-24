@@ -152,7 +152,7 @@ public class TextFormatPlugin extends EasyFormatPlugin<TextFormatConfig> {
     if (!supportPlanCache(selection)) {
       return null;
     }
-    Path path = selection.getSelectionRoot();
+    Path path = selection.getFiles().get(0);
     // Read fresh status: the selection may already contain cached file metadata.
     try (DrillFileSystem fs = ImpersonationUtil.createFileSystem(userName, getFsConf())) {
       FileStatus status = fs.getFileStatus(path);

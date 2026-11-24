@@ -19,8 +19,10 @@ package org.apache.drill.exec.planner.sql;
 
 import java.io.IOException;
 import java.time.Duration;
+import java.util.ArrayList;
 import java.util.Collections;
 import java.util.LinkedHashMap;
+import java.util.List;
 import java.util.Map;
 
 import org.apache.calcite.schema.SchemaPlus;
@@ -56,6 +58,12 @@ import static org.mockito.Mockito.when;
 
 @Category(PlannerTest.class)
 public class TestPlanCacheContext extends BaseTest {
+  private static final String[] EXPLICIT_TABLE_QUERIES = {
+      "TABLE \"a\"",
+      "WITH t AS (TABLE \"a\") SELECT * FROM t",
+      "WITH t AS (SELECT * FROM \"a\") TABLE t",
+      "SELECT * FROM \"b\" UNION ALL TABLE \"a\""
+  };
   private QueryContext context;
   private SchemaPlus schema;
   private StoragePluginRegistry registry;
@@ -105,6 +113,27 @@ public class TestPlanCacheContext extends BaseTest {
       assertTrue(cache.get("key").matchesContext(original));
       assertFalse(cache.get("key").matchesContext(changed));
     }
+  }
+
+  @Test
+  public void testExplicitTableQueriesTrackVersionChanges() throws Exception {
+    List<PlanCache.ContextSnapshot> original = new ArrayList<>();
+    for (String sql : EXPLICIT_TABLE_QUERIES) {
+      original.add(snapshot(sql));
+    }
+    when(pluginA.planCacheTable("scan-user-a", selectionA)).thenReturn(new PlanCacheTable("a", "version-2"));
+    for (int i = 0; i < EXPLICIT_TABLE_QUERIES.length; i++) {
+      assertIncompatible(original.get(i), snapshot(EXPLICIT_TABLE_QUERIES[i]));
+    }
+  }
+
+  @Test
+  public void testExplicitTableQueriesRequirePluginSupport() throws Exception {
+    when(pluginA.supportPlanCache(selectionA)).thenReturn(false);
+    for (String sql : EXPLICIT_TABLE_QUERIES) {
+      assertNull(sql, PlanCache.ContextSnapshot.resolve(schema, SqlParser.create(sql).parseQuery(), context));
+    }
+    verify(pluginA, never()).planCacheTable("scan-user-a", selectionA);
   }
 
   @Test

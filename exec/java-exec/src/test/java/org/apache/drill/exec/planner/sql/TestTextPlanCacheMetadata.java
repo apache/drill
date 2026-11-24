@@ -39,6 +39,7 @@ import org.junit.Test;
 
 import static org.junit.Assert.assertEquals;
 import static org.junit.Assert.assertThrows;
+import static org.junit.Assert.assertTrue;
 import static org.mockito.Mockito.CALLS_REAL_METHODS;
 import static org.mockito.Mockito.doReturn;
 import static org.mockito.Mockito.mock;
@@ -91,6 +92,21 @@ public class TestTextPlanCacheMetadata extends BaseTest {
     assertThrows(AccessControlException.class, () -> storage.planCacheTable(BOB, alice));
     assertEquals("10:1", storage.planCacheTable(BOB, bob).getVersion());
     assertEquals(first.getIdentifier(), storage.planCacheTable(ALICE, alice).getIdentifier());
+  }
+
+  @Test
+  public void testVersionReadsUseSelectedFilePath() throws Exception {
+    Configuration conf = new Configuration(false);
+    conf.set(FileSystem.FS_DEFAULT_NAME_KEY, URI_ROOT.toString());
+    conf.setClass("fs.plan-cache-test.impl", UserScopedFileSystem.class, FileSystem.class);
+    TextFormatConfig config = new TextFormatConfig(Collections.singletonList("csv"),
+        null, null, null, null, null, null, null);
+    TextFormatPlugin format = new TextFormatPlugin("csv", null, conf, null, config);
+    Path file = new Path(URI_ROOT.toString() + ALICE + "/data.csv");
+    Path root = new Path("plan-cache-test://other-cluster/" + ALICE + "/data.csv");
+    FileSelection selection = new FileSelection(null, Collections.singletonList(file), root);
+    assertTrue(format.supportPlanCache(selection));
+    assertEquals(file.toString(), format.planCacheTable(ALICE, selection).getIdentifier());
   }
 
   private FormatSelection selection(String userName, TextFormatConfig formatConfig) {

@@ -30,9 +30,11 @@ import ch.qos.logback.classic.Logger;
 import ch.qos.logback.classic.spi.ILoggingEvent;
 import ch.qos.logback.core.read.ListAppender;
 import org.apache.drill.categories.SqlTest;
+import org.apache.drill.common.exceptions.DrillRuntimeException;
 import org.apache.drill.common.exceptions.UserException;
 import org.apache.drill.common.exceptions.UserRemoteException;
 import org.apache.drill.exec.ExecConstants;
+import org.apache.drill.exec.alias.AliasRegistryProvider;
 import org.apache.drill.exec.metrics.DrillMetrics;
 import org.apache.drill.exec.ops.QueryContext;
 import org.apache.drill.exec.physical.PhysicalPlan;
@@ -59,6 +61,10 @@ import static org.junit.Assert.assertNotNull;
 import static org.junit.Assert.assertNull;
 import static org.junit.Assert.assertThrows;
 import static org.junit.Assert.assertTrue;
+import static org.mockito.Mockito.doReturn;
+import static org.mockito.Mockito.mock;
+import static org.mockito.Mockito.spy;
+import static org.mockito.Mockito.when;
 
 @Category(SqlTest.class)
 public class TestPlanCacheFallback extends ClusterTest {
@@ -130,6 +136,23 @@ public class TestPlanCacheFallback extends ClusterTest {
       assertEquals(IOException.class.getName(), warning.getThrowableProxy().getClassName());
       cache().clear();
       assertEquals(failures + 1, metric("planning_failures"));
+    }
+  }
+
+  @Test
+  public void testAliasReadFailureBypassesCache() throws Exception {
+    AliasRegistryProvider aliases = mock(AliasRegistryProvider.class);
+    when(aliases.getStorageAliasesRegistry()).thenThrow(new DrillRuntimeException("Alias store read failed"));
+    try (UserSession session = session(); QueryContext original = context(session)) {
+      QueryContext context = spy(original);
+      doReturn(aliases).when(context).getAliasRegistryProvider();
+      long failures = metric("planning_failures");
+      long misses = metric("misses");
+      assertNotNull(DrillSqlWorker.getPlan(context, "SELECT 1"));
+      assertFalse(context.isPlanCacheHit());
+      assertNull(context.takePendingPlanCacheInsert());
+      assertEquals(failures, metric("planning_failures"));
+      assertEquals(misses, metric("misses"));
     }
   }
 

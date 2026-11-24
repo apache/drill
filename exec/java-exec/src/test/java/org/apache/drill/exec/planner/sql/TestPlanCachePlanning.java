@@ -44,7 +44,9 @@ import org.apache.drill.exec.planner.sql.conversion.SqlConverter;
 import org.apache.drill.exec.proto.UserBitShared.QueryId;
 import org.apache.drill.exec.proto.UserBitShared.UserCredentials;
 import org.apache.drill.exec.rpc.user.UserSession;
+import org.apache.drill.exec.testing.Controls;
 import org.apache.drill.exec.util.Pointer;
+import org.apache.drill.exec.work.foreman.Foreman;
 import org.apache.drill.test.ClientFixture;
 import org.apache.drill.test.ClusterFixture;
 import org.apache.drill.test.ClusterTest;
@@ -309,6 +311,32 @@ public class TestPlanCachePlanning extends ClusterTest {
       assertNotEquals(planned.getSortedOperators().stream().map(PhysicalOperator::getOperatorId)
           .collect(Collectors.toList()), cachedIds);
     }
+  }
+
+  @Test(timeout = 30000)
+  public void testPublicationFailureStillCompletesQuery() throws Exception {
+    cache().awaitWrites();
+    cache().clear();
+    client.alterSession(PlannerSettings.ENABLE_PLAN_CACHE_OPTION, true);
+    String sql = "SELECT x AS publication_value FROM (VALUES (1), (2)) AS t(x) WHERE x > %d";
+    long failures = metric("planning_failures");
+    long hits = cache().getHitCount();
+    client.setControls(Controls.newBuilder()
+        .addException(Foreman.class, "plan-cache-publication", IllegalStateException.class).build());
+    client.testBuilder().sqlQuery(sql, 0).unOrdered()
+        .baselineColumns("publication_value").baselineValues(1).baselineValues(2).go();
+    cache().awaitWrites();
+    assertEquals(0L, metric("entries"));
+    assertEquals(failures, metric("planning_failures"));
+    assertEquals(hits, cache().getHitCount());
+
+    client.testBuilder().sqlQuery(sql, 0).unOrdered()
+        .baselineColumns("publication_value").baselineValues(1).baselineValues(2).go();
+    cache().awaitWrites();
+    assertEquals(1L, metric("entries"));
+    client.testBuilder().sqlQuery(sql, 1).unOrdered()
+        .baselineColumns("publication_value").baselineValues(2).go();
+    assertEquals(hits + 1, cache().getHitCount());
   }
 
   @Test

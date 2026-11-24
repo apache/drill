@@ -476,6 +476,9 @@ public final class PlanCache implements AutoCloseable {
         return true;
       }
       if (node instanceof SqlCall) {
+        if (node.getKind() == SqlKind.EXPLICIT_TABLE) {
+          return collectFrom(schema, ((SqlCall) node).operand(0), ctes, dependencies);
+        }
         for (SqlNode operand : ((SqlCall) node).getOperandList()) {
           if (!collectQuery(schema, operand, ctes, dependencies)) {
             return false;

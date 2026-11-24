@@ -802,7 +802,12 @@ public class Foreman implements Runnable {
       }
 
       if (resultState == QueryState.COMPLETED && pendingPlanCacheInsert != null) {
-        pendingPlanCacheInsert.run();
+        try {
+          injector.injectUnchecked(queryContext.getExecutionControls(), "plan-cache-publication");
+          pendingPlanCacheInsert.run();
+        } catch (RuntimeException e) {
+          logger.warn("Failed to publish query {} to the plan cache", queryIdString, e);
+        }
       }
 
       /*
