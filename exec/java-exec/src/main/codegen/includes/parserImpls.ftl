@@ -977,11 +977,25 @@ DrillSqlSetOption DrillSqlSetOption(Span s, String scope) :
 }
 
 /**
+ * Parses CLEAR PLAN CACHE after ALTER SYSTEM.
+ */
+SqlClearPlanCache SqlClearPlanCache(Span s, String scope) :
+{
+}
+{
+    <CLEAR> <PLAN> <CACHE>
+    {
+        if (!"SYSTEM".equalsIgnoreCase(scope)) {
+            throw new ParseException("CLEAR PLAN CACHE requires ALTER SYSTEM.");
+        }
+        return new SqlClearPlanCache(s.end(this));
+    }
+}
+
+/**
  * Parses a RESET statement without a leading "ALTER <SCOPE>":
  *
  *  RESET { <NAME> | ALL }
- * <p>
- * Statement handles in: {@link SetAndResetOptionHandler}
  */
 DrillSqlResetOption DrillSqlResetOption(Span s, String scope) :
 {

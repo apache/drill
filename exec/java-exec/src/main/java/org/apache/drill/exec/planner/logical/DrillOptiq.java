@@ -40,6 +40,7 @@ import org.apache.drill.common.expression.FieldReference;
 import org.apache.drill.common.expression.FunctionCallFactory;
 import org.apache.drill.common.expression.IfExpression;
 import org.apache.drill.common.expression.IfExpression.IfCondition;
+import org.apache.drill.common.expression.LiteralExpression;
 import org.apache.drill.common.expression.LogicalExpression;
 import org.apache.drill.common.expression.NullExpression;
 import org.apache.drill.common.expression.SchemaPath;
@@ -76,6 +77,7 @@ import com.google.common.collect.Lists;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.apache.drill.exec.planner.physical.PlannerSettings;
+import org.apache.drill.exec.planner.sql.conversion.RexBoundDynamicParam;
 import org.apache.drill.exec.work.ExecErrorConstants;
 
 import static org.apache.drill.exec.planner.physical.PlannerSettings.ENABLE_DECIMAL_DATA_TYPE;
@@ -469,6 +471,15 @@ public class DrillOptiq {
 
     @Override
     public LogicalExpression visitDynamicParam(RexDynamicParam dynamicParam) {
+      if (dynamicParam instanceof RexBoundDynamicParam) {
+        RexBoundDynamicParam bound = (RexBoundDynamicParam) dynamicParam;
+        LogicalExpression expression = bound.getLiteral().accept(this);
+        if (!(expression instanceof LiteralExpression)) {
+          return doUnknown(dynamicParam);
+        }
+        ((LiteralExpression) expression).setDynamicParamIndex(bound.getIndex());
+        return expression;
+      }
       return doUnknown(dynamicParam);
     }
 

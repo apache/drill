@@ -48,6 +48,10 @@ public final class ExecConstants {
     // Don't allow instantiation
   }
 
+  public static final String PLAN_CACHE_MAX_SIZE_BYTES = "drill.exec.plan_cache.max_size_bytes";
+  public static final String PLAN_CACHE_EXPIRE_AFTER_WRITE = "drill.exec.plan_cache.expire_after_write";
+  public static final String PLAN_CACHE_EXPIRE_AFTER_ACCESS = "drill.exec.plan_cache.expire_after_access";
+
   public static final String ZK_RETRY_TIMES = "drill.exec.zk.retry.count";
   public static final String ZK_RETRY_DELAY = "drill.exec.zk.retry.delay";
   public static final String ZK_CONNECTION = "drill.exec.zk.connect";

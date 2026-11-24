@@ -23,6 +23,7 @@ import org.apache.drill.exec.physical.base.PhysicalOperator;
 import org.apache.drill.exec.physical.base.Receiver;
 import org.apache.drill.common.logical.data.Order.Ordering;
 import com.fasterxml.jackson.annotation.JsonProperty;
+import com.fasterxml.jackson.annotation.JsonCreator;
 import com.fasterxml.jackson.annotation.JsonTypeName;
 
 /**
@@ -34,6 +35,7 @@ public class OrderedMuxExchange extends AbstractMuxExchange {
 
   private final List<Ordering> orderings;
 
+  @JsonCreator
   public OrderedMuxExchange(@JsonProperty("child") PhysicalOperator child, @JsonProperty("orderings")List<Ordering> orderings) {
     super(child);
     this.orderings = orderings;
@@ -47,5 +49,10 @@ public class OrderedMuxExchange extends AbstractMuxExchange {
   @Override
   protected PhysicalOperator getNewWithChild(PhysicalOperator child) {
     return new OrderedMuxExchange(child, orderings);
+  }
+
+  @JsonProperty("orderings")
+  public List<Ordering> getOrderings() {
+    return orderings;
   }
 }

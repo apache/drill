@@ -47,6 +47,7 @@ import org.apache.drill.common.exceptions.ExpressionParsingException;
   public ExpressionPosition pos(Token token){
     return new ExpressionPosition(fullExpression, token.getTokenIndex());
   }
+
 }
 
 parse returns [LogicalExpression e]
@@ -324,7 +325,11 @@ arraySegment returns [PathSegment seg]
   ;
 
 lookup returns [LogicalExpression e]
-  :  functionCall {$e = $functionCall.e ;}
+  :  BoundDynamicParam OParen Number Comma dataType Comma boundLiteralValue CParen {
+       $e = ValueExpressions.getBoundDynamicParam(Integer.parseInt($Number.text),
+           $dataType.type, $boundLiteralValue.value);
+     }
+  |  functionCall {$e = $functionCall.e ;}
   | convertCall {$e = $convertCall.e; }
   | anyValueCall {$e = $anyValueCall.e; }
   | castCall {$e = $castCall.e; }
@@ -332,6 +337,14 @@ lookup returns [LogicalExpression e]
   | String {$e = new ValueExpressions.QuotedString($String.text, $String.text.length(), pos($String) ); }
   | OParen expression CParen  {$e = $expression.e; }
   | SingleQuote Identifier SingleQuote {$e = new SchemaPath($Identifier.text, pos($Identifier) ); }
+  ;
+
+boundLiteralValue returns [String value]
+  : s=String { $value = $s.text; }
+  | b=Bool { $value = $b.text; }
+  | sign=(Plus|Minus)? n=Number {
+      $value = ($sign == null ? "" : $sign.text) + $n.text;
+    }
   ;
   
   

@@ -28,6 +28,7 @@ import org.apache.drill.exec.physical.base.Receiver;
 import org.apache.drill.exec.physical.base.Sender;
 
 import com.fasterxml.jackson.annotation.JsonCreator;
+import com.fasterxml.jackson.annotation.JsonAlias;
 import com.fasterxml.jackson.annotation.JsonProperty;
 import com.fasterxml.jackson.annotation.JsonTypeName;
 
@@ -40,7 +41,7 @@ public class HashToMergeExchange extends AbstractExchange {
   @JsonCreator
   public HashToMergeExchange(@JsonProperty("child") PhysicalOperator child,
       @JsonProperty("expr") LogicalExpression expr,
-      @JsonProperty("orderings") List<Ordering> orderExprs) {
+      @JsonProperty("orderings") @JsonAlias("orderExpr") List<Ordering> orderExprs) {
     super(child);
     this.distExpr = expr;
     this.orderExprs = orderExprs;
@@ -62,7 +63,12 @@ public class HashToMergeExchange extends AbstractExchange {
     return new HashToMergeExchange(child, distExpr, orderExprs);
   }
 
-  @JsonProperty("orderExpr")
+  @JsonProperty("expr")
+  public LogicalExpression getExpression() {
+    return distExpr;
+  }
+
+  @JsonProperty("orderings")
   public List<Ordering> getOrderExpressions(){
     return orderExprs;
   }

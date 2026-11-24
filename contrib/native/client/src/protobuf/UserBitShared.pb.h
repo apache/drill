@@ -3202,6 +3202,7 @@ class QueryProfile PROTOBUF_FINAL :
     kPlanEndFieldNumber = 18,
     kQueueWaitEndFieldNumber = 19,
     kTotalCostFieldNumber = 20,
+    kPlanCacheHitFieldNumber = 25,
     kTypeFieldNumber = 2,
   };
   // repeated .exec.shared.MajorFragmentProfile fragment_profile = 11;
@@ -3579,6 +3580,19 @@ class QueryProfile PROTOBUF_FINAL :
   void _internal_set_total_cost(double value);
   public:
 
+  // optional bool plan_cache_hit = 25;
+  bool has_plan_cache_hit() const;
+  private:
+  bool _internal_has_plan_cache_hit() const;
+  public:
+  void clear_plan_cache_hit();
+  bool plan_cache_hit() const;
+  void set_plan_cache_hit(bool value);
+  private:
+  bool _internal_plan_cache_hit() const;
+  void _internal_set_plan_cache_hit(bool value);
+  public:
+
   // optional .exec.shared.QueryType type = 2;
   bool has_type() const;
   private:
@@ -3626,6 +3640,7 @@ class QueryProfile PROTOBUF_FINAL :
   ::PROTOBUF_NAMESPACE_ID::int64 planend_;
   ::PROTOBUF_NAMESPACE_ID::int64 queuewaitend_;
   double total_cost_;
+  bool plan_cache_hit_;
   int type_;
   friend struct ::TableStruct_UserBitShared_2eproto;
 };
@@ -7808,7 +7823,7 @@ inline void QueryProfile::set_allocated_id(::exec::shared::QueryId* id) {
 
 // optional .exec.shared.QueryType type = 2;
 inline bool QueryProfile::_internal_has_type() const {
-  bool value = (_has_bits_[0] & 0x00200000u) != 0;
+  bool value = (_has_bits_[0] & 0x00400000u) != 0;
   return value;
 }
 inline bool QueryProfile::has_type() const {
@@ -7816,7 +7831,7 @@ inline bool QueryProfile::has_type() const {
 }
 inline void QueryProfile::clear_type() {
   type_ = 1;
-  _has_bits_[0] &= ~0x00200000u;
+  _has_bits_[0] &= ~0x00400000u;
 }
 inline ::exec::shared::QueryType QueryProfile::_internal_type() const {
   return static_cast< ::exec::shared::QueryType >(type_);
@@ -7827,7 +7842,7 @@ inline ::exec::shared::QueryType QueryProfile::type() const {
 }
 inline void QueryProfile::_internal_set_type(::exec::shared::QueryType value) {
   assert(::exec::shared::QueryType_IsValid(value));
-  _has_bits_[0] |= 0x00200000u;
+  _has_bits_[0] |= 0x00400000u;
   type_ = value;
 }
 inline void QueryProfile::set_type(::exec::shared::QueryType value) {
@@ -8850,6 +8865,34 @@ inline ::PROTOBUF_NAMESPACE_ID::RepeatedPtrField<std::string>*
 QueryProfile::mutable_scanned_plugins() {
   // @@protoc_insertion_point(field_mutable_list:exec.shared.QueryProfile.scanned_plugins)
   return &scanned_plugins_;
+}
+
+// optional bool plan_cache_hit = 25;
+inline bool QueryProfile::_internal_has_plan_cache_hit() const {
+  bool value = (_has_bits_[0] & 0x00200000u) != 0;
+  return value;
+}
+inline bool QueryProfile::has_plan_cache_hit() const {
+  return _internal_has_plan_cache_hit();
+}
+inline void QueryProfile::clear_plan_cache_hit() {
+  plan_cache_hit_ = false;
+  _has_bits_[0] &= ~0x00200000u;
+}
+inline bool QueryProfile::_internal_plan_cache_hit() const {
+  return plan_cache_hit_;
+}
+inline bool QueryProfile::plan_cache_hit() const {
+  // @@protoc_insertion_point(field_get:exec.shared.QueryProfile.plan_cache_hit)
+  return _internal_plan_cache_hit();
+}
+inline void QueryProfile::_internal_set_plan_cache_hit(bool value) {
+  _has_bits_[0] |= 0x00200000u;
+  plan_cache_hit_ = value;
+}
+inline void QueryProfile::set_plan_cache_hit(bool value) {
+  _internal_set_plan_cache_hit(value);
+  // @@protoc_insertion_point(field_set:exec.shared.QueryProfile.plan_cache_hit)
 }
 
 // -------------------------------------------------------------------
