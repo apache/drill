@@ -992,6 +992,10 @@ public class SimpleHttp implements AutoCloseable {
       .tempDir(new File(context.getConfig().getString(ExecConstants.DRILL_TMP_DIR)))
       .url(HttpUrl.parse(finalUrl))
       .proxyConfig(proxyConfig)
+      // The http_get() UDF is not given the query user, so it can only use the
+      // shared token table. A USER_TRANSLATION plugin's per-user tokens are
+      // therefore not reachable from this UDF; it fails rather than falling back
+      // to some other user's tokens.
       .tokenTable(plugin.getTokenTable())
       .build();
   }

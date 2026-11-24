@@ -25,6 +25,7 @@ import org.apache.drill.common.logical.StoragePluginConfig;
 import org.apache.drill.common.logical.security.CredentialsProvider;
 import org.apache.drill.exec.server.rest.DrillRestServer.UserAuthEnabled;
 import org.apache.drill.exec.server.rest.StorageResources.StoragePluginModel;
+import org.apache.drill.exec.server.rest.auth.DrillUserPrincipal;
 import org.apache.drill.exec.store.StoragePluginRegistry;
 import org.apache.drill.exec.store.StoragePluginRegistry.PluginException;
 import org.apache.drill.exec.store.StoragePluginRegistry.PluginFilter;
@@ -62,7 +63,9 @@ import static org.apache.drill.exec.server.rest.auth.DrillUserPrincipal.AUTHENTI
 @RolesAllowed(AUTHENTICATED_ROLE)
 public class CredentialResources {
   private static final Logger logger = LoggerFactory.getLogger(CredentialResources.class);
-  private static final Comparator<PluginConfigWrapper> PLUGIN_COMPARATOR =
+  private static final Comparator<CredentialPluginInfo> PLUGIN_COMPARATOR =
+    Comparator.comparing(CredentialPluginInfo::getName);
+  private static final Comparator<PluginConfigWrapper> CONFIG_COMPARATOR =
     Comparator.comparing(PluginConfigWrapper::getName);
   private static final String ALL_PLUGINS = "all";
   private static final String ENABLED_PLUGINS = "enabled";
@@ -78,6 +81,14 @@ public class CredentialResources {
   @Inject
   SecurityContext sc;
 
+  /**
+   * The caller. Injected rather than read from the {@code SecurityContext} so it
+   * also resolves with authentication disabled, where Drill binds the anonymous
+   * principal but the security context has none.
+   */
+  @Inject
+  DrillUserPrincipal principal;
+
   @Inject
   HttpServletRequest request;
 
@@ -86,7 +97,7 @@ public class CredentialResources {
   @Produces(MediaType.TEXT_HTML)
   @Operation(externalDocs = @ExternalDocumentation(description = "Apache Drill REST API documentation:", url = "https://drill.apache.org/docs/rest-api-introduction/"))
   public Viewable getPlugins() {
-    List<StoragePluginModel> model = getPluginsJSON().stream()
+    List<StoragePluginModel> model = getUserTranslationConfigs().stream()
       .map(plugin -> new StoragePluginModel(plugin, request, sc))
       .collect(Collectors.toList());
     // Creating an empty model with CSRF token, if there are no storage plugins
@@ -99,15 +110,31 @@ public class CredentialResources {
   @GET
   @Path("/credentials.json")
   @Produces(MediaType.APPLICATION_JSON)
-  public List<PluginConfigWrapper> getPluginsJSON() {
+  public List<CredentialPluginInfo> getPluginsJSON() {
     return getConfigsFor(TRANSLATES_USERS);
+  }
+
+  /**
+   * The stored configs of every user translation plugin, for server-side
+   * rendering only. These must never be serialized to a client: a config carries
+   * every user's stored credentials along with shared secrets such as an OAuth
+   * client secret, and this resource is open to any authenticated user.
+   */
+  private List<PluginConfigWrapper> getUserTranslationConfigs() {
+    return StreamSupport.stream(
+        Spliterators.spliteratorUnknownSize(
+          storage.storedConfigs(PluginFilter.TRANSLATES_USERS).entrySet().iterator(),
+          Spliterator.ORDERED), false)
+      .map(entry -> new PluginConfigWrapper(entry.getKey(), entry.getValue()))
+      .sorted(CONFIG_COMPARATOR)
+      .collect(Collectors.toList());
   }
 
   @GET
   @Path("/credentials{group: (/[^/]+?)*}-plugins.json")
   @Produces(MediaType.APPLICATION_JSON)
   @Operation(externalDocs = @ExternalDocumentation(description = "Apache Drill REST API documentation:", url = "https://drill.apache.org/docs/rest-api-introduction/"))
-  public List<PluginConfigWrapper> getConfigsFor(@PathParam("group") String pluginGroup) {
+  public List<CredentialPluginInfo> getConfigsFor(@PathParam("group") String pluginGroup) {
     PluginFilter filter;
     switch (pluginGroup.trim()) {
       case ALL_PLUGINS:
@@ -125,17 +152,27 @@ public class CredentialResources {
       default:
         return Collections.emptyList();
     }
-    List<PluginConfigWrapper> results = StreamSupport.stream(
+    // Any authenticated user may reach this resource, so the plugin configs
+    // themselves must not be serialized: they carry every user's stored
+    // credentials and any shared secrets. Map each one down to the fields this
+    // caller needs to manage their own credentials. Admins read full configs
+    // from StorageResources instead, which is gated on ADMIN_ROLE.
+    String queryUser = queryUser();
+    return StreamSupport.stream(
         Spliterators.spliteratorUnknownSize(storage.storedConfigs(filter).entrySet().iterator(), Spliterator.ORDERED), false)
-      .map(entry -> new PluginConfigWrapper(entry.getKey(), entry.getValue()))
+      .map(entry -> CredentialPluginInfo.from(entry.getKey(), entry.getValue(), queryUser))
       .sorted(PLUGIN_COMPARATOR)
       .collect(Collectors.toList());
+  }
 
-    if (results.isEmpty()) {
-      return Collections.emptyList();
-    } else {
-      return results;
-    }
+  /**
+   * The caller, used to scope credential reads and writes to their own entry.
+   * With authentication disabled this is the anonymous user, which is also the
+   * user queries run as, so per-user credentials stay readable by the query path.
+   * Null only with authentication on and no authenticated principal.
+   */
+  private String queryUser() {
+    return principal == null ? null : principal.getName();
   }
 
   @POST
@@ -146,7 +183,14 @@ public class CredentialResources {
   public Response createOrUpdateCredentials(@FormParam("plugin") String pluginName,
                                        @FormParam("username") String username,
                                        @FormParam("password") String password) {
-    String queryUser = sc.getUserPrincipal().getName();
+    String queryUser = queryUser();
+    if (queryUser == null) {
+      // Credentials are always stored against a user, so refuse rather than
+      // write an entry under a null key that nobody could ever read back.
+      return Response.status(Status.UNAUTHORIZED)
+        .entity(message("Could not determine the current user."))
+        .build();
+    }
     pluginName = pluginName.trim();
     if (pluginName.isEmpty()) {
       return Response.status(Response.Status.BAD_REQUEST)
@@ -192,7 +236,14 @@ public class CredentialResources {
   @Produces(MediaType.APPLICATION_JSON)
   @Operation(externalDocs = @ExternalDocumentation(description = "Apache Drill REST API documentation:", url = "https://drill.apache.org/docs/rest-api-introduction/"))
   public Response createOrUpdatePlugin(@PathParam("pluginName") String pluginName, UsernamePasswordContainer credentials) {
-    String queryUser = sc.getUserPrincipal().getName();
+    String queryUser = queryUser();
+    if (queryUser == null) {
+      // Credentials are always stored against a user, so refuse rather than
+      // write an entry under a null key that nobody could ever read back.
+      return Response.status(Status.UNAUTHORIZED)
+        .entity(message("Could not determine the current user."))
+        .build();
+    }
     String cleanPluginName;
     if (pluginName.isEmpty()) {
       return Response.status(Response.Status.BAD_REQUEST)
@@ -238,7 +289,7 @@ public class CredentialResources {
   @Produces(MediaType.APPLICATION_JSON)
   @Operation(externalDocs = @ExternalDocumentation(description = "Apache Drill REST API documentation:", url = "https://drill.apache.org/docs/rest-api-introduction/"))
   public Response updateRefreshToken(@PathParam("name") String name, OAuthTokenContainer tokens) {
-    return OAuthRequests.updateRefreshToken(name, tokens, storage, authEnabled, sc);
+    return OAuthRequests.updateRefreshToken(name, tokens, storage, principal);
   }
 
   @POST
@@ -247,7 +298,7 @@ public class CredentialResources {
   @Produces(MediaType.APPLICATION_JSON)
   @Operation(externalDocs = @ExternalDocumentation(description = "Apache Drill REST API documentation:", url = "https://drill.apache.org/docs/rest-api-introduction/"))
   public Response updateAccessToken(@PathParam("name") String name, OAuthTokenContainer tokens) {
-    return OAuthRequests.updateAccessToken(name, tokens, storage, authEnabled, sc);
+    return OAuthRequests.updateAccessToken(name, tokens, storage, principal);
   }
 
   @POST
@@ -257,7 +308,7 @@ public class CredentialResources {
   @Operation(externalDocs = @ExternalDocumentation(description = "Apache Drill REST API documentation:", url = "https://drill.apache.org/docs/rest-api-introduction/"))
   public Response updateOAuthTokens(@PathParam("name") String name,
                                     OAuthTokenContainer tokenContainer) {
-    return OAuthRequests.updateOAuthTokens(name, tokenContainer, storage, authEnabled, sc);
+    return OAuthRequests.updateOAuthTokens(name, tokenContainer, storage, principal);
   }
 
   @GET
@@ -265,7 +316,7 @@ public class CredentialResources {
   @Produces(MediaType.TEXT_HTML)
   @Operation(externalDocs = @ExternalDocumentation(description = "Apache Drill REST API documentation:", url = "https://drill.apache.org/docs/rest-api-introduction/"))
   public Response updateAuthToken(@PathParam("name") String name, @QueryParam("code") String code) {
-    return OAuthRequests.updateAuthToken(name, code, request, storage, authEnabled, sc);
+    return OAuthRequests.updateAuthToken(name, code, request, storage, principal);
   }
 
   private JsonResult message(String message, Object... args) {

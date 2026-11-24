@@ -1,5 +1,10 @@
 # Drill Developer Docs
 
+## Credentials and OAuth
+
+- [OAuthTokenStorage.md](OAuthTokenStorage.md) — **where plugin credentials live and who may change them**: shared vs `USER_TRANSLATION` auth modes, the per-identity OAuth token registry layout, the admin gate on shared tokens, how identity resolves when user authentication is disabled, and the orphaned-token-table limitation.
+- [PluginCredentialsProvider.md](PluginCredentialsProvider.md) — credential provider implementations (plain, env, Vault, Hadoop).
+
 ## Environment
 
 For information about configuring your development enviornment see [Environment.md](Environment.md).
