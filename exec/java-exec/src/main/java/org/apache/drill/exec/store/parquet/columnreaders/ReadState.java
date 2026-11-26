@@ -25,7 +25,6 @@ import java.util.Map;
 import org.apache.drill.exec.physical.impl.OutputMutator;
 import org.apache.drill.exec.store.parquet.ParquetReaderStats;
 import org.apache.drill.exec.store.parquet.columnreaders.batchsizing.RecordBatchSizerManager;
-import org.apache.drill.exec.vector.NullableIntVector;
 import org.apache.drill.exec.vector.ValueVector;
 import org.apache.parquet.column.ColumnDescriptor;
 import org.apache.parquet.hadoop.metadata.BlockMetaData;
@@ -51,7 +50,7 @@ public class ReadState {
    * at that position in the schema. Currently this requires a vector be present. Here is a list of all of these vectors
    * that need only have their value count set at the end of each call to next(), as the values default to null.
    */
-  private List<NullableIntVector> nullFilledVectors;
+  private List<ValueVector> nullFilledVectors;
   private List<ColumnReader<?>> fixedLenColumnReaders = new ArrayList<>();
   private final long totalNumRecordsToRead; // number of records to read
 

@@ -54,6 +54,7 @@ import java.io.InputStream;
 import java.io.OutputStream;
 import java.security.PrivilegedExceptionAction;
 import java.util.ArrayList;
+import java.util.HashMap;
 import java.util.HashSet;
 import java.util.LinkedHashMap;
 import java.util.List;
@@ -279,15 +280,16 @@ public class Metadata {
         } else {
           for (ColumnTypeMetadata_v4.Key key : subTableColumnTypeInfo.keySet()) {
             ColumnTypeMetadata_v4 columnTypeMetadata_v4 = columnTypeInfoSet.get(key);
-            if (columnTypeMetadata_v4 == null) {
-              columnTypeMetadata_v4 = subTableColumnTypeInfo.get(key);
+            ColumnTypeMetadata_v4 subTableColumnTypeMetadata_v4 = subTableColumnTypeInfo.get(key);
+            if (columnTypeMetadata_v4 == null || columnTypeMetadata_v4.repetition.isMoreRestrictiveThan(subTableColumnTypeMetadata_v4.repetition)) {
+              columnTypeMetadata_v4 = subTableColumnTypeMetadata_v4;
             } else {
               // If the existing total null count or the null count of the child file is unknown(-1), update the total null count
               // as unknown
-              if (subTableColumnTypeInfo.get(key).totalNullCount < 0 || columnTypeMetadata_v4.totalNullCount < 0) {
+              if (subTableColumnTypeMetadata_v4.totalNullCount < 0 || columnTypeMetadata_v4.totalNullCount < 0) {
                 columnTypeMetadata_v4.totalNullCount = NULL_COUNT_NOT_EXISTS;
               } else {
-                columnTypeMetadata_v4.totalNullCount = columnTypeMetadata_v4.totalNullCount + subTableColumnTypeInfo.get(key).totalNullCount;
+                columnTypeMetadata_v4.totalNullCount = columnTypeMetadata_v4.totalNullCount + subTableColumnTypeMetadata_v4.totalNullCount;
               }
             }
             columnTypeInfoSet.put(key, columnTypeMetadata_v4);
@@ -516,9 +518,28 @@ public class Metadata {
     FileMetadataCollector metadataCollector = new FileMetadataCollector(metadata, file, fs, allColumnsInteresting,
       skipNonInteresting, columnSet, readerConfig);
 
-    parquetTableMetadata.metadataSummary.columnTypeInfo.putAll(metadataCollector.getColumnTypeInfo());
+    mergeColumns(parquetTableMetadata.metadataSummary.columnTypeInfo, metadataCollector.getColumnTypeInfo());
     return metadataCollector.getFileMetadata();
   }
+
+  /**
+   * Merges myColumns into resultColumns map with the least restrictive repetition resolution
+   * @param resultColumns - overall columns map from all the files
+   * @param myColumns - columns from a particular file to merge into resultColumns
+   */
+  private static synchronized void mergeColumns(Map<ColumnTypeMetadata_v4.Key, ColumnTypeMetadata_v4> resultColumns,
+      Map<ColumnTypeMetadata_v4.Key, ColumnTypeMetadata_v4> myColumns) {
+    Map<ColumnTypeMetadata_v4.Key, ColumnTypeMetadata_v4> columnsToMerge = new HashMap<>(myColumns);
+    for (ColumnTypeMetadata_v4.Key key: columnsToMerge.keySet()) {
+      ColumnTypeMetadata_v4 columnToMerge = columnsToMerge.get(key);
+      ColumnTypeMetadata_v4 resultColumn = resultColumns.get(key);
+      if (resultColumn != null && columnToMerge.repetition.isMoreRestrictiveThan(resultColumn.repetition)) {
+        columnToMerge.repetition = resultColumn.repetition;
+      }
+    }
+    resultColumns.putAll(columnsToMerge);
+  }
+
 
   /**
    * Serialize parquet metadata to json and write to a file.
